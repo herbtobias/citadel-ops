@@ -6,7 +6,8 @@
     "q-branch": "Q-Branch",
     "m-desk": "M Desk",
     "team": "Team",
-    "audit": "Audit"
+    "audit": "Audit",
+    "diagnostics": "Diagnose"
   },
   "common": {
     "project": "Projekt",

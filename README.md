@@ -81,6 +81,13 @@ open spawned children); **FinOps** cost attribution (`finops`: spend by agent/op
 **GDPR export** (`organizations/:id/export`, key material stripped); **Archivist** knowledge
 refresh. *Secret-store / Redis backplane / EU-region remain deferred infra (§19).*
 
+**P11 — Monitoring & Tracing (Echelon)** ✓ **traceId** propagation (W3C `traceparent`/`x-trace-id`
+→ AsyncLocalStorage → auto-stamped on The Wire + ErrorEvents; echoed in `x-trace-id` response
+header); **ErrorEvent capture** (Nitro error hook for 5xx + `POST /api/v1/errors` for
+frontend/runner/MCP); **`/health`** (DB readiness); **Diagnostics — Echelon** UI page (system
+health, Wire tamper-evidence, agent-run/runner status, error feed; live via SSE). *OpenTelemetry
+spans / Sentry / Prometheus / Grafana remain deferred infra (§19).*
+
 ### Local agent mode
 ```bash
 cp .mcp.json.example .mcp.json   # paste a license from The M Desk

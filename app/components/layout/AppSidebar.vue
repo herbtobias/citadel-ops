@@ -15,6 +15,7 @@ const nav = [
   { key: 'm-desk', icon: 'lucide:id-card', to: (id: string) => `/${id}/m-desk` },
   { key: 'team', icon: 'lucide:users', to: (id: string) => `/${id}/team` },
   { key: 'audit', icon: 'lucide:scroll-text', to: (id: string) => `/${id}/audit` },
+  { key: 'diagnostics', icon: 'lucide:activity', to: (id: string) => `/${id}/diagnostics` },
 ]
 
 // Route param is the source of truth (consistent SSR & client); UI store is fallback.

@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto'
 import { asc, desc, eq } from 'drizzle-orm'
 import { db, schema } from '../db'
 import { publishEvent } from './events'
+import { getTraceId } from './tracing'
 
 const { activityLog } = schema
 
@@ -47,9 +48,11 @@ export async function logActivity(input: LogInput) {
 
   const prevHash = prev?.hash ?? null
   const hash = computeHash(prevHash, input)
+  const traceId = input.traceId ?? getTraceId()
 
   const [row] = await db.insert(activityLog).values({
     ...input,
+    traceId,
     prevHash,
     hash,
   }).returning()
@@ -60,7 +63,7 @@ export async function logActivity(input: LogInput) {
     type: input.event,
     missionId: input.missionId ?? null,
     message: input.message ?? null,
-    traceId: input.traceId ?? null,
+    traceId,
   })
   return row
 }
