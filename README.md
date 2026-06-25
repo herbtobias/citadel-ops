@@ -78,6 +78,30 @@ live in HQ on the **Board**, **Situation Room**, and **Admin → Trace Log**.
 > npm run agent -- --license lic_… --dry-run
 > ```
 
+### Use a different agent runtime (agent-agnostic)
+
+Citadel doesn't care which AI drives it — the server holds all the logic and only checks the
+License. Claude is just the reference driver. The full runtime-neutral spec is
+[docs/AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md); the short version:
+
+**Any MCP-capable runtime (e.g. Google Antigravity).** Register Citadel as an MCP server and give
+the agent the mission loop as its instructions — no code changes:
+
+- **HTTP** — server URL `http://localhost:3000/api/mcp`, header `Authorization: Bearer lic_…`
+- **stdio** — command `node`, args `[".../mcp/stdio.ts"]`, env `CITADEL_URL` + `CITADEL_LICENSE`
+
+**Any other runtime (e.g. a Hermes model in your own harness).** Use the generic driver — Citadel
+runs the model-agnostic loop and hands each mission to a command you provide:
+
+```bash
+npm run agent -- --license lic_… --driver generic --exec "sh examples/generic-agent.sh"
+```
+
+The `--exec` command is spawned once per mission with the mission context, the License, and the MCP
+entrypoint in its environment (`CITADEL_MISSION_*`, `CITADEL_LICENSE`, `CITADEL_MCP_STDIO`); it does
+the work and finishes the mission via the citadel tools. Orchestration stays Citadel's, the brain
+is yours. [`examples/generic-agent.sh`](examples/generic-agent.sh) is a working (non-Claude) stub.
+
 ### Demo logins (password `citadel123`)
 | Email | Role |
 |---|---|
@@ -130,10 +154,11 @@ enforcement** at the transition chokepoint (`requireGoldfish`, `requireHarnessPa
 **P6 — MCP server + Local Agent Mode** ✓ MCP server `citadel` with **18 `citadel_*` tools**
 ([mcp/citadel.ts](mcp/citadel.ts)) wrapping the REST API, License-authenticated. Two transports:
 **stdio** ([mcp/stdio.ts](mcp/stdio.ts), `citadel-mcp` bin) and **streamable-HTTP**
-(`POST /api/mcp`, Bearer license). Two drivers: the **`/citadel-work` skill** (loop in-session)
-and the **`citadel-agent` CLI** ([bin/citadel-agent.ts](bin/citadel-agent.ts), `--dry-run` for
-loop testing; real mode spawns a fresh Claude per mission via the Agent SDK). See
-[.mcp.json.example](.mcp.json.example).
+(`POST /api/mcp`, Bearer license). Drivers: the **`/citadel-work` skill** (loop in-session) and
+the **`citadel-agent` CLI** ([bin/citadel-agent.ts](bin/citadel-agent.ts)) with `--driver
+claude` (fresh Claude per mission via the Agent SDK), `--driver generic --exec` (any runtime),
+and `--dry-run` (loop testing, no agent). The loop is model-agnostic — see the runtime-neutral
+[Agent Integration Contract](docs/AGENT_INTEGRATION.md). Also [.mcp.json.example](.mcp.json.example).
 
 **P7 — HQ-UI** ✓ **Situation Room** (metric cards, active operation, **review queue** with
 gate-enforced approve/reject, agent roster, blocked & cold-read panels, status distribution,

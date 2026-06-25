@@ -10,6 +10,11 @@ using the `citadel_*` MCP tools. Keep context clean **per mission** (EGM / "Gold
 before starting each new mission, forget the previous mission's details and re-fetch only
 what this mission needs.
 
+> This skill is the **Claude Code driver** of the runtime-neutral
+> [Agent Integration Contract](../../../docs/AGENT_INTEGRATION.md). The loop below is the
+> Claude-flavored phrasing of that contract; any other agent (Antigravity, Hermes, …) follows
+> the same contract via MCP or the `citadel-agent --driver generic` CLI.
+
 ## Prerequisites
 The `citadel` MCP server must be configured (see `.mcp.json`) with `CITADEL_URL` and your
 `CITADEL_LICENSE`. If the tools aren't available, tell the user to configure it and stop.
