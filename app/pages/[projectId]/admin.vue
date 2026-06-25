@@ -34,12 +34,10 @@ const open = ref<Set<string>>(new Set())
 function toggle(id: string) { open.value.has(id) ? open.value.delete(id) : open.value.add(id); open.value = new Set(open.value) }
 function fmt(d: string) { return new Date(d).toISOString().slice(11, 19) + 'Z' }
 
-onMounted(() => {
-  const es = new EventSource(`/api/v1/events?projectId=${projectId.value}`)
-  let t: any = null
-  es.onmessage = () => { clearTimeout(t); t = setTimeout(() => refresh(), 500) }
-  onBeforeUnmount(() => { es.close(); clearTimeout(t) })
-})
+// Live updates via SSE (reconnects on project switch).
+let liveTimer: any = null
+useProjectEvents(projectId, () => { clearTimeout(liveTimer); liveTimer = setTimeout(() => refresh(), 500) })
+onBeforeUnmount(() => clearTimeout(liveTimer))
 
 const actorColor: Record<string, string> = { agent: 'text-accent', human: 'text-accent-tertiary', system: 'text-muted-foreground' }
 </script>

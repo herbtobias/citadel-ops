@@ -40,13 +40,10 @@ function fmt(d: string) {
   return new Date(d).toISOString().slice(0, 19).replace('T', ' ') + ' UTC'
 }
 
-// Live append.
-onMounted(() => {
-  const es = new EventSource(`/api/v1/events?projectId=${projectId.value}`)
-  let timer: any = null
-  es.onmessage = () => { clearTimeout(timer); timer = setTimeout(() => refresh(), 300) }
-  onBeforeUnmount(() => { es.close(); clearTimeout(timer) })
-})
+// Live append (reconnects on project switch).
+let liveTimer: any = null
+useProjectEvents(projectId, () => { clearTimeout(liveTimer); liveTimer = setTimeout(() => refresh(), 300) })
+onBeforeUnmount(() => clearTimeout(liveTimer))
 </script>
 
 <template>

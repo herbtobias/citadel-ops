@@ -27,12 +27,10 @@ const runnerColor: Record<string, string> = {
   running: 'text-accent-tertiary', succeeded: 'text-accent', failed: 'text-destructive', idle: 'text-muted-foreground', cancelled: 'text-muted-foreground',
 }
 
-onMounted(() => {
-  const es = new EventSource(`/api/v1/events?projectId=${projectId.value}`)
-  let t: any = null
-  es.onmessage = () => { clearTimeout(t); t = setTimeout(() => refresh(), 400) }
-  onBeforeUnmount(() => { es.close(); clearTimeout(t) })
-})
+// Live updates via SSE (reconnects on project switch).
+let liveTimer: any = null
+useProjectEvents(projectId, () => { clearTimeout(liveTimer); liveTimer = setTimeout(() => refresh(), 400) })
+onBeforeUnmount(() => clearTimeout(liveTimer))
 </script>
 
 <template>
