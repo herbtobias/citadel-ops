@@ -81,6 +81,13 @@ open spawned children); **FinOps** cost attribution (`finops`: spend by agent/op
 **GDPR export** (`organizations/:id/export`, key material stripped); **Archivist** knowledge
 refresh. *Secret-store / Redis backplane / EU-region remain deferred infra (§19).*
 
+**Ops Console & Admin** ✓ An **Ops Console** (`/:project/console`) to fire any API call by hand
+(method/path/JSON body, as HQ session or with an agent Bearer license; quick-action presets;
+response shows status + `traceId`). An **Admin** page (`/:project/admin`, manager-only) with an
+org-wide metrics rollup, FinOps cost attribution, and a live **Trace Log** that groups every
+agent/HQ request by `traceId` (expand to see the activity + errors that request produced) — backed
+by `GET /api/v1/projects/:id/traces`.
+
 **P11 — Monitoring & Tracing (Echelon)** ✓ **traceId** propagation (W3C `traceparent`/`x-trace-id`
 → AsyncLocalStorage → auto-stamped on The Wire + ErrorEvents; echoed in `x-trace-id` response
 header); **ErrorEvent capture** (Nitro error hook for 5xx + `POST /api/v1/errors` for

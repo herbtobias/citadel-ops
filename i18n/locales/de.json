@@ -7,7 +7,9 @@
     "m-desk": "M Desk",
     "team": "Team",
     "audit": "Audit",
-    "diagnostics": "Diagnose"
+    "diagnostics": "Diagnose",
+    "console": "Konsole",
+    "admin": "Admin"
   },
   "common": {
     "project": "Projekt",
