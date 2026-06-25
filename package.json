@@ -1,0 +1,53 @@
+{
+  "name": "citadel-ops",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "citadel-mcp": "mcp/stdio.ts",
+    "citadel-agent": "bin/citadel-agent.ts"
+  },
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:seed": "tsx server/db/seed.ts",
+    "mcp:stdio": "tsx mcp/stdio.ts",
+    "agent": "tsx bin/citadel-agent.ts"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.108",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@nuxt/fonts": "^0.11.4",
+    "@nuxt/icon": "^1.10.3",
+    "@nuxtjs/i18n": "^10.3.0",
+    "@pinia/nuxt": "^0.11.3",
+    "@vueuse/core": "^13.5.0",
+    "drizzle-orm": "^0.44.2",
+    "nuxt-auth-utils": "^0.5.20",
+    "pinia": "^3.0.3",
+    "postgres": "^3.4.5",
+    "vuedraggable": "^4.1.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@vue/test-utils": "^2.4.10",
+    "drizzle-kit": "^0.31.1",
+    "happy-dom": "^20.9.0",
+    "nuxt": "^4.4.5",
+    "tailwindcss": "^4.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.6"
+  }
+}

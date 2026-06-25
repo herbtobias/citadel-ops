@@ -1,0 +1,23 @@
+# Citadel Ops — local full-stack dependencies.
+# Postgres on 5433 to avoid clashing with other local Postgres instances (5432).
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: citadel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: citadel
+      POSTGRES_PASSWORD: citadel
+      POSTGRES_DB: citadel
+    ports:
+      - "5433:5432"
+    volumes:
+      - citadel-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U citadel -d citadel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  citadel-pgdata:

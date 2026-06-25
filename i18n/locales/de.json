@@ -1,0 +1,15 @@
+{
+  "nav": {
+    "board": "Board",
+    "situation-room": "Lagezentrum",
+    "operations": "Operationen",
+    "q-branch": "Q-Branch",
+    "m-desk": "M Desk",
+    "team": "Team",
+    "audit": "Audit"
+  },
+  "common": {
+    "project": "Projekt",
+    "theme": "Thema"
+  }
+}

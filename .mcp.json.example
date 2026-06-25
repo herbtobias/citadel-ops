@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "citadel": {
+      "command": "npx",
+      "args": ["tsx", "mcp/stdio.ts"],
+      "env": {
+        "CITADEL_URL": "http://localhost:3000",
+        "CITADEL_LICENSE": "lic_paste_your_license_key_here"
+      }
+    }
+  }
+}

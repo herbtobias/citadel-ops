@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+/*
+  Citadel Ops — Multi-Theme Design Foundation (§4 of the concept).
+  Components consume ONLY semantic tokens (bg-background, text-accent, font-heading,
+  border-border, …). Never hardcode colors. A theme = an override layer that sets the
+  raw --ct-* variables under [data-theme]; switching the attribute re-skins everything.
+*/
+
+@theme inline {
+  --color-background: var(--ct-bg);
+  --color-foreground: var(--ct-fg);
+  --color-card: var(--ct-card);
+  --color-muted: var(--ct-muted);
+  --color-muted-foreground: var(--ct-muted-fg);
+  --color-accent: var(--ct-accent);
+  --color-accent-secondary: var(--ct-accent-2);
+  --color-accent-tertiary: var(--ct-accent-3);
+  --color-border: var(--ct-border);
+  --color-destructive: var(--ct-destructive);
+  --color-ring: var(--ct-accent);
+
+  --font-heading: var(--ct-font-heading);
+  --font-body: var(--ct-font-body);
+  --font-mono: var(--ct-font-mono);
+
+  --radius-card: var(--ct-radius);
+}
+
+/* ── Seed theme: DEFCON 5 (default) — editorial poster, flat & legible ── */
+:root,
+[data-theme="defcon-5"] {
+  --ct-bg: #0a0a0a;
+  --ct-fg: #fafafa;
+  --ct-card: #0f0f0f;
+  --ct-muted: #1a1a1a;
+  --ct-muted-fg: #737373;
+  --ct-accent: #ff3d00;
+  --ct-accent-2: #ff3d00;
+  --ct-accent-3: #fafafa;
+  --ct-border: #262626;
+  --ct-destructive: #ff3d00;
+
+  --ct-font-heading: "Inter Tight", system-ui, sans-serif;
+  --ct-font-body: "Inter Tight", system-ui, sans-serif;
+  --ct-font-mono: "JetBrains Mono", monospace;
+  --ct-radius: 0px;
+
+  --ct-glow: none;
+  --ct-glow-sm: none;
+  --ct-uppercase: none;
+  --ct-tracking: -0.01em;
+}
+
+/* ── Seed theme: Cyberwar — neon HUD, glitch dialed back for legibility ── */
+[data-theme="cyberwar"] {
+  --ct-bg: #0a0a0f;
+  --ct-fg: #e8e8ec;
+  --ct-card: #12121a;
+  --ct-muted: #1c1c2e;
+  --ct-muted-fg: #8b93a3;
+  --ct-accent: #00ff88;
+  --ct-accent-2: #ff00ff;
+  --ct-accent-3: #00d4ff;
+  --ct-border: #2a2a3a;
+  --ct-destructive: #ff3366;
+
+  /* Body is a clean sans (was monospace) for readability; mono kept for labels,
+     Orbitron reserved for headings only. */
+  --ct-font-heading: "Orbitron", "Inter Tight", sans-serif;
+  --ct-font-body: "Inter Tight", system-ui, sans-serif;
+  --ct-font-mono: "JetBrains Mono", monospace;
+  --ct-radius: 2px;
+
+  /* Softer glow + tighter tracking than the original glitch treatment. */
+  --ct-glow: 0 0 6px color-mix(in srgb, var(--ct-accent) 30%, transparent);
+  --ct-glow-sm: 0 0 4px color-mix(in srgb, var(--ct-accent) 22%, transparent);
+  --ct-uppercase: uppercase;
+  --ct-tracking: 0.04em;
+}
+
+html, body, #__nuxt {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  letter-spacing: var(--ct-tracking);
+}
+
+/* ── Theme-aware utilities ────────────────────────────────────────────── */
+.ct-glow { box-shadow: var(--ct-glow); }
+.ct-glow-sm { box-shadow: var(--ct-glow-sm); }
+.ct-heading {
+  font-family: var(--font-heading);
+  text-transform: var(--ct-uppercase);
+  letter-spacing: var(--ct-tracking);
+}
+.ct-label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+}
+.ct-card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+/* Chamfered corners — cyberwar only (clip-path). Neutralized in flat themes. */
+[data-theme="cyberwar"] .ct-chamfer {
+  clip-path: polygon(
+    0 8px, 8px 0,
+    calc(100% - 8px) 0, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 0 calc(100% - 8px)
+  );
+}
+
+/* Scanline overlay — cyberwar only. Much subtler now (was rgba .25 / 4px) so it
+   doesn't degrade text legibility. */
+[data-theme="cyberwar"] .ct-scanlines::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.06) 3px,
+    rgba(0, 0, 0, 0.06) 6px
+  );
+}
+
+/* Circuit/grid background accent — cyberwar only. */
+[data-theme="cyberwar"] .ct-grid-bg {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--ct-accent) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--ct-accent) 4%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Mission drag ghost. */
+.task-dragging {
+  transform: rotate(1deg);
+  box-shadow: 0 18px 30px -8px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

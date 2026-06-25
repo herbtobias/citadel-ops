@@ -1,0 +1,62 @@
+# Citadel Ops — common dev workflows. Run with `task <name>` (https://taskfile.dev).
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  up:
+    desc: Start Postgres (docker-compose)
+    cmds:
+      - docker compose up -d
+      - echo "Postgres on localhost:5433"
+
+  down:
+    desc: Stop Postgres
+    cmds:
+      - docker compose down
+
+  nuke:
+    desc: Stop Postgres and delete its volume (DESTRUCTIVE)
+    cmds:
+      - docker compose down -v
+
+  db:generate:
+    desc: Generate SQL migrations from the Drizzle schema
+    cmds:
+      - npm run db:generate
+
+  db:migrate:
+    desc: Apply pending migrations
+    cmds:
+      - npm run db:migrate
+
+  db:push:
+    desc: Push the schema directly (dev only)
+    cmds:
+      - npm run db:push
+
+  db:seed:
+    desc: Seed demo org/project/operation/missions/themes
+    cmds:
+      - npm run db:seed
+
+  bootstrap:
+    desc: One-command full-stack bootstrap (Postgres + migrate + seed)
+    cmds:
+      - task: up
+      - sleep 3
+      - task: db:push
+      - task: db:seed
+
+  dev:
+    desc: Run the Nuxt dev server (HQ + API)
+    cmds:
+      - npm run dev
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - npm run test
