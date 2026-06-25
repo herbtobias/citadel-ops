@@ -1,8 +1,62 @@
 # Citadel Ops
 
-A multi-agent agile-OS for AI agents — a spy-themed "HQ" where local Claude Code agents
-pull **Missions** from **Operations**, work them sequentially, and report back. Humans
-("HQ") watch and control everything from a Jira-like board.
+> **A multi-agent agile-OS for AI agents** — a spy-themed HQ where AI coding agents pull
+> **Missions** from **Operations**, work them in their lane, hand off across disciplines, and
+> report back. You ("HQ") watch and control everything from a Jira-like board.
+
+## The story
+
+It's 03:00 at the Citadel. A **Field-Agent** — a Claude Code session, or any AI agent — reports
+for duty. The **M Desk** issues it a **License**: scoped to one discipline (a **Sector** like
+`BACKEND`), and revocable the instant HQ wants it gone (the kill-switch).
+
+The agent pulls its **Briefing** from **The Archive** — the project's living memory — and claims
+the next ready **Mission** from the active **Operation** (a sprint). No two agents ever grab the
+same one: claiming is atomic. For a design task it writes a **Dossier** (problem, plan, affected
+files), and a *fresh* **Recruit** with zero prior context runs the **Cold Read** — if the Recruit
+can't restate the plan, it goes back to the drawing board. Only then does work begin.
+
+Our agent only does BACKEND, so when the feature needs tests it can't write, it **hands off** a new
+QA Mission — carrying the same Dossier and artifacts forward — to whichever agent works that Sector.
+The QA agent finds a bug and hands a *bugfix* back, linked both ways. To finish anything, an agent
+must clear **Q-Branch's Quality Gates** (e.g. "tests must pass" — proven by an attached test report);
+half-done work simply can't be marked done.
+
+Every move — every claim, hand-off, gate, and verdict — is written to **The Wire**, an append-only,
+hash-chained log you can't quietly rewrite. HQ watches the **Board** move in real time, gets a ping
+when a Mission needs review, and can **pause, redirect, or pull a License** at any moment.
+
+## What it's for
+
+Citadel turns "let an AI agent chew through my backlog" into something you can run **with many
+agents at once** — or one solo agent wearing several hats — safely and accountably:
+
+- **Bounded parallelism.** Each agent is fenced to its Sector; cross-discipline work becomes an
+  explicit, tracked hand-off instead of one agent flailing across the whole codebase.
+- **Shared brain, consistent output.** Every agent on a project reads the *same* Archive, Harness,
+  Quality Gates, and Design Guidelines — so parallel agents stay in-style and in-spec.
+- **Fresh context per Mission (EGM).** Agents reload only what a Mission needs — cheaper runs, no
+  context-rot, and the Cold Read keeps plans genuinely understandable.
+- **Gates that actually block.** Bad or unfinished work can't slip to "done"; the harness runs for real.
+- **Audit + control.** Tamper-evident history, a kill-switch, control orders, and live notifications
+  keep a human firmly in command.
+- **Agent-agnostic.** Claude Code is the reference driver, but any MCP- or REST-speaking agent works
+  (see [docs/AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md)).
+
+### Decoder (codename → what it actually is)
+
+| Codename | Plain meaning |
+|---|---|
+| **Operation** / **Mission** | Sprint / Task |
+| **Field-Agent** · **Recruit** | A worker AI agent · a zero-context agent that runs the Cold Read |
+| **Sector** | The discipline an agent is licensed for (BACKEND, QA, DESIGN, …) |
+| **The M Desk** / **License** | Auth authority / the agent's revocable bearer credential |
+| **The Archive** | Dossiers + knowledge docs — the project's institutional memory (EGM) |
+| **Cold Read** | Zero-context comprehension gate on a Dossier before work may start |
+| **Q-Branch** | Quality Gates, Harness (build/test/lint), and Design Guidelines |
+| **The Wire** | Append-only, hash-chained activity log (tamper-evident audit) |
+| **Hand-off** | Spawning a new Mission in another Sector with shared context |
+| **HQ** | You — the human, via the board |
 
 See the full concept in `~/.claude/plans/neue-app-die-mir-jaunty-shamir.md`.
 
@@ -27,10 +81,11 @@ Open <http://localhost:3000> and sign in as the SuperAdmin **`herb.tobias@gmail.
 > Prefer one command? `docker compose --profile full up --build` (or `task stack`) runs the
 > whole stack — auto-migrated and seeded — in Docker.
 
-### 2. Connect a local Claude Code agent
+### 2. Put an agent to work — the `/citadel-work` skill
 
-A Field-Agent works missions through the **`/citadel-work` skill** plus the **`citadel` MCP
-server**. Two things to set up: make the skill visible, and give the agent a License.
+This is the fast path: a Claude Code session becomes a Field-Agent via the **`/citadel-work`
+skill** plus the **`citadel` MCP server**. The skill is the loop; the MCP server is how it talks
+to HQ; the License is its credential. Set up steps **a–d** once, then just invoke `/citadel-work`.
 
 **a. Make the skill available**
 - *Project scope (already done):* launch Claude Code **inside this repo** —
