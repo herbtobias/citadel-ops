@@ -103,8 +103,8 @@ activity log); Pinia stores wired to `$fetch` — the board now renders from Pos
 **P2 — Organizations, Teams & Permissions** ✓ Session auth (login/register/logout, scrypt);
 permission tiers SuperAdmin / Manager / Contributor / Viewer with **row-level isolation**
 (contributor sees only granted projects, viewer is read-only); email-invite flow (create +
-accept, new or existing user); SuperAdmin org creation; **org & project switchers** (per-user
-state); Team page; login + accept-invite pages; global auth middleware.
+accept, new or existing user); **New Organization dialog** (SuperAdmin) + **New Project dialog**
+(Manager) in the sidebar switchers; Team page; login + accept-invite pages; global auth middleware.
 
 **P3 — License & Multi-Agent (The M Desk / DSPTCH)** ✓ License issue/list/revoke/verify;
 license middleware (`Bearer lic_…`, kill-switch, expiry, heartbeat); **atomic `claim-next`**

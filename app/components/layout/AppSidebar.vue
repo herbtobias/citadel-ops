@@ -3,9 +3,29 @@ const ui = useUiStore()
 const projects = useProjectsStore()
 const orgs = useOrgStore()
 const route = useRoute()
+const { user } = useUserSession()
+
+const isSuperAdmin = computed(() => (user.value as any)?.systemRole === 'super_admin')
+const isManager = computed(() => isSuperAdmin.value || orgs.activeRole === 'manager')
 
 // Projects in the active organization only.
 const orgProjects = computed(() => projects.projects.filter(p => p.orgId === orgs.activeOrgId))
+
+const showNewOrg = ref(false)
+const showNewProject = ref(false)
+
+async function onOrgCreated(orgId: string) {
+  showNewOrg.value = false
+  await orgs.fetchOrgs()
+  orgs.setActiveOrg(orgId)
+  // New org has no projects yet — the sidebar shows "No projects yet" + the + button.
+}
+
+async function onProjectCreated(projectId: string) {
+  await projects.fetchProjects()
+  showNewProject.value = false
+  await onSwitchProject(projectId)
+}
 
 const nav = [
   { key: 'board', icon: 'lucide:columns-3', to: (id: string) => `/${id}/board` },
@@ -53,7 +73,12 @@ async function onSwitchOrg(id: string) {
 
     <div v-if="ui.sidebarOpen" class="space-y-3 border-b border-border p-3">
       <div v-if="orgs.orgs.length">
-        <p class="ct-label mb-2 text-muted-foreground">Organization</p>
+        <div class="mb-2 flex items-center justify-between">
+          <p class="ct-label text-muted-foreground">Organization</p>
+          <button v-if="isSuperAdmin" class="ct-label text-muted-foreground hover:text-accent" title="New organization" @click="showNewOrg = true">
+            <Icon name="lucide:plus" class="size-4" />
+          </button>
+        </div>
         <select
           :value="orgs.activeOrgId"
           class="w-full rounded-[var(--radius-card)] border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:border-accent focus:outline-none"
@@ -65,8 +90,14 @@ async function onSwitchOrg(id: string) {
         </select>
       </div>
       <div>
-        <p class="ct-label mb-2 text-muted-foreground">Project</p>
+        <div class="mb-2 flex items-center justify-between">
+          <p class="ct-label text-muted-foreground">Project</p>
+          <button v-if="isManager" class="ct-label text-muted-foreground hover:text-accent" title="New project" @click="showNewProject = true">
+            <Icon name="lucide:plus" class="size-4" />
+          </button>
+        </div>
         <select
+          v-if="orgProjects.length"
           :value="pid"
           class="w-full rounded-[var(--radius-card)] border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:border-accent focus:outline-none"
           @change="onSwitchProject(($event.target as HTMLSelectElement).value)"
@@ -75,8 +106,12 @@ async function onSwitchOrg(id: string) {
             {{ p.key }} · {{ p.name }}
           </option>
         </select>
+        <p v-else class="ct-label text-muted-foreground">No projects yet</p>
       </div>
     </div>
+
+    <NewOrgModal :open="showNewOrg" @close="showNewOrg = false" @created="onOrgCreated" />
+    <NewProjectModal :open="showNewProject" :org-id="orgs.activeOrgId" @close="showNewProject = false" @created="onProjectCreated" />
 
     <!-- Nav -->
     <nav class="flex-1 space-y-1 p-2">
