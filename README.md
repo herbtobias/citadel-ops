@@ -135,9 +135,11 @@ npm run test:integration   # + DB-backed tests against localhost:5433 (seed firs
 ```
 
 Unit tests cover the deterministic core (state-machine, reference inverse map, password/license
-crypto, trace-id parsing, rate limiter, validation schemas). Integration tests self-skip unless
-`TEST_DATABASE_URL` is set, and verify The Wire hash-chain + reference bidirectionality against a
-seeded DB.
+crypto, trace-id parsing, rate limiter, validation schemas), the **MCP server** (the 18 `citadel_*`
+tools + their input schemas, over an in-memory transport) and the **`/citadel-work` skill**
+(frontmatter + a drift check that every `citadel_*` tool it mentions is actually registered, plus
+`.mcp.json.example` validity). Integration tests self-skip unless `TEST_DATABASE_URL` is set, and
+verify The Wire hash-chain + reference bidirectionality against a seeded DB.
 
 ### End-to-end behaviour (HTTP scenario + demo)
 
@@ -147,7 +149,7 @@ M Desk, EGM (dossier + Cold Read), DSPTCH claim, both Quality Gates, hand-off ch
 
 ```bash
 npm run dev                    # terminal 1 — server on :3000
-npm run test:http              # terminal 2 — runs it as a Vitest test (re-seeds first)
+npm run test:http              # terminal 2 — HTTP scenario + MCP-tools-vs-REST (re-seeds first)
 npm run demo                   # …or as a narrated transcript (re-seeds, prints ✓/✗ per step)
 ```
 
