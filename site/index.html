@@ -148,8 +148,27 @@
     .shotbar i.live{background:var(--accent); opacity:1; box-shadow:var(--glow-strong)}
     .shotbar .label{margin-left:8px}
     .shotframe img{display:block; width:100%; height:auto}
-    .gallery{display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:22px; margin-top:22px}
-    .gitem figcaption{margin-top:11px}
+
+    /* pinned horizontal-scroll showcase: panels slide right→left as you scroll down */
+    .hscroll{position:relative; border-bottom:1px solid var(--border)}
+    .hsticky{position:sticky; top:0; height:100vh; overflow:hidden; display:flex; align-items:center}
+    .htrack{display:flex; will-change:transform}
+    .hpanel{flex:0 0 100vw; height:100vh; display:flex; align-items:center; gap:5vw; padding:0 7vw}
+    .hpanel .copy{flex:0 0 320px; max-width:340px}
+    .hpanel .copy .num{font-family:var(--font-mono); color:var(--accent); font-size:.72rem; letter-spacing:.14em; display:block; margin-bottom:16px}
+    .hpanel .copy h3{font-size:clamp(1.5rem,2.6vw,2.1rem); margin-bottom:16px}
+    .hpanel .copy p{color:var(--muted-fg); font-size:1.02rem; margin:0; line-height:1.65}
+    .hpanel .frame{flex:1; min-width:0}
+    .hprogress{position:absolute; left:7vw; right:7vw; bottom:36px; height:2px; background:var(--border)}
+    .hprogress span{position:absolute; inset:0 auto 0 0; width:0; background:var(--accent); box-shadow:var(--glow)}
+    @media(max-width:860px){
+      .hscroll{height:auto !important}
+      .hsticky{position:static; height:auto; display:block; overflow:visible; padding:8px 24px 48px}
+      .htrack{flex-direction:column; transform:none !important; gap:46px}
+      .hpanel{flex-direction:column; width:100%; height:auto; padding:0; gap:16px; align-items:stretch}
+      .hpanel .copy{flex:none; max-width:none}
+      .hprogress{display:none}
+    }
 
     footer{padding:54px 0; color:var(--muted-fg)}
     footer .bar2{display:flex; flex-wrap:wrap; gap:16px; align-items:center}
@@ -194,23 +213,63 @@
     </div>
   </div>
 
-  <!-- SCREENS -->
-  <section id="screens">
+  <!-- SCREENS intro -->
+  <section id="screens" style="border-bottom:none; padding-bottom:24px">
     <div class="wrap">
       <p class="label eyebrow reveal" data-i18n="screens.eyebrow">Inside HQ</p>
       <h2 class="reveal" data-i18n="screens.h2">See it in action</h2>
-      <figure class="shotframe reveal" style="margin-bottom:26px">
-        <div class="shotbar"><i></i><i></i><i class="live"></i><span class="label" data-i18n="shot.board">The Board — Missions move live as agents work</span></div>
-        <img src="img/board-defcon.webp" alt="Citadel Ops — the Kanban board" width="1600" height="1000" />
-      </figure>
-      <div class="gallery reveal">
-        <figure class="gitem"><div class="shotframe"><img src="img/situation-room.webp" alt="Situation Room" width="1600" height="1000" /></div><figcaption class="label" data-i18n="shot.sr">Situation Room — metrics, review queue, agent roster</figcaption></figure>
-        <figure class="gitem"><div class="shotframe"><img src="img/m-desk.webp" alt="The M Desk" width="1600" height="1000" /></div><figcaption class="label" data-i18n="shot.mdesk">M Desk — issue &amp; revoke Licenses (the kill-switch)</figcaption></figure>
-        <figure class="gitem"><div class="shotframe"><img src="img/diagnostics.webp" alt="Diagnostics — Echelon" width="1600" height="758" /></div><figcaption class="label" data-i18n="shot.diag">Diagnostics — health &amp; tamper-evident audit (Echelon)</figcaption></figure>
-        <figure class="gitem"><div class="shotframe"><img src="img/board-cyberwar.webp" alt="The board in the Cyberwar theme" width="1600" height="1000" /></div><figcaption class="label" data-i18n="shot.cyber">Same board, Cyberwar theme — token-based theming</figcaption></figure>
-      </div>
+      <p class="reveal muted" style="max-width:680px;margin-top:-12px;font-size:1.05rem" data-i18n="screens.lead">Five views into how HQ stays in command. Keep scrolling — the screens move sideways as you go.</p>
     </div>
   </section>
+
+  <!-- pinned horizontal-scroll showcase -->
+  <div class="hscroll" id="hscroll" style="height:440vh">
+    <div class="hsticky">
+      <div class="htrack" id="htrack">
+        <div class="hpanel">
+          <div class="copy">
+            <span class="num">01 / 05</span>
+            <h3 data-i18n="sc1.t">The Board</h3>
+            <p data-i18n="sc1.d">Every Mission, Sector and reference at a glance. Cards move on their own as agents claim, work and complete — or drag them yourself to re-plan. Reference lines trace how a feature, its tests and its bugfix connect.</p>
+          </div>
+          <div class="frame"><figure class="shotframe"><div class="shotbar"><i></i><i></i><i class="live"></i><span class="label">BOARD · LIVE</span></div><img src="img/board-defcon.webp" alt="The board" width="1600" height="1000" /></figure></div>
+        </div>
+        <div class="hpanel">
+          <div class="copy">
+            <span class="num">02 / 05</span>
+            <h3 data-i18n="sc2.t">Situation Room</h3>
+            <p data-i18n="sc2.d">Your command view: cycle time, rework, token spend, the live review queue and the agent roster — who's active, on what, in which Sector. Approve or reject a Mission without leaving the page.</p>
+          </div>
+          <div class="frame"><figure class="shotframe"><div class="shotbar"><i></i><i></i><i></i><span class="label">SITUATION ROOM</span></div><img src="img/situation-room.webp" alt="Situation Room" width="1600" height="1000" /></figure></div>
+        </div>
+        <div class="hpanel">
+          <div class="copy">
+            <span class="num">03 / 05</span>
+            <h3 data-i18n="sc3.t">The M Desk</h3>
+            <p data-i18n="sc3.d">Mint a scoped License for an agent in seconds — pick its Sectors, hand over the key. Something looks off? One click revokes it, and the kill-switch lands on the agent's very next call.</p>
+          </div>
+          <div class="frame"><figure class="shotframe"><div class="shotbar"><i></i><i></i><i></i><span class="label">M DESK</span></div><img src="img/m-desk.webp" alt="The M Desk" width="1600" height="1000" /></figure></div>
+        </div>
+        <div class="hpanel">
+          <div class="copy">
+            <span class="num">04 / 05</span>
+            <h3 data-i18n="sc4.t">Diagnostics — Echelon</h3>
+            <p data-i18n="sc4.d">End-to-end traceability. System health, the tamper-evident hash chain of The Wire, every agent run and any error — all correlated by traceId, so you can replay exactly what happened and where it broke.</p>
+          </div>
+          <div class="frame"><figure class="shotframe"><div class="shotbar"><i></i><i></i><i></i><span class="label">DIAGNOSTICS</span></div><img src="img/diagnostics.webp" alt="Diagnostics — Echelon" width="1600" height="758" /></figure></div>
+        </div>
+        <div class="hpanel">
+          <div class="copy">
+            <span class="num">05 / 05</span>
+            <h3 data-i18n="sc5.t">Make it yours</h3>
+            <p data-i18n="sc5.d">The whole UI runs on semantic design tokens, so a theme is just an override layer. Ship DEFCON 5's editorial poster look or Cyberwar's neon HUD — or author your own — and every agent builds in-style for it.</p>
+          </div>
+          <div class="frame"><figure class="shotframe"><div class="shotbar"><i></i><i></i><i></i><span class="label">BOARD · CYBERWAR</span></div><img src="img/board-cyberwar.webp" alt="The board in the Cyberwar theme" width="1600" height="1000" /></figure></div>
+        </div>
+      </div>
+      <div class="hprogress"><span id="hbar"></span></div>
+    </div>
+  </div>
 
   <!-- STORY -->
   <section id="story" class="story">
@@ -379,11 +438,17 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       'doc.desc': 'Ein spionage-thematisiertes HQ, in dem KI-Agenten Missionen ziehen, sie in ihrem Sektor bearbeiten, disziplinübergreifend übergeben und zurückmelden — während du alles von einem Kanban-Board aus steuerst.',
       'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.how': 'Ablauf', 'nav.start': 'Loslegen',
       'screens.eyebrow': 'Im HQ', 'screens.h2': 'So sieht es aus',
-      'shot.board': 'Das Board — Missionen wandern live, während Agenten arbeiten',
-      'shot.sr': 'Lagezentrum — Metriken, Review-Queue, Agenten-Roster',
-      'shot.mdesk': 'M Desk — Licenses ausstellen & widerrufen (der Kill-Switch)',
-      'shot.diag': 'Diagnose — Health & manipulationssicheres Audit (Echelon)',
-      'shot.cyber': 'Dasselbe Board, Cyberwar-Theme — Token-basiertes Theming',
+      'screens.lead': 'Fünf Blicke darauf, wie HQ die Kontrolle behält. Scroll weiter — die Screens wandern seitwärts mit.',
+      'sc1.t': 'Das Board',
+      'sc1.d': 'Jede Mission, jeder Sektor, jede Referenz auf einen Blick. Karten wandern von allein, während Agenten claimen, arbeiten und abschließen — oder du planst per Drag selbst um. Referenzlinien zeigen, wie Feature, Tests und Bugfix zusammenhängen.',
+      'sc2.t': 'Lagezentrum',
+      'sc2.d': 'Deine Kommandosicht: Cycle-Time, Rework, Token-Verbrauch, die Live-Review-Queue und das Agenten-Roster — wer aktiv ist, woran, in welchem Sektor. Missionen freigeben oder ablehnen, ohne die Seite zu verlassen.',
+      'sc3.t': 'Das M Desk',
+      'sc3.d': 'In Sekunden eine scoped License ausstellen — Sektoren wählen, Key übergeben. Etwas stimmt nicht? Ein Klick widerruft sie, und der Kill-Switch greift beim nächsten Call des Agenten.',
+      'sc4.t': 'Diagnose — Echelon',
+      'sc4.d': 'Lückenlose Nachvollziehbarkeit. System-Health, die manipulationssichere Hash-Kette von The Wire, jeder Agenten-Lauf und jeder Fehler — alles per traceId korreliert, sodass du exakt nachspielst, was passierte und wo es brach.',
+      'sc5.t': 'Mach es zu deinem',
+      'sc5.d': 'Die gesamte Oberfläche läuft auf semantischen Design-Tokens — ein Theme ist nur eine Override-Schicht. DEFCON 5 im Editorial-Look oder Cyberwar als Neon-HUD — oder dein eigenes — und jeder Agent baut im passenden Stil.',
       'hero.pill': 'Multi-Agent-Agile-OS · Spionage-HQ',
       'hero.h1': 'Ein HQ für deine<br><span class="accent">KI-Agenten.</span>',
       'hero.lede': 'Citadel Ops ist eine Missionszentrale, in der KI-Coding-Agenten <strong>Missionen</strong> aus <strong>Operationen</strong> ziehen, sie in ihrer Spur bearbeiten, disziplinübergreifend übergeben und zurückmelden — während du („HQ") alles von einem Kanban-Board aus beobachtest und steuerst.',
@@ -469,6 +534,30 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       initial = saved || ((navigator.language || '').toLowerCase().startsWith('de') ? 'de' : 'en');
     } catch (e) {}
     setLang(initial);
+
+    // ── Pinned horizontal scroll: translate the track right→left with vertical scroll ──
+    (function () {
+      const wrap = document.getElementById('hscroll');
+      const track = document.getElementById('htrack');
+      const bar = document.getElementById('hbar');
+      if (!wrap || !track) return;
+      const active = () => window.matchMedia('(min-width: 861px)').matches
+        && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let ticking = false;
+      function update() {
+        ticking = false;
+        if (!active()) { track.style.transform = ''; if (bar) bar.style.width = ''; return; }
+        const total = wrap.offsetHeight - window.innerHeight;
+        const passed = Math.min(Math.max(-wrap.getBoundingClientRect().top, 0), total);
+        const p = total > 0 ? passed / total : 0;
+        const maxX = track.scrollWidth - window.innerWidth;
+        track.style.transform = 'translate3d(' + (-p * maxX) + 'px,0,0)';
+        if (bar) bar.style.width = (p * 100) + '%';
+      }
+      window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+      window.addEventListener('resize', update);
+      update();
+    })();
 
     // ── Subtle reveal on scroll ──
     const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.12 });

@@ -316,7 +316,7 @@ Citadel Ops is **source-available** under the [Business Source License 1.1](LICE
 - **Change Date:** on **2030-06-25** (or four years after each version's release, whichever is
   earlier) the code automatically converts to the **Apache License 2.0**.
 - Need terms beyond the grant (e.g. a competing commercial offering)? A commercial license is
-  available — contact **tobias.herb@actinate.com**.
+  available — contact **tobias@zirmail.de**.
 
 BSL 1.1 is *not* an OSI "open source" license, but the code is public and becomes Apache-2.0 over
 time. All third-party dependencies are permissively licensed (MIT/ISC/BSD/Apache); their notices
