@@ -42,6 +42,27 @@ async function markAllRead() {
 }
 onMounted(loadNotifs)
 watch(() => route.fullPath, loadNotifs)
+
+// ── Live intervention alerts ──
+// The bell + a toast surface actionable agent events in real time, on any page.
+const { push } = useToasts()
+const TOAST_FOR: Record<string, { tone: 'info' | 'accent' | 'destructive', title: string }> = {
+  submitted_for_review: { tone: 'accent', title: 'Mission needs review' },
+  blocked: { tone: 'destructive', title: 'Mission blocked' },
+  lease_expired: { tone: 'destructive', title: 'Lease expired — mission re-queued' },
+  handed_off: { tone: 'info', title: 'Mission handed off' },
+}
+let notifTimer: any = null
+useProjectEvents(pid, (e) => {
+  const spec = TOAST_FOR[e.type]
+  if (!spec) return
+  // Toast is instant from the event; the badge re-pulls from the DB (the notification
+  // is written async by Leiter) shortly after, so it stays authoritative.
+  push({ tone: spec.tone, title: spec.title, body: e.message || undefined })
+  clearTimeout(notifTimer)
+  notifTimer = setTimeout(loadNotifs, 400)
+})
+onBeforeUnmount(() => clearTimeout(notifTimer))
 </script>
 
 <template>

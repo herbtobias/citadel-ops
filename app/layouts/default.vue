@@ -21,5 +21,6 @@ await useAsyncData(
         <slot />
       </main>
     </div>
+    <AppToaster />
   </div>
 </template>
