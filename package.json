@@ -2,6 +2,8 @@
   "name": "citadel-ops",
   "private": true,
   "type": "module",
+  "license": "BUSL-1.1",
+  "author": "Tobias Herb",
   "engines": {
     "node": ">=22"
   },
