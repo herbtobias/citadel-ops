@@ -1,8 +1,34 @@
 <script setup lang="ts">
 import type { Mission } from '~/types'
 
-defineProps<{ mission: Mission | null }>()
+const props = defineProps<{ mission: Mission | null }>()
 defineEmits<{ close: [], 'open-key': [key: string] }>()
+
+interface Dossier { id: string, title: string, status: string, sections: Record<string, any>, affectedFiles: string[], coldRead: any }
+interface Entry { id: string, event: string, fromStatus: string | null, toStatus: string | null, message: string | null, actor: string, createdAt: string }
+
+const dossier = ref<Dossier | null>(null)
+const activity = ref<Entry[]>([])
+
+// Load dossier + activity timeline whenever a mission is opened.
+watch(() => props.mission?.id, async (id) => {
+  dossier.value = null
+  activity.value = []
+  if (!id) return
+  const [d, a] = await Promise.all([
+    $fetch<Dossier | null>(`/api/v1/missions/${id}/dossier`).catch(() => null),
+    $fetch<Entry[]>(`/api/v1/missions/${id}/activity`).catch(() => []),
+  ])
+  dossier.value = d
+  activity.value = a
+}, { immediate: true })
+
+const sectionLabels: Record<string, string> = {
+  problem: 'Problem', background: 'Background', technicalPlan: 'Technical Plan',
+  rejectedAlternatives: 'Rejected Alternatives', implementationSteps: 'Implementation Steps',
+  acceptanceCriteria: 'Acceptance Criteria', risks: 'Risks', handoffNotes: 'Hand-off Notes', references: 'References',
+}
+function fmt(d: string) { return new Date(d).toISOString().slice(0, 16).replace('T', ' ') + ' UTC' }
 </script>
 
 <template>
@@ -59,6 +85,38 @@ defineEmits<{ close: [], 'open-key': [key: string] }>()
             <ul class="space-y-1 text-sm">
               <li v-for="a in mission.artifacts" :key="a.id" class="flex items-center gap-2">
                 <Icon name="lucide:git-pull-request" class="size-4 text-accent" />{{ a.label }}
+              </li>
+            </ul>
+          </section>
+
+          <!-- Dossier (The Archive) -->
+          <section v-if="dossier" class="mb-5">
+            <p class="ct-label mb-1 text-muted-foreground">
+              Dossier · <span :class="dossier.status === 'cold_read_passed' ? 'text-accent' : dossier.status === 'cold_read_failed' ? 'text-destructive' : 'text-accent-tertiary'">{{ dossier.status }}</span>
+            </p>
+            <p class="mb-2 text-sm font-medium">{{ dossier.title }}</p>
+            <div v-for="(val, key) in dossier.sections" :key="key" class="mb-2">
+              <p class="ct-label text-muted-foreground">{{ sectionLabels[key] ?? key }}</p>
+              <p v-if="typeof val === 'string'" class="text-sm leading-relaxed">{{ val }}</p>
+              <p v-else class="text-sm leading-relaxed">{{ Array.isArray(val) ? val.join(', ') : val }}</p>
+            </div>
+            <div v-if="dossier.coldRead" class="mt-2 rounded-[var(--radius-card)] border border-border p-2">
+              <p class="ct-label text-muted-foreground">Cold Read: <span :class="dossier.coldRead.verdict === 'pass' ? 'text-accent' : 'text-destructive'">{{ dossier.coldRead.verdict }}</span></p>
+              <p v-if="dossier.coldRead.comprehensionNotes" class="text-sm text-muted-foreground">{{ dossier.coldRead.comprehensionNotes }}</p>
+            </div>
+          </section>
+
+          <!-- Activity timeline (The Wire) -->
+          <section v-if="activity.length" class="mb-5">
+            <p class="ct-label mb-1 text-muted-foreground">Activity</p>
+            <ul class="space-y-1.5">
+              <li v-for="e in activity" :key="e.id" class="flex gap-2 text-xs">
+                <span class="ct-label shrink-0 text-muted-foreground">{{ fmt(e.createdAt) }}</span>
+                <span>
+                  <span class="text-accent-tertiary">{{ e.actor }}</span>
+                  <span class="ml-1 text-foreground">{{ e.event }}</span>
+                  <span v-if="e.message" class="ml-1 text-muted-foreground">— {{ e.message }}</span>
+                </span>
               </li>
             </ul>
           </section>

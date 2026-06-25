@@ -56,6 +56,13 @@ and the **`citadel-agent` CLI** ([bin/citadel-agent.ts](bin/citadel-agent.ts), `
 loop testing; real mode spawns a fresh Claude per mission via the Agent SDK). See
 [.mcp.json.example](.mcp.json.example).
 
+**P7 — HQ-UI** ✓ **Situation Room** (metric cards, active operation, **review queue** with
+gate-enforced approve/reject, agent roster, blocked & cold-read panels, status distribution,
+**live via SSE**); **Operations** (plan + close); **Control & Audit** (The Wire timeline +
+broadcast orders); enriched **Dossier drawer** (sections + Cold Read verdict + activity timeline +
+clickable references). Supporting endpoints: project/mission activity, metrics, operations
+create/close. (M Desk, Team, Q-Branch shipped in P3/P2/P5.)
+
 ### Local agent mode
 ```bash
 cp .mcp.json.example .mcp.json   # paste a license from The M Desk

@@ -215,6 +215,8 @@ async function seed() {
   await db.insert(artifacts).values([
     { missionId: byKey['WEB-42'].id, kind: 'pr', url: '#', label: 'PR #128' },
     { missionId: byKey['WEB-47'].id, kind: 'pr', url: '#', label: 'PR #131' },
+    // Harness report so WEB-47 (in_review) can pass the done-gate when approved.
+    { missionId: byKey['WEB-47'].id, kind: 'test_report', url: '#', label: 'jest: 18 passed' },
   ])
 
   // ── References (typed cross-links) ──
