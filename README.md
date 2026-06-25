@@ -68,6 +68,12 @@ project members on review_requested / blocked / lease_expired / handed_off; list
 topbar bell with unread badge + dropdown); outbound **webhooks** (HMAC-signed POST with one retry,
 delivery log; project CRUD). A Nitro plugin (Leiter) subscribes to the event bus and dispatches both.
 
+**P9 — Remote/Cloud Runner** ◑ *Deferred by design (§19).* The runner **contract** is documented
+in [RUNNER.md](RUNNER.md) and the building blocks are in place: Deployment lifecycle (opened on
+claim, closed on complete; runner status + token/cost fields) observable via
+`GET /api/v1/projects/:id/deployments`, repository binding, leases+watchdog, kill-switch, and the
+`citadel-agent` driver. Container orchestration/autoscaling/egress isolation remain out of scope.
+
 ### Local agent mode
 ```bash
 cp .mcp.json.example .mcp.json   # paste a license from The M Desk
