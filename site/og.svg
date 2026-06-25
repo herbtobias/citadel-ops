@@ -1,0 +1,41 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#ff3d00" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0a0a" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0a0a0a" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect width="1200" height="630" fill="url(#fade)"/>
+  <rect x="0" y="0" width="1200" height="6" fill="#ff3d00"/>
+
+  <!-- brand -->
+  <g transform="translate(80,78)">
+    <path d="M14 30s12-6 12-15V7L14 2 2 7v8c0 9 12 15 12 15z" fill="none" stroke="#ff3d00" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M14 30V2" fill="none" stroke="#ff3d00" stroke-width="2.4"/>
+    <text x="46" y="22" font-family="'Helvetica Neue',Arial,sans-serif" font-weight="800" font-size="24" letter-spacing="5" fill="#fafafa">CITADEL OPS</text>
+  </g>
+
+  <!-- headline -->
+  <text x="78" y="300" font-family="'Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="118" letter-spacing="-4" fill="#fafafa">An HQ for your</text>
+  <text x="78" y="418" font-family="'Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="118" letter-spacing="-4" fill="#ff3d00">AI agents.</text>
+
+  <!-- subline -->
+  <text x="80" y="495" font-family="'Helvetica Neue',Arial,sans-serif" font-weight="500" font-size="29" fill="#b3b3b3">A multi-agent agile-OS — Missions, Operations, hand-offs,</text>
+  <text x="80" y="535" font-family="'Helvetica Neue',Arial,sans-serif" font-weight="500" font-size="29" fill="#b3b3b3">Quality Gates, a tamper-evident audit &amp; a kill-switch.</text>
+
+  <!-- footer tag -->
+  <text x="80" y="592" font-family="'JetBrains Mono','Courier New',monospace" font-weight="500" font-size="17" letter-spacing="4" fill="#737373">GITHUB.COM/HERBTOBIAS/CITADEL-OPS</text>
+
+  <!-- accent corner mark -->
+  <g transform="translate(1040,470)" opacity="0.9">
+    <circle cx="40" cy="40" r="40" fill="none" stroke="#ff3d00" stroke-width="2"/>
+    <path d="M40 8v64M8 40h64" stroke="#ff3d00" stroke-width="2" stroke-opacity="0.5"/>
+    <circle cx="40" cy="40" r="6" fill="#ff3d00"/>
+  </g>
+</svg>
