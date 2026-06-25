@@ -5,12 +5,13 @@ import { createHash } from 'node:crypto'
 import { eq, inArray } from 'drizzle-orm'
 import { db, schema } from './index'
 import { hashPassword } from '../utils/password'
+import { logActivity } from '../utils/activity'
 import type { ProjectSettings } from './schema'
 
 const {
   users, organizations, orgMemberships, projectMemberships, projects, themes, designGuidelines,
   qualityGates, harnessDefs, operations, missions, references, licenses,
-  artifacts, dossiers, activityLog, knowledgeDocs,
+  artifacts, dossiers, knowledgeDocs,
 } = schema
 
 // All seeded users share this dev password.
@@ -232,12 +233,15 @@ async function seed() {
   ])
 
   // ── Activity log seed (genesis entries) ──
-  await db.insert(activityLog).values([
-    { projectId: web.id, missionId: byKey['WEB-40'].id, actorType: 'agent', actorLicenseId: lic006.id,
-      event: 'completed', toStatus: 'done', message: 'Design dossier accepted via Cold Read' },
-    { projectId: web.id, missionId: byKey['WEB-42'].id, actorType: 'agent', actorLicenseId: lic007.id,
-      event: 'claimed', toStatus: 'in_progress', message: 'Claimed pricing API mission' },
-  ])
+  // Use logActivity so The Wire's hash chain is valid from the start (tamper-evidence).
+  await logActivity({
+    projectId: web.id, missionId: byKey['WEB-40'].id, actorType: 'agent', actorLicenseId: lic006.id,
+    event: 'completed', toStatus: 'done', message: 'Design dossier accepted via Cold Read',
+  })
+  await logActivity({
+    projectId: web.id, missionId: byKey['WEB-42'].id, actorType: 'agent', actorLicenseId: lic007.id,
+    event: 'claimed', toStatus: 'in_progress', message: 'Claimed pricing API mission',
+  })
 
   console.log(`✓ Seeded org=${org.slug} projects=[WEB,APP] missions=${rows.length} licenses=3 users=4`)
   console.log(`  logins (password "${DEV_PASSWORD}"):`)

@@ -74,6 +74,13 @@ claim, closed on complete; runner status + token/cost fields) observable via
 `GET /api/v1/projects/:id/deployments`, repository binding, leases+watchdog, kill-switch, and the
 `citadel-agent` driver. Container orchestration/autoscaling/egress isolation remain out of scope.
 
+**P10 — Hardening** ✓ Per-license **rate limiting** (429 on exceed; per-project `callsPerMin`);
+**tamper-evidence** verify endpoint (`audit-verify` walks the hash chain, flags the broken entry);
+**license rotation** (new key, old → 401); **cancel-cascade** (cancelling a mission cancels its
+open spawned children); **FinOps** cost attribution (`finops`: spend by agent/operation + quota);
+**GDPR export** (`organizations/:id/export`, key material stripped); **Archivist** knowledge
+refresh. *Secret-store / Redis backplane / EU-region remain deferred infra (§19).*
+
 ### Local agent mode
 ```bash
 cp .mcp.json.example .mcp.json   # paste a license from The M Desk

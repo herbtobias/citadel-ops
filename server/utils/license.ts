@@ -5,6 +5,7 @@ import type { H3Event } from 'h3'
 import { createHash, randomBytes } from 'node:crypto'
 import { and, eq, lt } from 'drizzle-orm'
 import { db, schema } from '../db'
+import { enforceRateLimit, getProjectRateLimit } from './ratelimit'
 
 const { licenses, missions } = schema
 
@@ -41,6 +42,9 @@ export async function requireLicense(event: H3Event): Promise<License> {
     await db.update(licenses).set({ status: 'expired' }).where(eq(licenses.id, lic.id))
     throw createError({ statusCode: 401, statusMessage: 'license_expired' })
   }
+
+  // Per-license rate limit (§21).
+  enforceRateLimit(lic.id, await getProjectRateLimit(lic.projectId))
 
   await db.update(licenses).set({ lastSeenAt: new Date() }).where(eq(licenses.id, lic.id))
   return lic

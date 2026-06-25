@@ -1,7 +1,7 @@
 // Citadel Ops — The Wire. Append-only, hash-chained activity log (§8/§24).
 // Each entry's hash chains the previous entry's hash → tamper-evident.
 import { createHash } from 'node:crypto'
-import { desc, eq } from 'drizzle-orm'
+import { asc, desc, eq } from 'drizzle-orm'
 import { db, schema } from '../db'
 import { publishEvent } from './events'
 
@@ -63,4 +63,26 @@ export async function logActivity(input: LogInput) {
     traceId: input.traceId ?? null,
   })
   return row
+}
+
+// Tamper-evidence: walk the project's chain in order, recompute each hash and check
+// linkage. Returns the first broken entry if any. §24.
+export async function verifyProjectChain(projectId: string) {
+  const rows = await db.select().from(activityLog)
+    .where(eq(activityLog.projectId, projectId))
+    .orderBy(asc(activityLog.createdAt))
+
+  let prevHash: string | null = null
+  for (const r of rows) {
+    const expected = computeHash(prevHash, {
+      projectId: r.projectId, missionId: r.missionId, event: r.event,
+      fromStatus: r.fromStatus, toStatus: r.toStatus, message: r.message,
+      actorType: r.actorType, actorLicenseId: r.actorLicenseId, actorUserId: r.actorUserId,
+    })
+    if (r.prevHash !== prevHash || r.hash !== expected) {
+      return { intact: false, entries: rows.length, brokenAt: { id: r.id, event: r.event, createdAt: r.createdAt } }
+    }
+    prevHash = r.hash
+  }
+  return { intact: true, entries: rows.length }
 }
