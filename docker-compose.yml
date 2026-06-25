@@ -19,5 +19,24 @@ services:
       timeout: 5s
       retries: 10
 
+  # Full-stack app (HQ + API + MCP). Opt-in via the "full" profile so plain
+  # `docker compose up` stays Postgres-only for local `npm run dev`.
+  #   docker compose --profile full up --build
+  app:
+    profiles: ["full"]
+    build: .
+    container_name: citadel-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # The app talks to the postgres service inside the compose network.
+      DATABASE_URL: postgres://citadel:citadel@postgres:5432/citadel
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:-dev-session-password-change-me-min-32-chars}
+      SEED_ON_START: "1" # run migrations + seed on first boot
+    ports:
+      - "3000:3000"
+
 volumes:
   citadel-pgdata:

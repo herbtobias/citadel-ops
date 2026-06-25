@@ -111,15 +111,41 @@ Postgres + Drizzle, Zod, nuxt-auth-utils.
 
 ## Themes
 
-Two seed themes, switchable at runtime (Topbar): `cyberpunk-glitch` (default) and
-`bold-typography`. Components consume only semantic tokens (`bg-background`, `text-accent`,
-`font-heading`, …) so a theme = a CSS-variable override layer under `[data-theme]`.
+Two seed themes, switchable at runtime (Topbar): **`defcon-5`** (default — editorial poster,
+flat, legible) and **`cyberwar`** (neon HUD, glitch dialed back). Components consume only semantic
+tokens (`bg-background`, `text-accent`, `font-heading`, …) so a theme = a CSS-variable override
+layer under `[data-theme]`.
 
 ## Develop
 
 ```bash
 npm install
-npm run dev   # http://localhost:3000
+docker compose up -d        # Postgres on :5433
+npm run db:push && npm run db:seed   # schema + demo data  (or: task bootstrap)
+npm run dev                 # http://localhost:3000
 ```
 
 > Requires Node ≥ 22.
+
+## Tests
+
+```bash
+npm test               # fast unit suite (no infrastructure)
+npm run test:integration   # + DB-backed tests against localhost:5433 (seed first)
+```
+
+Unit tests cover the deterministic core (state-machine, reference inverse map, password/license
+crypto, trace-id parsing, rate limiter, validation schemas). Integration tests self-skip unless
+`TEST_DATABASE_URL` is set, and verify The Wire hash-chain + reference bidirectionality against a
+seeded DB. (Concurrency, tenancy, gates, kill-switch, and the agent loop are exercised end-to-end
+in the development workflow.)
+
+## Run the full stack in Docker
+
+Plain `docker compose up` is Postgres-only (for local `npm run dev`). The whole app —
+auto-migrated and seeded — runs under the `full` profile:
+
+```bash
+docker compose --profile full up --build   # or: task stack
+# → HQ + API + MCP on http://localhost:3000
+```

@@ -6,6 +6,7 @@ import { eq, inArray } from 'drizzle-orm'
 import { db, schema } from './index'
 import { hashPassword } from '../utils/password'
 import { logActivity } from '../utils/activity'
+import { createBidirectional } from '../utils/references'
 import type { ProjectSettings } from './schema'
 
 const {
@@ -220,17 +221,16 @@ async function seed() {
     { missionId: byKey['WEB-47'].id, kind: 'test_report', url: '#', label: 'jest: 18 passed' },
   ])
 
-  // ── References (typed cross-links) ──
-  const ref = (srcKey: string, tgtKey: string, lt: typeof references.$inferInsert['linkType']) => ({
-    projectId: web.id, sourceKind: 'mission' as const, sourceId: byKey[srcKey].id,
-    targetKind: 'mission' as const, targetId: byKey[tgtKey].id, linkType: lt,
-  })
-  await db.insert(references).values([
-    ref('WEB-43', 'WEB-42', 'tests'),
-    ref('WEB-43', 'WEB-42', 'spawned_from'),
-    ref('WEB-44', 'WEB-42', 'blocked_by'),
-    ref('WEB-47', 'WEB-42', 'fixes'),
-  ])
+  // ── References (typed cross-links) ── bidirectional, like hand_off / link_missions.
+  const links: [string, string, typeof references.$inferInsert['linkType']][] = [
+    ['WEB-43', 'WEB-42', 'tests'],
+    ['WEB-43', 'WEB-42', 'spawned_from'],
+    ['WEB-44', 'WEB-42', 'blocked_by'],
+    ['WEB-47', 'WEB-42', 'fixes'],
+  ]
+  for (const [s, t, lt] of links) {
+    await createBidirectional({ projectId: web.id, sourceId: byKey[s].id, targetId: byKey[t].id, linkType: lt })
+  }
 
   // ── Activity log seed (genesis entries) ──
   // Use logActivity so The Wire's hash chain is valid from the start (tamper-evidence).

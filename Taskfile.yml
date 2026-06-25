@@ -44,12 +44,22 @@ tasks:
       - npm run db:seed
 
   bootstrap:
-    desc: One-command full-stack bootstrap (Postgres + migrate + seed)
+    desc: Local bootstrap (Postgres in Docker; app via `npm run dev`)
     cmds:
       - task: up
       - sleep 3
       - task: db:push
       - task: db:seed
+
+  stack:
+    desc: One-command FULL stack in Docker (Postgres + app, auto migrate+seed)
+    cmds:
+      - docker compose --profile full up --build
+
+  stack:down:
+    desc: Stop the full Docker stack
+    cmds:
+      - docker compose --profile full down
 
   dev:
     desc: Run the Nuxt dev server (HQ + API)
