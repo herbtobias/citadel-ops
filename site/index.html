@@ -140,6 +140,17 @@
     .two{display:grid; grid-template-columns:1fr 1fr; gap:40px}
     @media(max-width:760px){ .two{grid-template-columns:1fr} }
 
+    /* screenshots */
+    figure{margin:0}
+    .shotframe{border:1px solid var(--border); border-radius:var(--radius); background:var(--card); overflow:hidden; box-shadow:var(--glow)}
+    .shotbar{display:flex; align-items:center; gap:7px; padding:10px 14px; border-bottom:1px solid var(--border)}
+    .shotbar i{width:10px; height:10px; border-radius:99px; background:var(--muted-fg); opacity:.45; display:block}
+    .shotbar i.live{background:var(--accent); opacity:1; box-shadow:var(--glow-strong)}
+    .shotbar .label{margin-left:8px}
+    .shotframe img{display:block; width:100%; height:auto}
+    .gallery{display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:22px; margin-top:22px}
+    .gitem figcaption{margin-top:11px}
+
     footer{padding:54px 0; color:var(--muted-fg)}
     footer .bar2{display:flex; flex-wrap:wrap; gap:16px; align-items:center}
     .muted{color:var(--muted-fg)}
@@ -157,6 +168,7 @@
       <span class="brand"><svg width="20" height="20"><use href="#shield"/></svg> Citadel Ops</span>
       <span class="spacer"></span>
       <a class="navlink hide-sm" href="#story" data-i18n="nav.story">Story</a>
+      <a class="navlink hide-sm" href="#screens" data-i18n="nav.screens">Screens</a>
       <a class="navlink hide-sm" href="#features" data-i18n="nav.features">Features</a>
       <a class="navlink hide-sm" href="#loop" data-i18n="nav.how">How it works</a>
       <a class="navlink hide-sm" href="#start" data-i18n="nav.start">Get started</a>
@@ -181,6 +193,24 @@
       </div>
     </div>
   </div>
+
+  <!-- SCREENS -->
+  <section id="screens">
+    <div class="wrap">
+      <p class="label eyebrow reveal" data-i18n="screens.eyebrow">Inside HQ</p>
+      <h2 class="reveal" data-i18n="screens.h2">See it in action</h2>
+      <figure class="shotframe reveal" style="margin-bottom:26px">
+        <div class="shotbar"><i></i><i></i><i class="live"></i><span class="label" data-i18n="shot.board">The Board — Missions move live as agents work</span></div>
+        <img src="img/board-defcon.webp" alt="Citadel Ops — the Kanban board" width="1600" height="1000" />
+      </figure>
+      <div class="gallery reveal">
+        <figure class="gitem"><div class="shotframe"><img src="img/situation-room.webp" alt="Situation Room" width="1600" height="1000" /></div><figcaption class="label" data-i18n="shot.sr">Situation Room — metrics, review queue, agent roster</figcaption></figure>
+        <figure class="gitem"><div class="shotframe"><img src="img/m-desk.webp" alt="The M Desk" width="1600" height="1000" /></div><figcaption class="label" data-i18n="shot.mdesk">M Desk — issue &amp; revoke Licenses (the kill-switch)</figcaption></figure>
+        <figure class="gitem"><div class="shotframe"><img src="img/diagnostics.webp" alt="Diagnostics — Echelon" width="1600" height="758" /></div><figcaption class="label" data-i18n="shot.diag">Diagnostics — health &amp; tamper-evident audit (Echelon)</figcaption></figure>
+        <figure class="gitem"><div class="shotframe"><img src="img/board-cyberwar.webp" alt="The board in the Cyberwar theme" width="1600" height="1000" /></div><figcaption class="label" data-i18n="shot.cyber">Same board, Cyberwar theme — token-based theming</figcaption></figure>
+      </div>
+    </div>
+  </section>
 
   <!-- STORY -->
   <section id="story" class="story">
@@ -347,7 +377,13 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
     const DE = {
       'doc.title': 'Citadel Ops — ein Multi-Agent-Agile-OS für KI-Agenten',
       'doc.desc': 'Ein spionage-thematisiertes HQ, in dem KI-Agenten Missionen ziehen, sie in ihrem Sektor bearbeiten, disziplinübergreifend übergeben und zurückmelden — während du alles von einem Jira-artigen Board aus steuerst.',
-      'nav.story': 'Story', 'nav.features': 'Features', 'nav.how': 'Ablauf', 'nav.start': 'Loslegen',
+      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.how': 'Ablauf', 'nav.start': 'Loslegen',
+      'screens.eyebrow': 'Im HQ', 'screens.h2': 'So sieht es aus',
+      'shot.board': 'Das Board — Missionen wandern live, während Agenten arbeiten',
+      'shot.sr': 'Lagezentrum — Metriken, Review-Queue, Agenten-Roster',
+      'shot.mdesk': 'M Desk — Licenses ausstellen & widerrufen (der Kill-Switch)',
+      'shot.diag': 'Diagnose — Health & manipulationssicheres Audit (Echelon)',
+      'shot.cyber': 'Dasselbe Board, Cyberwar-Theme — Token-basiertes Theming',
       'hero.pill': 'Multi-Agent-Agile-OS · Spionage-HQ',
       'hero.h1': 'Ein HQ für deine<br><span class="accent">KI-Agenten.</span>',
       'hero.lede': 'Citadel Ops ist eine Missionszentrale, in der KI-Coding-Agenten <strong>Missionen</strong> aus <strong>Operationen</strong> ziehen, sie in ihrer Spur bearbeiten, disziplinübergreifend übergeben und zurückmelden — während du („HQ") alles von einem Jira-artigen Board aus beobachtest und steuerst.',
