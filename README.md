@@ -6,6 +6,91 @@ pull **Missions** from **Operations**, work them sequentially, and report back. 
 
 See the full concept in `~/.claude/plans/neue-app-die-mir-jaunty-shamir.md`.
 
+## Getting started
+
+### Prerequisites
+- **Node ≥ 22**
+- **Docker** (for Postgres) — or your own Postgres on `:5433`
+
+### 1. Run HQ (the server)
+
+```bash
+npm install
+docker compose up -d                  # Postgres on :5433
+npm run db:push && npm run db:seed    # schema + demo data   (shortcut: task bootstrap)
+npm run dev                           # http://localhost:3000
+```
+
+Open <http://localhost:3000> and sign in as the SuperAdmin **`herb.tobias@gmail.com`** /
+**`citadel123`** (more demo logins below).
+
+> Prefer one command? `docker compose --profile full up --build` (or `task stack`) runs the
+> whole stack — auto-migrated and seeded — in Docker.
+
+### 2. Connect a local Claude Code agent
+
+A Field-Agent works missions through the **`/citadel-work` skill** plus the **`citadel` MCP
+server**. Two things to set up: make the skill visible, and give the agent a License.
+
+**a. Make the skill available**
+- *Project scope (already done):* launch Claude Code **inside this repo** —
+  `.claude/skills/citadel-work/SKILL.md` is auto-loaded; invoke it with `/citadel-work`.
+- *Personal scope (every project):*
+  ```bash
+  mkdir -p ~/.claude/skills/citadel-work
+  cp .claude/skills/citadel-work/SKILL.md ~/.claude/skills/citadel-work/
+  ```
+
+**b. Issue a License** — in HQ go to **M Desk → Issue license** (or the **Ops Console**:
+`POST /api/v1/projects/:id/licenses`). Pick the agent's sector(s); the key (`lic_…`) is shown
+**once** — copy it.
+
+**c. Configure the MCP server**
+```bash
+cp .mcp.json.example .mcp.json        # .mcp.json is gitignored — your key stays local
+```
+Edit `.mcp.json` and paste the key into `CITADEL_LICENSE` (set `CITADEL_URL`, default
+`http://localhost:3000`):
+```json
+{
+  "mcpServers": {
+    "citadel": {
+      "command": "npx",
+      "args": ["tsx", "mcp/stdio.ts"],
+      "env": { "CITADEL_URL": "http://localhost:3000", "CITADEL_LICENSE": "lic_…" }
+    }
+  }
+}
+```
+
+**d. Run it**
+```bash
+npm run dev          # HQ/API must be reachable at CITADEL_URL
+claude               # launch from THIS repo; trust the `citadel` MCP server when prompted
+```
+Invoke **`/citadel-work`**. The agent loops `acquire_license → get_briefing → claim_next →
+work → complete → next` — sector-scoped, gate-compliant, fresh context per mission. Watch it
+live in HQ on the **Board**, **Situation Room**, and **Admin → Trace Log**.
+
+> No Claude run handy? The CLI driver runs the same loop, and `--dry-run` exercises it without
+> invoking Claude:
+> ```bash
+> npm run agent -- --license lic_… --dry-run
+> ```
+
+### Demo logins (password `citadel123`)
+| Email | Role |
+|---|---|
+| `herb.tobias@gmail.com` | SuperAdmin (all orgs) |
+| `manager@citadel.test` | Manager (all org projects) |
+| `agent.dev@citadel.test` | Contributor (WEB only) |
+| `observer@citadel.test` | Viewer (WEB, read-only) |
+
+### Demo agent licenses (Bearer keys, WEB project)
+`lic_007_demo` (007, BACKEND) · `lic_009_demo` (009, QA) · `lic_006_demo` (006, FRONTEND/DESIGN).
+Agent loop endpoints: `POST /api/v1/agent/check-in` → `claim-next` → `…/missions/:id/heartbeat`
+→ `…/hand-off` → `…/complete`; `GET /api/v1/agent/orders` for control.
+
 ## Status
 
 **P0 — Scaffold** ✓ Nuxt 4 + Tailwind v4 frontend, multi-theme foundation, app-shell +
@@ -27,12 +112,6 @@ license middleware (`Bearer lic_…`, kill-switch, expiry, heartbeat); **atomic 
 + **watchdog re-queue**; mission complete with **idempotency keys**; **control orders**
 (targeted/sector/broadcast + `stand_down`); deployment lifecycle; M Desk UI (issue, roster,
 kill-switch).
-
-### Demo logins (password `citadel123`)
-- `herb.tobias@gmail.com` — SuperAdmin (all)
-- `manager@citadel.test` — Manager (all org projects)
-- `agent.dev@citadel.test` — Contributor (WEB only)
-- `observer@citadel.test` — Viewer (WEB, read-only)
 
 **P4 — Hand-offs & References** ✓ `hand_off_mission` (new mission in target sector +
 shared context + `parentId` + **bidirectional typed references** [semantic + provenance] +
@@ -95,21 +174,6 @@ frontend/runner/MCP); **`/health`** (DB readiness); **Diagnostics — Echelon** 
 health, Wire tamper-evidence, agent-run/runner status, error feed; live via SSE). *OpenTelemetry
 spans / Sentry / Prometheus / Grafana remain deferred infra (§19).*
 
-### Local agent mode
-```bash
-cp .mcp.json.example .mcp.json   # paste a license from The M Desk
-npm run agent -- --license lic_… --dry-run   # exercise the loop without Claude
-```
-
-### Demo agent licenses (Bearer keys, WEB project)
-- `lic_007_demo` — agent 007 (BACKEND)
-- `lic_009_demo` — agent 009 (QA)
-- `lic_006_demo` — agent 006 (FRONTEND, DESIGN)
-
-Agent loop: `POST /api/v1/agent/check-in` → `POST /api/v1/agent/claim-next` →
-`…/missions/:id/heartbeat` → `…/missions/:id/hand-off` → `…/missions/:id/complete`;
-`GET /api/v1/agent/orders` for control.
-
 ## Stack
 
 Nuxt 4 · Vue 3 · Tailwind v4 (semantic tokens, multi-theme) · Pinia · @nuxtjs/i18n (EN/DE) ·
@@ -122,17 +186,6 @@ Two seed themes, switchable at runtime (Topbar): **`defcon-5`** (default — edi
 flat, legible) and **`cyberwar`** (neon HUD, glitch dialed back). Components consume only semantic
 tokens (`bg-background`, `text-accent`, `font-heading`, …) so a theme = a CSS-variable override
 layer under `[data-theme]`.
-
-## Develop
-
-```bash
-npm install
-docker compose up -d        # Postgres on :5433
-npm run db:push && npm run db:seed   # schema + demo data  (or: task bootstrap)
-npm run dev                 # http://localhost:3000
-```
-
-> Requires Node ≥ 22.
 
 ## Tests
 
