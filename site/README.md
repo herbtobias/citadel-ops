@@ -15,5 +15,7 @@ python3 -m http.server -d site 8080
 
 ## Publish (GitHub Pages)
 Deployment is automated by [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) on every
-push to `main` that touches `site/`. Enable it once: **repo Settings → Pages → Source: "GitHub
-Actions"**. The page then lives at `https://herbtobias.github.io/citadel-ops/`.
+push to `main` that touches `site/`. The workflow self-enables Pages (`configure-pages` with
+`enablement: true`), so no manual Settings step is needed — the page lands at
+`https://herbtobias.github.io/citadel-ops/`. (If your account restricts Pages, enable it once under
+**Settings → Pages → Source: "GitHub Actions"** and re-run the workflow.)
