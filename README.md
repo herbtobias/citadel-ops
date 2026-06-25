@@ -63,6 +63,11 @@ broadcast orders); enriched **Dossier drawer** (sections + Cold Read verdict + a
 clickable references). Supporting endpoints: project/mission activity, metrics, operations
 create/close. (M Desk, Team, Q-Branch shipped in P3/P2/P5.)
 
+**P8 — Leiter (Webhooks & Notifications)** ✓ In-app **notifications** (fan-out to org managers +
+project members on review_requested / blocked / lease_expired / handed_off; list + mark-read API;
+topbar bell with unread badge + dropdown); outbound **webhooks** (HMAC-signed POST with one retry,
+delivery log; project CRUD). A Nitro plugin (Leiter) subscribes to the event bus and dispatches both.
+
 ### Local agent mode
 ```bash
 cp .mcp.json.example .mcp.json   # paste a license from The M Desk

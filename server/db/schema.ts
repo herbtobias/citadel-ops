@@ -431,6 +431,17 @@ export const webhookSubscriptions = pgTable('webhook_subscriptions', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+export const webhookDeliveries = pgTable('webhook_deliveries', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  subscriptionId: uuid('subscription_id').notNull().references(() => webhookSubscriptions.id, { onDelete: 'cascade' }),
+  event: text('event').notNull(),
+  ok: boolean('ok').notNull().default(false),
+  statusCode: integer('status_code'),
+  attempts: integer('attempts').notNull().default(1),
+  error: text('error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, t => [index('webhook_delivery_sub_idx').on(t.subscriptionId)])
+
 // ─── Relations (used by the API for joins) ────────────────────────────────
 export const projectsRelations = relations(projects, ({ many, one }) => ({
   organization: one(organizations, { fields: [projects.orgId], references: [organizations.id] }),

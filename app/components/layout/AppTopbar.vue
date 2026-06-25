@@ -21,6 +21,27 @@ async function logout() {
   await clear()
   await navigateTo('/login')
 }
+
+// ── Notifications ──
+interface Notif { id: string, type: string, payload: any, createdAt: string, readAt: string | null }
+const notifOpen = ref(false)
+const notifs = ref<Notif[]>([])
+const unread = ref(0)
+
+async function loadNotifs() {
+  try {
+    const r = await $fetch<{ unread: number, notifications: Notif[] }>('/api/v1/notifications?limit=20')
+    notifs.value = r.notifications
+    unread.value = r.unread
+  }
+  catch { /* not logged in / no access */ }
+}
+async function markAllRead() {
+  await $fetch('/api/v1/notifications/read', { method: 'POST', body: {} })
+  await loadNotifs()
+}
+onMounted(loadNotifs)
+watch(() => route.fullPath, loadNotifs)
 </script>
 
 <template>
@@ -57,10 +78,26 @@ async function logout() {
         </button>
       </div>
 
-      <button class="relative text-muted-foreground hover:text-accent">
-        <Icon name="lucide:bell" class="size-5" />
-        <span class="absolute -right-1 -top-1 size-2 rounded-full bg-accent ct-glow-sm" />
-      </button>
+      <!-- Notifications -->
+      <div class="relative">
+        <button class="relative text-muted-foreground hover:text-accent" @click="notifOpen = !notifOpen; notifOpen && loadNotifs()">
+          <Icon name="lucide:bell" class="size-5" />
+          <span v-if="unread" class="absolute -right-1.5 -top-1.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-background ct-glow-sm">{{ unread }}</span>
+        </button>
+        <div v-if="notifOpen" class="ct-card absolute right-0 top-8 z-50 w-80 border border-border bg-card p-3 shadow-xl">
+          <div class="mb-2 flex items-center justify-between">
+            <span class="ct-label text-muted-foreground">Notifications</span>
+            <button v-if="unread" class="ct-label text-accent hover:underline" @click="markAllRead">mark all read</button>
+          </div>
+          <ul class="max-h-80 space-y-2 overflow-y-auto">
+            <li v-for="n in notifs" :key="n.id" class="border-b border-border/50 pb-2 text-sm" :class="n.readAt ? 'opacity-50' : ''">
+              <span class="ct-label text-accent-tertiary">{{ n.type.replace('_', ' ') }}</span>
+              <p v-if="n.payload?.message" class="text-muted-foreground">{{ n.payload.message }}</p>
+            </li>
+            <li v-if="!notifs.length" class="text-sm text-muted-foreground">No notifications.</li>
+          </ul>
+        </div>
+      </div>
 
       <div class="flex items-center gap-2">
         <div

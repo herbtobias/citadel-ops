@@ -8,6 +8,13 @@
       "when": 1782382344596,
       "tag": "0000_old_mulholland_black",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782396416290,
+      "tag": "0001_slim_roland_deschain",
+      "breakpoints": true
     }
   ]
 }
