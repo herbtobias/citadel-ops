@@ -25,7 +25,7 @@ async function seed() {
   const ORG_SLUG = 'hq'
   console.log('› Seeding Citadel Ops demo data…')
 
-  const HQ_EMAIL = 'herb.tobias@gmail.com'
+  const HQ_EMAIL = 'hq@citadel.test'
   const MANAGER_EMAIL = 'manager@citadel.test'
   const CONTRIB_EMAIL = 'agent.dev@citadel.test'
   const VIEWER_EMAIL = 'observer@citadel.test'

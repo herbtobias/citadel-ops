@@ -5,7 +5,7 @@
 import { assert, makeClient, makeRunner, type StepResult } from './harness'
 
 const PW = 'citadel123'
-const HQ = 'herb.tobias@gmail.com'
+const HQ = 'hq@citadel.test'
 const CONTRIB = 'agent.dev@citadel.test'
 
 export async function runScenario(baseUrl: string): Promise<StepResult[]> {

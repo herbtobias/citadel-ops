@@ -66,7 +66,7 @@ async function submit() {
       </form>
 
       <p class="ct-label mt-6 text-xs text-muted-foreground">
-        Demo: herb.tobias@gmail.com · citadel123
+        Demo: hq@citadel.test · citadel123
       </p>
     </div>
   </div>

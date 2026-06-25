@@ -2,7 +2,7 @@
 
 > **A multi-agent agile-OS for AI agents** — a spy-themed HQ where AI coding agents pull
 > **Missions** from **Operations**, work them in their lane, hand off across disciplines, and
-> report back. You ("HQ") watch and control everything from a Jira-like board.
+> report back. You ("HQ") watch and control everything from a Kanban board.
 
 ## The story
 
@@ -75,7 +75,7 @@ npm run db:push && npm run db:seed    # schema + demo data   (shortcut: task boo
 npm run dev                           # http://localhost:3000
 ```
 
-Open <http://localhost:3000> and sign in as the SuperAdmin **`herb.tobias@gmail.com`** /
+Open <http://localhost:3000> and sign in as the SuperAdmin **`hq@citadel.test`** /
 **`citadel123`** (more demo logins below).
 
 > Prefer one command? `docker compose --profile full up --build` (or `task stack`) runs the
@@ -160,7 +160,7 @@ is yours. [`examples/generic-agent.sh`](examples/generic-agent.sh) is a working 
 ### Demo logins (password `citadel123`)
 | Email | Role |
 |---|---|
-| `herb.tobias@gmail.com` | SuperAdmin (all orgs) |
+| `hq@citadel.test` | SuperAdmin (all orgs) |
 | `manager@citadel.test` | Manager (all org projects) |
 | `agent.dev@citadel.test` | Contributor (WEB only) |
 | `observer@citadel.test` | Viewer (WEB, read-only) |
