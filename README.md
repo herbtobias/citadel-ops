@@ -137,8 +137,21 @@ npm run test:integration   # + DB-backed tests against localhost:5433 (seed firs
 Unit tests cover the deterministic core (state-machine, reference inverse map, password/license
 crypto, trace-id parsing, rate limiter, validation schemas). Integration tests self-skip unless
 `TEST_DATABASE_URL` is set, and verify The Wire hash-chain + reference bidirectionality against a
-seeded DB. (Concurrency, tenancy, gates, kill-switch, and the agent loop are exercised end-to-end
-in the development workflow.)
+seeded DB.
+
+### End-to-end behaviour (HTTP scenario + demo)
+
+A scenario harness drives the **running server** through the whole workflow — auth, tenancy,
+M Desk, EGM (dossier + Cold Read), DSPTCH claim, both Quality Gates, hand-off chain, concurrency
+(SKIP LOCKED), kill-switch, and tamper-evidence — as 14 asserted steps.
+
+```bash
+npm run dev                    # terminal 1 — server on :3000
+npm run test:http              # terminal 2 — runs it as a Vitest test (re-seeds first)
+npm run demo                   # …or as a narrated transcript (re-seeds, prints ✓/✗ per step)
+```
+
+Both target `CITADEL_URL` (default `http://localhost:3000`) and re-seed for a deterministic slate.
 
 ## Run the full stack in Docker
 
