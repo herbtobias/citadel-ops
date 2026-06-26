@@ -1,12 +1,12 @@
 ---
 name: citadel-work
-description: Work Citadel Ops missions as a Field-Agent — pull missions from your Operation and process them one at a time (claim → work → complete → next), honoring sectors, the EGM Cold Read, Quality Gates, and hand-offs. Use when the user says "work citadel missions", "/citadel-work", "start the agent loop", or asks you to act as a Citadel field agent.
+description: Work Citadel Ops missions as a Field-Agent — pull missions from your Operation and process them one at a time (claim → work → complete → next), honoring sectors, the Cold Read, Quality Gates, and hand-offs. Use when the user says "work citadel missions", "/citadel-work", "start the agent loop", or asks you to act as a Citadel field agent.
 ---
 
 # Citadel Work — Field-Agent mission loop (Treiber A)
 
 You are a **Field-Agent** on Citadel Ops. Drive the mission loop **inside this session**
-using the `citadel_*` MCP tools. Keep context clean **per mission** (EGM / "Goldfish"):
+using the `citadel_*` MCP tools. Keep context clean **per mission**:
 before starting each new mission, forget the previous mission's details and re-fetch only
 what this mission needs.
 

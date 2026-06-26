@@ -41,7 +41,7 @@ agents at once** — or one solo agent wearing several hats — safely and accou
   explicit, tracked hand-off instead of one agent flailing across the whole codebase.
 - **Shared brain, consistent output.** Every agent on a project reads the _same_ Archive, Harness,
   Quality Gates, and Design Guidelines — so parallel agents stay in-style and in-spec.
-- **Fresh context per Mission (EGM).** Agents reload only what a Mission needs — cheaper runs, no
+- **Fresh context per Mission.** Agents reload only what a Mission needs — cheaper runs, no
   context-rot, and the Cold Read keeps plans genuinely understandable.
 - **Gates that actually block.** Bad or unfinished work can't slip to "done"; the harness runs for real.
 - **Audit + control.** Tamper-evident history, a kill-switch, control orders, and live notifications
@@ -51,18 +51,18 @@ agents at once** — or one solo agent wearing several hats — safely and accou
 
 ### Decoder (codename → what it actually is)
 
-| Codename                      | Plain meaning                                                        |
-| ----------------------------- | -------------------------------------------------------------------- |
-| **Operation** / **Mission**   | Sprint / Task                                                        |
-| **Field-Agent** · **Recruit** | A worker AI agent · a zero-context agent that runs the Cold Read     |
-| **Sector**                    | The discipline an agent is licensed for (BACKEND, QA, DESIGN, …)     |
-| **The M Desk** / **License**  | Auth authority / the agent's revocable bearer credential             |
-| **The Archive**               | Dossiers + knowledge docs — the project's institutional memory (EGM) |
-| **Cold Read**                 | Zero-context comprehension gate on a Dossier before work may start   |
-| **Q-Branch**                  | Quality Gates, Harness (build/test/lint), and Design Guidelines      |
-| **The Wire**                  | Append-only, hash-chained activity log (tamper-evident audit)        |
-| **Hand-off**                  | Spawning a new Mission in another Sector with shared context         |
-| **HQ**                        | You — the human, via the board                                       |
+| Codename                      | Plain meaning                                                      |
+| ----------------------------- | ------------------------------------------------------------------ |
+| **Operation** / **Mission**   | Sprint / Task                                                      |
+| **Field-Agent** · **Recruit** | A worker AI agent · a zero-context agent that runs the Cold Read   |
+| **Sector**                    | The discipline an agent is licensed for (BACKEND, QA, DESIGN, …)   |
+| **The M Desk** / **License**  | Auth authority / the agent's revocable bearer credential           |
+| **The Archive**               | Dossiers + knowledge docs — the project's institutional memory     |
+| **Cold Read**                 | Zero-context comprehension gate on a Dossier before work may start |
+| **Q-Branch**                  | Quality Gates, Harness (build/test/lint), and Design Guidelines    |
+| **The Wire**                  | Append-only, hash-chained activity log (tamper-evident audit)      |
+| **Hand-off**                  | Spawning a new Mission in another Sector with shared context       |
+| **HQ**                        | You — the human, via the board                                     |
 
 See the full concept in `~/.claude/plans/neue-app-die-mir-jaunty-shamir.md`.
 
@@ -239,12 +239,12 @@ shared context + `parentId` + **bidirectional typed references** [semantic + pro
 bidirectional, self-link rejected); reference graph rendered as **SVG connector lines** on the
 board (toggleable) + clickable references in the dossier drawer.
 
-**P5 — EGM + Q-Branch** ✓ **Briefing** endpoint (layered: vision → operation → Q-equipment →
-Archive knowledge; dual-auth user/agent); **The Archive** (dossiers + knowledge docs); **Cold
-Read** gate (Recruit verdict pass→ready / fail→designing, zero-context enforced); Q-Branch reads
-(quality-gates / harness / design-guidelines `?theme=active` + theme registry); **gate
-enforcement** at the transition chokepoint (`requireGoldfish`, `requireHarnessPass`,
-`requireArtifacts`, `requireAcceptanceChecked`); agent artifact attach; **event bus + SSE**
+**P5 — The Archive + Q-Branch** ✓ **Briefing** endpoint (layered: vision → operation →
+Q-equipment → Archive knowledge; dual-auth user/agent); **The Archive** (dossiers + knowledge
+docs); **Cold Read** gate (Recruit verdict pass→ready / fail→designing, zero-context enforced);
+Q-Branch reads (quality-gates / harness / design-guidelines `?theme=active` + theme registry);
+**gate enforcement** at the transition chokepoint (Cold-Read pass · harness pass · required
+artifacts · acceptance checked); agent artifact attach; **event bus + SSE**
 (`GET /api/v1/events`); Q-Branch UI page.
 
 **P6 — MCP server + Local Agent Mode** ✓ MCP server `citadel` with **18 `citadel_*` tools**
@@ -325,7 +325,7 @@ verify The Wire hash-chain + reference bidirectionality against a seeded DB.
 ### End-to-end behaviour (HTTP scenario + demo)
 
 A scenario harness drives the **running server** through the whole workflow — auth, tenancy,
-M Desk, EGM (dossier + Cold Read), DSPTCH claim, both Quality Gates, hand-off chain, concurrency
+M Desk, the Archive (dossier + Cold Read), DSPTCH claim, both Quality Gates, hand-off chain, concurrency
 (SKIP LOCKED), kill-switch, and tamper-evidence — as 14 asserted steps.
 
 ```bash
