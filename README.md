@@ -199,6 +199,17 @@ groom to `ready` to make it claimable). Or an **agent Planner** plans it: a Lice
 A License without the scope is 403'd. Issue a Planner from **The M Desk** (the _Planner_ checkbox)
 or seed one (008).
 
+**Kick off an Operation with your agent.** Give a Planner an objective — e.g. via `/citadel-work`,
+_"Plan Operation 'Daybreak' — add OAuth login; break it into missions"_ — and it calls
+`plan_operation` → `create_mission` (one per task) → `link_missions`; field agents then claim the
+ready missions and run the loop. The same flow over plain REST is a runnable script:
+
+```bash
+CITADEL_LICENSE=lic_008_demo sh examples/plan-operation.sh   # plans OP + 2 linked missions
+```
+
+See [docs/AGENT_INTEGRATION.md → Kick off an Operation](docs/AGENT_INTEGRATION.md#kick-off-an-operation-with-a-planner-agent).
+
 ## Status
 
 **P0 — Scaffold** ✓ Nuxt 4 + Tailwind v4 frontend, multi-theme foundation, app-shell +

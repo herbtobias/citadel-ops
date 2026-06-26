@@ -97,6 +97,27 @@ Planning — require the `plan` scope (keys, not UUIDs):
 | Groom a Mission (id or key) | `PATCH /api/v1/agent/missions/:id` |
 | Link two missions by key    | `POST  /api/v1/agent/links`        |
 
+#### Kick off an Operation with a Planner agent
+
+A Planner turns one objective into an Operation + a set of linked Missions, which field agents
+then claim and execute. The MCP flow (a License with the `plan` scope):
+
+```
+citadel_plan_operation  { codename:"Daybreak", objective:"Add OAuth login", activate:true }
+                        → OP-1
+citadel_create_mission  { title:"OAuth backend", sector:"BACKEND",  operationKey:"OP-1", status:"ready" }
+                        → WEB-1
+citadel_create_mission  { title:"Login UI",      sector:"FRONTEND", operationKey:"OP-1", status:"ready" }
+                        → WEB-2
+citadel_link_missions   { sourceKey:"WEB-2", targetKey:"WEB-1", linkType:"relates_to" }
+```
+
+`status:"ready"` makes a Mission immediately claimable; omit it (defaults to `backlog`) to groom
+or run a design + Cold Read pass first. With the `/citadel-work` skill you can just say _"Plan
+Operation 'Daybreak' — add OAuth login; break it into missions"_ and the agent issues these calls.
+The same flow over plain REST is a runnable script:
+[`examples/plan-operation.sh`](../examples/plan-operation.sh) (`CITADEL_LICENSE=lic_008_demo sh examples/plan-operation.sh`).
+
 Briefing / gates / harness / design-guidelines are read from the project endpoints, e.g.
 `GET /api/v1/projects/:id/briefing`, `…/quality-gates`, `…/harness`, `…/design-guidelines?theme=active`.
 
