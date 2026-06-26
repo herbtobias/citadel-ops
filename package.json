@@ -27,6 +27,7 @@
     "typecheck": "nuxt typecheck",
     "test:integration": "TEST_DATABASE_URL=postgres://citadel:citadel@localhost:5433/citadel vitest run",
     "test:http": "CITADEL_URL=${CITADEL_URL:-http://localhost:3000} vitest run test/http --no-file-parallelism",
+    "test:e2e": "playwright test",
     "demo": "tsx scripts/demo.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -57,6 +58,7 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.16.0",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/vite": "^4.1.0",
     "@types/nodemailer": "^8.0.1",
     "@vitest/coverage-v8": "^4.1.9",
