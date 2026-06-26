@@ -32,6 +32,7 @@ const nav = [
   { key: 'situation-room', icon: 'lucide:radar', to: (id: string) => `/${id}/situation-room` },
   { key: 'operations', icon: 'lucide:target', to: (id: string) => `/${id}/operations` },
   { key: 'q-branch', icon: 'lucide:flask-conical', to: (id: string) => `/${id}/q-branch` },
+  { key: 'archive', icon: 'lucide:library', to: (id: string) => `/${id}/archive` },
   { key: 'm-desk', icon: 'lucide:id-card', to: (id: string) => `/${id}/m-desk` },
   { key: 'team', icon: 'lucide:users', to: (id: string) => `/${id}/team` },
   { key: 'audit', icon: 'lucide:scroll-text', to: (id: string) => `/${id}/audit` },
