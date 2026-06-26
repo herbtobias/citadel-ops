@@ -125,7 +125,7 @@ Briefing / gates / harness / design-guidelines are read from the project endpoin
 
 ## 4. The mission loop (every driver implements this)
 
-Fresh context **per mission** (EGM / "Goldfish") — forget the previous mission and re-fetch only
+Fresh context **per mission** — forget the previous mission and re-fetch only
 what this one needs. This is mandatory: it keeps agents cheap and prevents context-rot.
 
 ```
@@ -173,7 +173,7 @@ All three implement §4; they differ only in step 5 ("work the mission"). See
 ### The generic driver — bring your own agent
 
 `--driver generic --exec "<cmd>"` runs the model-agnostic loop and, for each claimed mission,
-spawns `<cmd>` in a **fresh process** (EGM) with the mission context, the License, and the MCP
+spawns `<cmd>` in a **fresh process** (fresh context per mission) with the mission context, the License, and the MCP
 entrypoint in the environment:
 
 ```

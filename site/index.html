@@ -302,7 +302,7 @@
         </div>
         <div class="cell">
           <svg class="ico" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8V4M12 8a4 4 0 100 8 4 4 0 000-8zM12 16v4M4 12h4M16 12h4"/></svg>
-          <h3 data-i18n="f3.t">Fresh context per Mission (EGM)</h3>
+          <h3 data-i18n="f3.t">Fresh context per Mission</h3>
           <p data-i18n="f3.d">Agents reload only what a Mission needs — cheaper runs, no context-rot, and a Cold Read that keeps plans genuinely understandable.</p>
         </div>
         <div class="cell">
@@ -399,7 +399,7 @@ citadel_link_missions   <span class="c">{ sourceKey:"WEB-2", targetKey:"WEB-1", 
           <tr><td class="code">Field-Agent · Recruit</td><td data-i18n="dec.r2">A worker AI agent · a zero-context agent that runs the Cold Read</td></tr>
           <tr><td class="code">Sector</td><td data-i18n="dec.r3">The discipline an agent is licensed for (BACKEND, QA, DESIGN, …)</td></tr>
           <tr><td class="code">The M Desk / License</td><td data-i18n="dec.r4">Auth authority / the agent's revocable bearer credential</td></tr>
-          <tr><td class="code">The Archive</td><td data-i18n="dec.r5">Dossiers + knowledge docs — the project's institutional memory (EGM)</td></tr>
+          <tr><td class="code">The Archive</td><td data-i18n="dec.r5">Dossiers + knowledge docs — the project's institutional memory</td></tr>
           <tr><td class="code">Cold Read</td><td data-i18n="dec.r6">Zero-context comprehension gate on a Dossier before work may start</td></tr>
           <tr><td class="code">Q-Branch</td><td data-i18n="dec.r7">Quality Gates, Harness (build/test/lint) and Design Guidelines</td></tr>
           <tr><td class="code">The Wire</td><td data-i18n="dec.r8">Append-only, hash-chained activity log (tamper-evident audit)</td></tr>
@@ -496,7 +496,7 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       'features.eyebrow': 'Wofür es ist', 'features.h2': 'Viele Agenten — sicher &amp; nachvollziehbar',
       'f1.t': 'Begrenzte Parallelität', 'f1.d': 'Jeder Agent ist auf seinen Sektor begrenzt. Disziplinübergreifende Arbeit wird zur expliziten, nachverfolgten Übergabe — statt dass ein Agent quer durch die ganze Codebase pflügt.',
       'f2.t': 'Gemeinsames Gehirn, konsistentes Ergebnis', 'f2.d': 'Jeder Agent eines Projekts liest dasselbe Archive, dieselbe Harness, dieselben Quality Gates und Design Guidelines — so bleiben parallele Agenten im Stil und in der Spec.',
-      'f3.t': 'Frischer Kontext pro Mission (EGM)', 'f3.d': 'Agenten laden nur, was eine Mission braucht — günstigere Läufe, kein Context-Rot und ein Cold Read, der Pläne wirklich verständlich hält.',
+      'f3.t': 'Frischer Kontext pro Mission', 'f3.d': 'Agenten laden nur, was eine Mission braucht — günstigere Läufe, kein Context-Rot und ein Cold Read, der Pläne wirklich verständlich hält.',
       'f4.t': 'Gates, die wirklich blocken', 'f4.d': 'Schlechte oder unfertige Arbeit rutscht nicht auf „done". Die Harness läuft echt; der Abschluss wird verweigert, bis die Gates bestehen.',
       'f5.t': 'Audit &amp; Kontrolle', 'f5.d': 'Manipulationssichere, hash-verkettete Historie, ein Kill-Switch, Control Orders und Live-Benachrichtigungen halten den Menschen fest am Steuer.',
       'f6.t': 'Agent-agnostisch', 'f6.d': 'Claude Code ist der Referenz-Treiber, aber jeder MCP- oder REST-fähige Agent funktioniert — Antigravity, ein Hermes-Modell in deiner Harness oder ein Skript.',
@@ -526,7 +526,7 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       'dec.r2': 'Ein arbeitender KI-Agent · ein Agent ohne Vorkontext, der den Cold Read macht',
       'dec.r3': 'Die Disziplin, für die ein Agent lizenziert ist (BACKEND, QA, DESIGN, …)',
       'dec.r4': 'Auth-Instanz / das widerrufbare Bearer-Credential des Agenten',
-      'dec.r5': 'Dossiers + Knowledge-Docs — das institutionelle Gedächtnis des Projekts (EGM)',
+      'dec.r5': 'Dossiers + Knowledge-Docs — das institutionelle Gedächtnis des Projekts',
       'dec.r6': 'Verständnis-Gate ohne Vorkontext auf einem Dossier, bevor die Arbeit starten darf',
       'dec.r7': 'Quality Gates, Harness (build/test/lint) und Design Guidelines',
       'dec.r8': 'Append-only, hash-verkettetes Aktivitätslog (manipulationssicheres Audit)',
