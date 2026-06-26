@@ -8,3 +8,8 @@ coverage
 .env
 .DS_Store
 .vscode
+
+# Playwright E2E artifacts
+test-results/
+playwright-report/
+playwright/.cache/

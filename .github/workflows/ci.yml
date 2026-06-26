@@ -87,3 +87,59 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # End-to-end smoke tests: drive the real app in a headless browser over the
+  # critical human paths (auth + board). Separate job — it needs a browser and a
+  # running dev server, neither of which the unit/integration job has.
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: citadel
+          POSTGRES_PASSWORD: citadel
+          POSTGRES_DB: citadel
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U citadel"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://citadel:citadel@localhost:5433/citadel
+      # E2E-only session secret (≥32 chars, see server/plugins/00.env-check).
+      NUXT_SESSION_PASSWORD: e2e-only-session-password-32-characters
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      # Apply migrations so the dev server + globalSetup seed find their tables.
+      # (globalSetup re-seeds to the known demo state at the start of the run.)
+      - name: Migrate database
+        run: npm run db:migrate
+
+      - name: Run E2E smoke tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

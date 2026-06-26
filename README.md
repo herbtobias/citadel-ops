@@ -383,12 +383,27 @@ npm run demo                   # …or as a narrated transcript (re-seeds, print
 
 Both target `CITADEL_URL` (default `http://localhost:3000`) and re-seed for a deterministic slate.
 
+### End-to-end UI smoke (Playwright)
+
+A headless-browser smoke suite (`test/e2e/**/*.spec.ts`) drives the real app over the critical
+human paths — login success / wrong-password / forgot-password / reset-password, and a board that
+renders seeded missions after login. It boots its own dev server (pinned to `:3100`) and re-seeds
+the DB first via a global setup.
+
+```bash
+npx playwright install chromium   # once
+npm run test:e2e                  # seeds, starts the dev server, runs the smoke specs
+```
+
+It runs as a separate **e2e** CI job (own Postgres service + browser). These specs are `.spec.ts`,
+so vitest (which only collects `*.test.ts`) never picks them up, and vice-versa.
+
 ## Code quality & CI
 
 Every push to `main` and every pull request runs the [CI workflow](.github/workflows/ci.yml):
 lint → format check → typecheck → unit + integration tests (against a Postgres service
-container) with coverage → build. That single gate is what the **CI** and **coverage** badges
-at the top report.
+container) with coverage → build, plus a parallel **e2e** job running the Playwright UI smoke
+suite. That gate is what the **CI** and **coverage** badges at the top report.
 
 ```bash
 npm run lint           # ESLint (flat config, @nuxt/eslint) — real bugs/bad patterns

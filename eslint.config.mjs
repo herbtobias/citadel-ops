@@ -28,6 +28,8 @@ export default withNuxt({
       'drizzle/**',
       'site/**',
       'coverage/**',
+      'test-results/**',
+      'playwright-report/**',
     ],
   })
   // Last word: turn off every rule that conflicts with Prettier formatting.
