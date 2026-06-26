@@ -38,7 +38,9 @@ repo being onboarded.
    - **level-1** docs for the major areas (e.g. `server/`, `app/`, `packages/core/`), each with a
      one-line `summary` and a fuller `bodyMarkdown`. Nest with `parentPath: "README"`.
    - `summary` is the headline the Briefing shows; `bodyMarkdown` is the deep read the Planner pulls.
-5. **Report** — list the paths you filed and flag the biggest unknowns (questions only a human can
+5. **Finish** — once all docs are filed, call `citadel_finish_recon` exactly once. This raises a
+   single "Archive updated" notification for HQ (no bell-spam per doc).
+6. **Report** — list the paths you filed and flag the biggest unknowns (questions only a human can
    answer). Hand those to the Interrogator (`/citadel-debrief`).
 
 ## Rules

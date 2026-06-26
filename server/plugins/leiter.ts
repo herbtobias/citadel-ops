@@ -13,6 +13,7 @@ const EVENT_TO_NOTIFICATION: Record<
   blocked: 'blocked',
   lease_expired: 'lease_expired',
   handed_off: 'handed_off',
+  recon_completed: 'archive_updated',
 }
 
 export default defineNitroPlugin(() => {

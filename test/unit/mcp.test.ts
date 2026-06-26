@@ -8,6 +8,7 @@ const EXPECTED_TOOLS = [
   'citadel_read_archive',
   'citadel_write_knowledge',
   'citadel_delete_knowledge',
+  'citadel_finish_recon',
   'citadel_get_quality_gates',
   'citadel_get_harness',
   'citadel_get_design_guidelines',
