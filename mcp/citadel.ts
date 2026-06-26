@@ -103,6 +103,15 @@ export function registerCitadelTools(server: McpServer, client: Client) {
     (body) => client.api('/api/v1/agent/knowledge', { method: 'POST', body }),
   )
 
+  t(
+    'citadel_delete_knowledge',
+    'Retract a KnowledgeDoc from The Archive by path (e.g. a stale recon doc or an ' +
+      'INTEL/* entry the operator asked to remove). Requires the `recon` scope.',
+    { path: z.string() },
+    ({ path }) =>
+      client.api(`/api/v1/agent/knowledge?path=${encodeURIComponent(path)}`, { method: 'DELETE' }),
+  )
+
   t('citadel_get_quality_gates', 'List the project Quality Gates.', {}, async () =>
     client.api(`/api/v1/projects/${await client.pid()}/quality-gates`),
   )

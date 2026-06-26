@@ -71,8 +71,8 @@ citadel_report_blocker         citadel_complete_mission        citadel_heartbeat
 citadel_plan_operation         citadel_create_mission          citadel_update_mission
 citadel_link_missions
 
-# Brownfield onboarding — read for any license, write requires the `recon` scope:
-citadel_read_archive           citadel_write_knowledge
+# Brownfield onboarding — read for any license, write/delete require the `recon` scope:
+citadel_read_archive           citadel_write_knowledge         citadel_delete_knowledge
 ```
 
 ### 3.2 REST — `/api/v1/agent/**`
@@ -101,12 +101,13 @@ Planning — require the `plan` scope (keys, not UUIDs):
 | Groom a Mission (id or key) | `PATCH /api/v1/agent/missions/:id` |
 | Link two missions by key    | `POST  /api/v1/agent/links`        |
 
-Brownfield onboarding — read for any project-bound license, write requires the `recon` scope:
+Brownfield onboarding — read for any project-bound license, write/delete require the `recon` scope:
 
-| Step                                  | Method + path                  |
-| ------------------------------------- | ------------------------------ |
-| Read the full Archive (incl. body)    | `GET  /api/v1/agent/knowledge` |
-| Write a KnowledgeDoc (upsert by path) | `POST /api/v1/agent/knowledge` |
+| Step                                  | Method + path                             |
+| ------------------------------------- | ----------------------------------------- |
+| Read the full Archive (incl. body)    | `GET    /api/v1/agent/knowledge`          |
+| Write a KnowledgeDoc (upsert by path) | `POST   /api/v1/agent/knowledge`          |
+| Retract a KnowledgeDoc by path        | `DELETE /api/v1/agent/knowledge?path=<p>` |
 
 #### Kick off an Operation with a Planner agent
 
@@ -162,6 +163,28 @@ Briefing's `archive.knowledge` (summaries) and in full via `citadel_read_archive
 over plain REST is a runnable script:
 [`examples/scout-codebase.sh`](../examples/scout-codebase.sh)
 (`CITADEL_LICENSE=lic_010_demo sh examples/scout-codebase.sh`).
+
+#### Deleting data & retention
+
+Citadel separates **work product** (deletable) from the **audit trail** (The Wire — append-only,
+hash-chained, tamper-evident). The deletion model:
+
+| Scope               | How                                                                    | Who             |
+| ------------------- | ---------------------------------------------------------------------- | --------------- |
+| One Archive doc     | `DELETE /api/v1/agent/knowledge?path=<p>` (`citadel_delete_knowledge`) | agent (`recon`) |
+| Archive doc/subtree | `DELETE /api/v1/projects/:id/knowledge?path=<p>` or `?prefix=INTEL/`   | manager         |
+| Whole project       | `DELETE /api/v1/projects/:id?confirm=<KEY>` (cascade)                  | manager         |
+| Whole org (tenant)  | `DELETE /api/v1/organizations/:id?confirm=<slug>` (cascade)            | SuperAdmin      |
+
+- **Archive deletions are logged** to The Wire (`knowledge_deleted`) — the removal itself is
+  auditable. Use the `prefix=INTEL/` purge to drop operator-elicited intel on request.
+- **Purges are irreversible** and require a matching `confirm` (the project key / org slug), so a
+  stray call can't wipe a tenant. They cascade through every child row (missions, dossiers, the
+  Archive, references, artifacts, **The Wire**, gates, licenses, themes…).
+- **Audit policy: full purge only.** The Wire is never selectively edited (that would break the
+  hash chain) — GDPR erasure of a tenant's audit data happens by purging the whole project/org.
+  Platform users are global and survive an org purge (only their memberships go).
+- GDPR export (the read side) is `GET /api/v1/organizations/:id/export`.
 
 ---
 
