@@ -13,7 +13,7 @@ export function useToasts() {
   const toasts = useState<Toast[]>('ct-toasts', () => [])
 
   function dismiss(id: number) {
-    toasts.value = toasts.value.filter(t => t.id !== id)
+    toasts.value = toasts.value.filter((t) => t.id !== id)
   }
 
   function push(t: Omit<Toast, 'id'>) {

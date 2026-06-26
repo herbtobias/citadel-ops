@@ -3,13 +3,19 @@
 // grab the same mission. Sets a lease; honours maxMissionsPerAgent; idempotent.
 import { and, eq, inArray, sql } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { requireLicense, sweepExpiredLeases, withIdempotency, LEASE_MS } from '~~/server/utils/license'
+import {
+  requireLicense,
+  sweepExpiredLeases,
+  withIdempotency,
+  LEASE_MS,
+} from '~~/server/utils/license'
 import { logActivity } from '~~/server/utils/activity'
 import { serializeMissionById } from '~~/server/utils/dto'
 
 export default defineEventHandler(async (event) => {
   const lic = await requireLicense(event)
-  if (!lic.projectId) throw createError({ statusCode: 422, statusMessage: 'License is not bound to a project' })
+  if (!lic.projectId)
+    throw createError({ statusCode: 422, statusMessage: 'License is not bound to a project' })
   const projectId = lic.projectId
   const idemKey = getHeader(event, 'idempotency-key') || undefined
 
@@ -20,10 +26,20 @@ export default defineEventHandler(async (event) => {
   const maxPerAgent = project?.settings?.maxMissionsPerAgent ?? 3
 
   // Loop-guard: don't exceed this agent's WIP.
-  const active = await db.select({ id: schema.missions.id }).from(schema.missions)
-    .where(and(eq(schema.missions.claimedByLicenseId, lic.id), eq(schema.missions.status, 'in_progress')))
+  const active = await db
+    .select({ id: schema.missions.id })
+    .from(schema.missions)
+    .where(
+      and(
+        eq(schema.missions.claimedByLicenseId, lic.id),
+        eq(schema.missions.status, 'in_progress'),
+      ),
+    )
   if (active.length >= maxPerAgent) {
-    throw createError({ statusCode: 429, statusMessage: `WIP limit reached (${maxPerAgent} missions in progress)` })
+    throw createError({
+      statusCode: 429,
+      statusMessage: `WIP limit reached (${maxPerAgent} missions in progress)`,
+    })
   }
 
   const sectors = lic.sectors as string[]
@@ -34,12 +50,16 @@ export default defineEventHandler(async (event) => {
 
   const run = async () => {
     const claimedId = await db.transaction(async (tx) => {
-      const rows = await tx.select().from(schema.missions)
-        .where(and(
-          eq(schema.missions.projectId, projectId),
-          eq(schema.missions.status, 'ready'),
-          inArray(schema.missions.sector, sectors as any),
-        ))
+      const rows = await tx
+        .select()
+        .from(schema.missions)
+        .where(
+          and(
+            eq(schema.missions.projectId, projectId),
+            eq(schema.missions.status, 'ready'),
+            inArray(schema.missions.sector, sectors as any),
+          ),
+        )
         .orderBy(sql`${priorityRank} DESC`, schema.missions.orderIndex, schema.missions.createdAt)
         .limit(1)
         .for('update', { skipLocked: true })
@@ -47,24 +67,34 @@ export default defineEventHandler(async (event) => {
       if (rows.length === 0) return null
       const m = rows[0]!
       const now = new Date()
-      await tx.update(schema.missions).set({
-        status: 'in_progress',
-        claimedByLicenseId: lic.id,
-        claimedAt: now,
-        leaseExpiresAt: new Date(now.getTime() + LEASE_MS),
-        heartbeatAt: now,
-        updatedAt: now,
-      }).where(eq(schema.missions.id, m.id))
+      await tx
+        .update(schema.missions)
+        .set({
+          status: 'in_progress',
+          claimedByLicenseId: lic.id,
+          claimedAt: now,
+          leaseExpiresAt: new Date(now.getTime() + LEASE_MS),
+          heartbeatAt: now,
+          updatedAt: now,
+        })
+        .where(eq(schema.missions.id, m.id))
       return m.id
     })
 
     if (!claimedId) return { result: { claimed: null as any }, resultRef: undefined }
 
     // Track the run (Deployment) + log the claim.
-    await db.insert(schema.deployments).values({ missionId: claimedId, licenseId: lic.id, runnerStatus: 'running' })
+    await db
+      .insert(schema.deployments)
+      .values({ missionId: claimedId, licenseId: lic.id, runnerStatus: 'running' })
     await logActivity({
-      projectId, missionId: claimedId, actorType: 'agent', actorLicenseId: lic.id,
-      event: 'claimed', toStatus: 'in_progress', message: `${lic.agentAlias} claimed mission`,
+      projectId,
+      missionId: claimedId,
+      actorType: 'agent',
+      actorLicenseId: lic.id,
+      event: 'claimed',
+      toStatus: 'in_progress',
+      message: `${lic.agentAlias} claimed mission`,
     })
     const mission = await serializeMissionById(claimedId)
     return { result: { claimed: mission }, resultRef: claimedId }

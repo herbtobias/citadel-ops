@@ -1,5 +1,11 @@
 # Citadel Ops
 
+[![CI](https://github.com/herbtobias/citadel-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/herbtobias/citadel-ops/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/herbtobias/citadel-ops/graph/badge.svg)](https://codecov.io/gh/herbtobias/citadel-ops)
+[![License: BUSL-1.1](https://img.shields.io/badge/license-BUSL--1.1-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%E2%89%A522-3c873a.svg)](package.json)
+[![Nuxt](https://img.shields.io/badge/Nuxt-4-00DC82.svg?logo=nuxt&logoColor=white)](https://nuxt.com)
+
 > **A multi-agent agile-OS for AI agents** — a spy-themed HQ where AI coding agents pull
 > **Missions** from **Operations**, work them in their lane, hand off across disciplines, and
 > report back. You ("HQ") watch and control everything from a Kanban board.
@@ -13,12 +19,12 @@ for duty. The **M Desk** issues it a **License**: scoped to one discipline (a **
 The agent pulls its **Briefing** from **The Archive** — the project's living memory — and claims
 the next ready **Mission** from the active **Operation** (a sprint). No two agents ever grab the
 same one: claiming is atomic. For a design task it writes a **Dossier** (problem, plan, affected
-files), and a *fresh* **Recruit** with zero prior context runs the **Cold Read** — if the Recruit
+files), and a _fresh_ **Recruit** with zero prior context runs the **Cold Read** — if the Recruit
 can't restate the plan, it goes back to the drawing board. Only then does work begin.
 
 Our agent only does BACKEND, so when the feature needs tests it can't write, it **hands off** a new
 QA Mission — carrying the same Dossier and artifacts forward — to whichever agent works that Sector.
-The QA agent finds a bug and hands a *bugfix* back, linked both ways. To finish anything, an agent
+The QA agent finds a bug and hands a _bugfix_ back, linked both ways. To finish anything, an agent
 must clear **Q-Branch's Quality Gates** (e.g. "tests must pass" — proven by an attached test report);
 half-done work simply can't be marked done.
 
@@ -33,7 +39,7 @@ agents at once** — or one solo agent wearing several hats — safely and accou
 
 - **Bounded parallelism.** Each agent is fenced to its Sector; cross-discipline work becomes an
   explicit, tracked hand-off instead of one agent flailing across the whole codebase.
-- **Shared brain, consistent output.** Every agent on a project reads the *same* Archive, Harness,
+- **Shared brain, consistent output.** Every agent on a project reads the _same_ Archive, Harness,
   Quality Gates, and Design Guidelines — so parallel agents stay in-style and in-spec.
 - **Fresh context per Mission (EGM).** Agents reload only what a Mission needs — cheaper runs, no
   context-rot, and the Cold Read keeps plans genuinely understandable.
@@ -45,24 +51,25 @@ agents at once** — or one solo agent wearing several hats — safely and accou
 
 ### Decoder (codename → what it actually is)
 
-| Codename | Plain meaning |
-|---|---|
-| **Operation** / **Mission** | Sprint / Task |
-| **Field-Agent** · **Recruit** | A worker AI agent · a zero-context agent that runs the Cold Read |
-| **Sector** | The discipline an agent is licensed for (BACKEND, QA, DESIGN, …) |
-| **The M Desk** / **License** | Auth authority / the agent's revocable bearer credential |
-| **The Archive** | Dossiers + knowledge docs — the project's institutional memory (EGM) |
-| **Cold Read** | Zero-context comprehension gate on a Dossier before work may start |
-| **Q-Branch** | Quality Gates, Harness (build/test/lint), and Design Guidelines |
-| **The Wire** | Append-only, hash-chained activity log (tamper-evident audit) |
-| **Hand-off** | Spawning a new Mission in another Sector with shared context |
-| **HQ** | You — the human, via the board |
+| Codename                      | Plain meaning                                                        |
+| ----------------------------- | -------------------------------------------------------------------- |
+| **Operation** / **Mission**   | Sprint / Task                                                        |
+| **Field-Agent** · **Recruit** | A worker AI agent · a zero-context agent that runs the Cold Read     |
+| **Sector**                    | The discipline an agent is licensed for (BACKEND, QA, DESIGN, …)     |
+| **The M Desk** / **License**  | Auth authority / the agent's revocable bearer credential             |
+| **The Archive**               | Dossiers + knowledge docs — the project's institutional memory (EGM) |
+| **Cold Read**                 | Zero-context comprehension gate on a Dossier before work may start   |
+| **Q-Branch**                  | Quality Gates, Harness (build/test/lint), and Design Guidelines      |
+| **The Wire**                  | Append-only, hash-chained activity log (tamper-evident audit)        |
+| **Hand-off**                  | Spawning a new Mission in another Sector with shared context         |
+| **HQ**                        | You — the human, via the board                                       |
 
 See the full concept in `~/.claude/plans/neue-app-die-mir-jaunty-shamir.md`.
 
 ## Getting started
 
 ### Prerequisites
+
 - **Node ≥ 22**
 - **Docker** (for Postgres) — or your own Postgres on `:5433`
 
@@ -88,9 +95,10 @@ skill** plus the **`citadel` MCP server**. The skill is the loop; the MCP server
 to HQ; the License is its credential. Set up steps **a–d** once, then just invoke `/citadel-work`.
 
 **a. Make the skill available**
-- *Project scope (already done):* launch Claude Code **inside this repo** —
+
+- _Project scope (already done):_ launch Claude Code **inside this repo** —
   `.claude/skills/citadel-work/SKILL.md` is auto-loaded; invoke it with `/citadel-work`.
-- *Personal scope (every project):*
+- _Personal scope (every project):_
   ```bash
   mkdir -p ~/.claude/skills/citadel-work
   cp .claude/skills/citadel-work/SKILL.md ~/.claude/skills/citadel-work/
@@ -101,11 +109,14 @@ to HQ; the License is its credential. Set up steps **a–d** once, then just inv
 **once** — copy it.
 
 **c. Configure the MCP server**
+
 ```bash
 cp .mcp.json.example .mcp.json        # .mcp.json is gitignored — your key stays local
 ```
+
 Edit `.mcp.json` and paste the key into `CITADEL_LICENSE` (set `CITADEL_URL`, default
 `http://localhost:3000`):
+
 ```json
 {
   "mcpServers": {
@@ -119,16 +130,19 @@ Edit `.mcp.json` and paste the key into `CITADEL_LICENSE` (set `CITADEL_URL`, de
 ```
 
 **d. Run it**
+
 ```bash
 npm run dev          # HQ/API must be reachable at CITADEL_URL
 claude               # launch from THIS repo; trust the `citadel` MCP server when prompted
 ```
+
 Invoke **`/citadel-work`**. The agent loops `acquire_license → get_briefing → claim_next →
 work → complete → next` — sector-scoped, gate-compliant, fresh context per mission. Watch it
 live in HQ on the **Board**, **Situation Room**, and **Admin → Trace Log**.
 
 > No Claude run handy? The CLI driver runs the same loop, and `--dry-run` exercises it without
 > invoking Claude:
+>
 > ```bash
 > npm run agent -- --license lic_… --dry-run
 > ```
@@ -158,14 +172,16 @@ the work and finishes the mission via the citadel tools. Orchestration stays Cit
 is yours. [`examples/generic-agent.sh`](examples/generic-agent.sh) is a working (non-Claude) stub.
 
 ### Demo logins (password `citadel123`)
-| Email | Role |
-|---|---|
-| `hq@citadel.test` | SuperAdmin (all orgs) |
-| `manager@citadel.test` | Manager (all org projects) |
-| `agent.dev@citadel.test` | Contributor (WEB only) |
-| `observer@citadel.test` | Viewer (WEB, read-only) |
+
+| Email                    | Role                       |
+| ------------------------ | -------------------------- |
+| `hq@citadel.test`        | SuperAdmin (all orgs)      |
+| `manager@citadel.test`   | Manager (all org projects) |
+| `agent.dev@citadel.test` | Contributor (WEB only)     |
+| `observer@citadel.test`  | Viewer (WEB, read-only)    |
 
 ### Demo agent licenses (Bearer keys, WEB project)
+
 `lic_007_demo` (007, BACKEND) · `lic_009_demo` (009, QA) · `lic_006_demo` (006, FRONTEND/DESIGN).
 Agent loop endpoints: `POST /api/v1/agent/check-in` → `claim-next` → `…/missions/:id/heartbeat`
 → `…/hand-off` → `…/complete`; `GET /api/v1/agent/orders` for control.
@@ -188,9 +204,10 @@ accept, new or existing user); **New Organization dialog** (SuperAdmin) + **New 
 **P3 — License & Multi-Agent (The M Desk / DSPTCH)** ✓ License issue/list/revoke/verify;
 license middleware (`Bearer lic_…`, kill-switch, expiry, heartbeat); **atomic `claim-next`**
 (`FOR UPDATE SKIP LOCKED`, sector-filtered, priority-ordered, WIP loop-guard); lease heartbeat
-+ **watchdog re-queue**; mission complete with **idempotency keys**; **control orders**
-(targeted/sector/broadcast + `stand_down`); deployment lifecycle; M Desk UI (issue, roster,
-kill-switch).
+
+- **watchdog re-queue**; mission complete with **idempotency keys**; **control orders**
+  (targeted/sector/broadcast + `stand_down`); deployment lifecycle; M Desk UI (issue, roster,
+  kill-switch).
 
 **P4 — Hand-offs & References** ✓ `hand_off_mission` (new mission in target sector +
 shared context + `parentId` + **bidirectional typed references** [semantic + provenance] +
@@ -227,7 +244,7 @@ project members on review_requested / blocked / lease_expired / handed_off; list
 topbar bell with unread badge + dropdown); outbound **webhooks** (HMAC-signed POST with one retry,
 delivery log; project CRUD). A Nitro plugin (Leiter) subscribes to the event bus and dispatches both.
 
-**P9 — Remote/Cloud Runner** ◑ *Deferred by design (§19).* The runner **contract** is documented
+**P9 — Remote/Cloud Runner** ◑ _Deferred by design (§19)._ The runner **contract** is documented
 in [RUNNER.md](RUNNER.md) and the building blocks are in place: Deployment lifecycle (opened on
 claim, closed on complete; runner status + token/cost fields) observable via
 `GET /api/v1/projects/:id/deployments`, repository binding, leases+watchdog, kill-switch, and the
@@ -238,7 +255,7 @@ claim, closed on complete; runner status + token/cost fields) observable via
 **license rotation** (new key, old → 401); **cancel-cascade** (cancelling a mission cancels its
 open spawned children); **FinOps** cost attribution (`finops`: spend by agent/operation + quota);
 **GDPR export** (`organizations/:id/export`, key material stripped); **Archivist** knowledge
-refresh. *Secret-store / Redis backplane / EU-region remain deferred infra (§19).*
+refresh. _Secret-store / Redis backplane / EU-region remain deferred infra (§19)._
 
 **Ops Console & Admin** ✓ An **Ops Console** (`/:project/console`) to fire any API call by hand
 (method/path/JSON body, as HQ session or with an agent Bearer license; quick-action presets;
@@ -251,8 +268,8 @@ by `GET /api/v1/projects/:id/traces`.
 → AsyncLocalStorage → auto-stamped on The Wire + ErrorEvents; echoed in `x-trace-id` response
 header); **ErrorEvent capture** (Nitro error hook for 5xx + `POST /api/v1/errors` for
 frontend/runner/MCP); **`/health`** (DB readiness); **Diagnostics — Echelon** UI page (system
-health, Wire tamper-evidence, agent-run/runner status, error feed; live via SSE). *OpenTelemetry
-spans / Sentry / Prometheus / Grafana remain deferred infra (§19).*
+health, Wire tamper-evidence, agent-run/runner status, error feed; live via SSE). _OpenTelemetry
+spans / Sentry / Prometheus / Grafana remain deferred infra (§19)._
 
 ## Stack
 
@@ -295,6 +312,32 @@ npm run demo                   # …or as a narrated transcript (re-seeds, print
 
 Both target `CITADEL_URL` (default `http://localhost:3000`) and re-seed for a deterministic slate.
 
+## Code quality & CI
+
+Every push to `main` and every pull request runs the [CI workflow](.github/workflows/ci.yml):
+lint → format check → typecheck → unit + integration tests (against a Postgres service
+container) with coverage → build. That single gate is what the **CI** and **coverage** badges
+at the top report.
+
+```bash
+npm run lint           # ESLint (flat config, @nuxt/eslint) — real bugs/bad patterns
+npm run lint:fix       # …auto-fixable subset
+npm run format         # Prettier — write
+npm run format:check   # Prettier — verify (CI uses this)
+npm run typecheck      # vue-tsc strict null/type checking
+npm run test:coverage  # vitest + v8 coverage → ./coverage (lcov + html)
+```
+
+Prettier owns formatting; ESLint's stylistic rules are off and `eslint-config-prettier` clears
+the rest, so the two never fight. Coverage is scoped to the pure core-logic modules the test
+suites own (`server/utils/**`, `mcp/**`); API route handlers are exercised by the HTTP scenario
+suite instead.
+
+> **Coverage badge setup (one-time):** sign in at [codecov.io](https://codecov.io) with GitHub
+> and add the repo. Public repos need no token; if Codecov asks for one, add it as the
+> `CODECOV_TOKEN` repository secret. Until then CI stays green (`fail_ci_if_error: false`) and
+> the badge simply shows "unknown".
+
 ## Run the full stack in Docker
 
 Plain `docker compose up` is Postgres-only (for local `npm run dev`). The whole app —
@@ -312,12 +355,12 @@ Citadel Ops is **source-available** under the [Business Source License 1.1](LICE
 
 - **You may** read, modify, self-host, and make non-production use freely — and production use too,
   **except** offering Citadel as a hosted/embedded service that competes with the Licensor's own
-  paid offerings (see the *Additional Use Grant* in [LICENSE](LICENSE)).
+  paid offerings (see the _Additional Use Grant_ in [LICENSE](LICENSE)).
 - **Change Date:** on **2030-06-25** (or four years after each version's release, whichever is
   earlier) the code automatically converts to the **Apache License 2.0**.
 - Need terms beyond the grant (e.g. a competing commercial offering)? A commercial license is
   available — contact **tobias@zirmail.de**.
 
-BSL 1.1 is *not* an OSI "open source" license, but the code is public and becomes Apache-2.0 over
+BSL 1.1 is _not_ an OSI "open source" license, but the code is public and becomes Apache-2.0 over
 time. All third-party dependencies are permissively licensed (MIT/ISC/BSD/Apache); their notices
 are retained as required.

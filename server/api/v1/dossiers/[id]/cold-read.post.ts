@@ -29,7 +29,10 @@ export default defineEventHandler(async (event) => {
 
   // Zero-context rule: the Recruit must not be the agent working the mission.
   if (actor.kind === 'agent' && mission && mission.claimedByLicenseId === actor.license.id) {
-    throw createError({ statusCode: 403, statusMessage: 'Cold Read must be performed by a different agent (zero-context Recruit)' })
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Cold Read must be performed by a different agent (zero-context Recruit)',
+    })
   }
 
   await db.insert(schema.coldReadChecks).values({
@@ -41,25 +44,45 @@ export default defineEventHandler(async (event) => {
   })
 
   const passed = body.verdict === 'pass'
-  await db.update(schema.dossiers).set({
-    status: passed ? 'cold_read_passed' : 'cold_read_failed',
-    coldRead: { verdict: body.verdict, recruitLicenseId: actor.license?.id, comprehensionNotes: body.comprehensionNotes, openQuestions: body.openQuestions },
-    updatedAt: new Date(),
-  }).where(eq(schema.dossiers.id, dossierId))
+  await db
+    .update(schema.dossiers)
+    .set({
+      status: passed ? 'cold_read_passed' : 'cold_read_failed',
+      coldRead: {
+        verdict: body.verdict,
+        recruitLicenseId: actor.license?.id,
+        comprehensionNotes: body.comprehensionNotes,
+        openQuestions: body.openQuestions,
+      },
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.dossiers.id, dossierId))
 
   let missionStatus: string | undefined
   if (mission && mission.status === 'cold_read') {
     const to = passed ? 'ready' : 'designing'
     assertTransition(mission.status, to)
-    await db.update(schema.missions).set({ status: to, updatedAt: new Date() }).where(eq(schema.missions.id, mission.id))
+    await db
+      .update(schema.missions)
+      .set({ status: to, updatedAt: new Date() })
+      .where(eq(schema.missions.id, mission.id))
     missionStatus = to
     await logActivity({
-      projectId: dossier.projectId, missionId: mission.id,
-      actorType: actor.kind === 'agent' ? 'agent' : 'human', actorLicenseId: actor.license?.id, actorUserId: actor.user?.id,
-      event: 'cold_read_run', fromStatus: 'cold_read', toStatus: to,
+      projectId: dossier.projectId,
+      missionId: mission.id,
+      actorType: actor.kind === 'agent' ? 'agent' : 'human',
+      actorLicenseId: actor.license?.id,
+      actorUserId: actor.user?.id,
+      event: 'cold_read_run',
+      fromStatus: 'cold_read',
+      toStatus: to,
       message: `Cold Read ${body.verdict} — ${passed ? 'promoted to ready' : 'returned for revision'}`,
     })
   }
 
-  return { verdict: body.verdict, dossierStatus: passed ? 'cold_read_passed' : 'cold_read_failed', missionStatus }
+  return {
+    verdict: body.verdict,
+    dossierStatus: passed ? 'cold_read_passed' : 'cold_read_failed',
+    missionStatus,
+  }
 })

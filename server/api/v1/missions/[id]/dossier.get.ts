@@ -10,10 +10,18 @@ export default defineEventHandler(async (event) => {
   await resolveProjectActor(event, mission.projectId)
 
   if (!mission.dossierId) return null
-  const [d] = await db.select().from(schema.dossiers).where(eq(schema.dossiers.id, mission.dossierId))
+  const [d] = await db
+    .select()
+    .from(schema.dossiers)
+    .where(eq(schema.dossiers.id, mission.dossierId))
   if (!d) return null
   return {
-    id: d.id, title: d.title, status: d.status, version: d.version,
-    sections: d.sections, affectedFiles: d.affectedFiles, coldRead: d.coldRead,
+    id: d.id,
+    title: d.title,
+    status: d.status,
+    version: d.version,
+    sections: d.sections,
+    affectedFiles: d.affectedFiles,
+    coldRead: d.coldRead,
   }
 })

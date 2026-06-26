@@ -46,7 +46,9 @@ if (!license) {
   process.exit(1)
 }
 if (driver === 'generic' && !execCmd) {
-  console.error('--driver generic needs --exec "<command>" (or CITADEL_EXEC). The command is run once per mission.')
+  console.error(
+    '--driver generic needs --exec "<command>" (or CITADEL_EXEC). The command is run once per mission.',
+  )
   process.exit(1)
 }
 
@@ -57,10 +59,12 @@ async function workMissionDryRun(mission: any) {
   log(`  dry-run: ${mission.key} — ${mission.title}`)
   // Satisfy the harness gate, then complete.
   await client.api(`/api/v1/agent/missions/${mission.id}/artifacts`, {
-    method: 'POST', body: { kind: 'test_report', url: '#', label: 'dry-run: all green' },
+    method: 'POST',
+    body: { kind: 'test_report', url: '#', label: 'dry-run: all green' },
   })
   await client.api(`/api/v1/agent/missions/${mission.id}/complete`, {
-    method: 'POST', body: { result: 'success', outcome: 'Completed by citadel-agent --dry-run' },
+    method: 'POST',
+    body: { result: 'success', outcome: 'Completed by citadel-agent --dry-run' },
   })
 }
 
@@ -88,7 +92,9 @@ async function workMissionWithExec(mission: any, cmd: string) {
         CITADEL_MISSION_TYPE: mission.type ?? '',
       },
     })
-    child.on('exit', code => code === 0 ? resolveP() : rejectP(new Error(`exec exited with code ${code}`)))
+    child.on('exit', (code) =>
+      code === 0 ? resolveP() : rejectP(new Error(`exec exited with code ${code}`)),
+    )
     child.on('error', rejectP)
   })
 }
@@ -97,10 +103,11 @@ async function workMissionWithClaude(mission: any) {
   // Fresh Claude Code process per mission, with the citadel MCP attached.
   let query: any
   try {
-    ({ query } = await import('@anthropic-ai/claude-agent-sdk'))
-  }
-  catch {
-    throw new Error('claude driver needs @anthropic-ai/claude-agent-sdk installed (npm i @anthropic-ai/claude-agent-sdk) + ANTHROPIC_API_KEY. Use --driver dry-run to test the loop, or --driver generic --exec for another runtime.')
+    ;({ query } = await import('@anthropic-ai/claude-agent-sdk'))
+  } catch {
+    throw new Error(
+      'claude driver needs @anthropic-ai/claude-agent-sdk installed (npm i @anthropic-ai/claude-agent-sdk) + ANTHROPIC_API_KEY. Use --driver dry-run to test the loop, or --driver generic --exec for another runtime.',
+    )
   }
   const prompt = [
     `You are Field-Agent on Citadel Ops. Work mission ${mission.key}: "${mission.title}".`,
@@ -115,7 +122,11 @@ async function workMissionWithClaude(mission: any) {
     prompt,
     options: {
       mcpServers: {
-        citadel: { command: 'node', args: [stdioEntry], env: { CITADEL_URL: baseUrl, CITADEL_LICENSE: license } },
+        citadel: {
+          command: 'node',
+          args: [stdioEntry],
+          env: { CITADEL_URL: baseUrl, CITADEL_LICENSE: license },
+        },
       },
     },
   })
@@ -126,15 +137,23 @@ async function workMissionWithClaude(mission: any) {
 
 async function main() {
   const ctx = await client.api('/api/v1/agent/check-in', { method: 'POST' })
-  log(`checked in as ${ctx.agentAlias} [${(ctx.sectors || []).join(', ')}] on ${ctx.project?.key ?? '—'} (driver: ${driver})`)
+  log(
+    `checked in as ${ctx.agentAlias} [${(ctx.sectors || []).join(', ')}] on ${ctx.project?.key ?? '—'} (driver: ${driver})`,
+  )
 
   let done = 0
   for (;;) {
     const orders = await client.api('/api/v1/agent/orders')
-    if (orders.standDown) { log('stand_down received — standing down.'); break }
+    if (orders.standDown) {
+      log('stand_down received — standing down.')
+      break
+    }
 
     const { claimed } = await client.api('/api/v1/agent/claim-next', { method: 'POST' })
-    if (!claimed) { log('no claimable missions in sector — backlog drained.'); break }
+    if (!claimed) {
+      log('no claimable missions in sector — backlog drained.')
+      break
+    }
     log(`claimed ${claimed.key} (${claimed.sector}/${claimed.type})`)
 
     try {
@@ -142,17 +161,27 @@ async function main() {
       else if (driver === 'generic') await workMissionWithExec(claimed, execCmd!)
       else await workMissionWithClaude(claimed)
       log(`completed ${claimed.key}`)
-    }
-    catch (e: any) {
+    } catch (e: any) {
       log(`mission ${claimed.key} errored: ${e?.message ?? e} — reporting blocker`)
-      await client.api(`/api/v1/agent/missions/${claimed.id}/block`, { method: 'POST', body: { reason: String(e?.message ?? e) } }).catch(() => {})
+      await client
+        .api(`/api/v1/agent/missions/${claimed.id}/block`, {
+          method: 'POST',
+          body: { reason: String(e?.message ?? e) },
+        })
+        .catch(() => {})
     }
 
     done++
-    if (maxMissions && done >= maxMissions) { log(`reached --max ${maxMissions}.`); break }
+    if (maxMissions && done >= maxMissions) {
+      log(`reached --max ${maxMissions}.`)
+      break
+    }
   }
   log(`run finished — ${done} mission(s) processed.`)
   process.exit(0)
 }
 
-main().catch((e) => { log('fatal:', e?.message ?? e); process.exit(1) })
+main().catch((e) => {
+  log('fatal:', e?.message ?? e)
+  process.exit(1)
+})

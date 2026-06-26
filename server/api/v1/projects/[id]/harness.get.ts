@@ -6,6 +6,9 @@ import { resolveProjectActor } from '~~/server/utils/actor'
 export default defineEventHandler(async (event) => {
   const projectId = getRouterParam(event, 'id')!
   await resolveProjectActor(event, projectId)
-  const rows = await db.select().from(schema.harnessDefs).where(eq(schema.harnessDefs.projectId, projectId))
-  return rows.map(h => ({ key: h.key, name: h.name, commands: h.commands, notes: h.notes }))
+  const rows = await db
+    .select()
+    .from(schema.harnessDefs)
+    .where(eq(schema.harnessDefs.projectId, projectId))
+  return rows.map((h) => ({ key: h.key, name: h.name, commands: h.commands, notes: h.notes }))
 })

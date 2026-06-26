@@ -15,10 +15,18 @@ export default defineEventHandler(async (event) => {
   const [m] = await db.select().from(schema.missions).where(eq(schema.missions.id, id))
   if (!m) throw createError({ statusCode: 404, statusMessage: 'Mission not found' })
 
-  const [c] = await db.insert(schema.comments).values({ missionId: id, authorLicenseId: lic.id, body }).returning()
+  const [c] = await db
+    .insert(schema.comments)
+    .values({ missionId: id, authorLicenseId: lic.id, body })
+    .returning()
+  if (!c) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
   await logActivity({
-    projectId: m.projectId, missionId: id, actorType: 'agent', actorLicenseId: lic.id,
-    event: 'comment_added', message: body.slice(0, 120),
+    projectId: m.projectId,
+    missionId: id,
+    actorType: 'agent',
+    actorLicenseId: lic.id,
+    event: 'comment_added',
+    message: body.slice(0, 120),
   })
   setResponseStatus(event, 201)
   return { id: c.id }

@@ -15,7 +15,10 @@ export function getTraceId(): string | null {
 }
 
 // Extracts a trace id from W3C `traceparent` or an explicit `x-trace-id` header.
-export function traceIdFromHeaders(traceparent?: string | null, xTraceId?: string | null): string | null {
+export function traceIdFromHeaders(
+  traceparent?: string | null,
+  xTraceId?: string | null,
+): string | null {
   if (xTraceId) return xTraceId
   if (traceparent) {
     const parts = traceparent.split('-')

@@ -10,8 +10,7 @@ await useAsyncData('shell-bootstrap', async () => {
   try {
     await Promise.all([projects.fetchProjects(), orgs.fetchOrgs()])
     return { ok: true }
-  }
-  catch {
+  } catch {
     return { ok: false }
   }
 })

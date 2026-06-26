@@ -13,34 +13,46 @@ export default defineEventHandler(async (event) => {
   const body = await parseBody(event, createMissionSchema)
 
   // Next key: max numeric suffix for this project's prefix + 1.
-  const existing = await db.select({ key: schema.missions.key }).from(schema.missions).where(eq(schema.missions.projectId, projectId))
+  const existing = await db
+    .select({ key: schema.missions.key })
+    .from(schema.missions)
+    .where(eq(schema.missions.projectId, projectId))
   const maxNum = existing.reduce((max, m) => {
     const n = Number.parseInt(m.key.split('-')[1] ?? '0', 10)
     return Number.isFinite(n) && n > max ? n : max
   }, 0)
   const key = `${project.key}-${maxNum + 1}`
 
-  const [created] = await db.insert(schema.missions).values({
-    projectId,
-    key,
-    title: body.title,
-    objective: body.objective,
-    briefing: body.briefing,
-    type: body.type,
-    sector: body.sector,
-    priority: body.priority,
-    estimatePoints: body.estimatePoints ?? null,
-    acceptanceCriteria: body.acceptanceCriteria,
-    requiredSkills: body.requiredSkills,
-    operationId: body.operationId ?? null,
-    parentId: body.parentId ?? null,
-    orderIndex: body.orderIndex ?? 0,
-    status: 'backlog',
-  }).returning()
+  const [created] = await db
+    .insert(schema.missions)
+    .values({
+      projectId,
+      key,
+      title: body.title,
+      objective: body.objective,
+      briefing: body.briefing,
+      type: body.type,
+      sector: body.sector,
+      priority: body.priority,
+      estimatePoints: body.estimatePoints ?? null,
+      acceptanceCriteria: body.acceptanceCriteria,
+      requiredSkills: body.requiredSkills,
+      operationId: body.operationId ?? null,
+      parentId: body.parentId ?? null,
+      orderIndex: body.orderIndex ?? 0,
+      status: 'backlog',
+    })
+    .returning()
+  if (!created) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
   await logActivity({
-    projectId, missionId: created.id, actorType: 'human', actorUserId: user.id,
-    event: 'created', toStatus: 'backlog', message: `Created ${key}: ${body.title}`,
+    projectId,
+    missionId: created.id,
+    actorType: 'human',
+    actorUserId: user.id,
+    event: 'created',
+    toStatus: 'backlog',
+    message: `Created ${key}: ${body.title}`,
   })
 
   setResponseStatus(event, 201)

@@ -9,10 +9,14 @@ export default defineEventHandler(async (event) => {
 
   const [m] = await db.select().from(schema.missions).where(eq(schema.missions.id, id))
   if (!m) throw createError({ statusCode: 404, statusMessage: 'Mission not found' })
-  if (m.claimedByLicenseId !== lic.id) throw createError({ statusCode: 403, statusMessage: 'Mission not claimed by this license' })
+  if (m.claimedByLicenseId !== lic.id)
+    throw createError({ statusCode: 403, statusMessage: 'Mission not claimed by this license' })
 
   const now = new Date()
   const leaseExpiresAt = new Date(now.getTime() + LEASE_MS)
-  await db.update(schema.missions).set({ heartbeatAt: now, leaseExpiresAt }).where(eq(schema.missions.id, id))
+  await db
+    .update(schema.missions)
+    .set({ heartbeatAt: now, leaseExpiresAt })
+    .where(eq(schema.missions.id, id))
   return { ok: true, leaseExpiresAt }
 })

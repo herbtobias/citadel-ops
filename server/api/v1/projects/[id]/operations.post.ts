@@ -24,20 +24,39 @@ export default defineEventHandler(async (event) => {
   const body = await parseBody(event, schema_)
 
   // Next OP-N key.
-  const existing = await db.select({ key: schema.operations.key }).from(schema.operations).where(eq(schema.operations.projectId, projectId))
-  const maxNum = existing.reduce((m, r) => Math.max(m, Number.parseInt(r.key.split('-')[1] ?? '0', 10) || 0), 0)
+  const existing = await db
+    .select({ key: schema.operations.key })
+    .from(schema.operations)
+    .where(eq(schema.operations.projectId, projectId))
+  const maxNum = existing.reduce(
+    (m, r) => Math.max(m, Number.parseInt(r.key.split('-')[1] ?? '0', 10) || 0),
+    0,
+  )
   const key = `OP-${maxNum + 1}`
 
-  const [op] = await db.insert(schema.operations).values({
-    projectId, key, codename: body.codename, objective: body.objective,
-    status: body.activate ? 'active' : 'planned',
-    sectorsInScope: body.sectorsInScope, capacityPoints: body.capacityPoints ?? null,
-    successCriteria: body.successCriteria, createdByUserId: manager.id,
-  }).returning()
+  const [op] = await db
+    .insert(schema.operations)
+    .values({
+      projectId,
+      key,
+      codename: body.codename,
+      objective: body.objective,
+      status: body.activate ? 'active' : 'planned',
+      sectorsInScope: body.sectorsInScope,
+      capacityPoints: body.capacityPoints ?? null,
+      successCriteria: body.successCriteria,
+      createdByUserId: manager.id,
+    })
+    .returning()
+  if (!op) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
   await logActivity({
-    projectId, operationId: op.id, actorType: 'human', actorUserId: manager.id,
-    event: 'operation_planned', message: `Planned ${key}: ${body.codename}`,
+    projectId,
+    operationId: op.id,
+    actorType: 'human',
+    actorUserId: manager.id,
+    event: 'operation_planned',
+    message: `Planned ${key}: ${body.codename}`,
   })
 
   setResponseStatus(event, 201)

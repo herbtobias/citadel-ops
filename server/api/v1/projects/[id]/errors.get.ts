@@ -8,13 +8,21 @@ export default defineEventHandler(async (event) => {
   await assertProjectAccess(event, projectId)
   const limit = Math.min(Number.parseInt((getQuery(event).limit as string) || '50', 10) || 50, 200)
 
-  const rows = await db.select().from(schema.errorEvents)
+  const rows = await db
+    .select()
+    .from(schema.errorEvents)
     .where(eq(schema.errorEvents.projectId, projectId))
     .orderBy(desc(schema.errorEvents.createdAt))
     .limit(limit)
 
-  return rows.map(r => ({
-    id: r.id, traceId: r.traceId, source: r.source, level: r.level,
-    message: r.message, missionId: r.missionId, context: r.context, createdAt: r.createdAt,
+  return rows.map((r) => ({
+    id: r.id,
+    traceId: r.traceId,
+    source: r.source,
+    level: r.level,
+    message: r.message,
+    missionId: r.missionId,
+    context: r.context,
+    createdAt: r.createdAt,
   }))
 })

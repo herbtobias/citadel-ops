@@ -8,8 +8,7 @@ export default defineEventHandler(async (event) => {
   try {
     await db.execute(sql`select 1`)
     checks.db = 'ok'
-  }
-  catch (e: any) {
+  } catch (e: any) {
     checks.db = `error: ${e?.message ?? e}`
     healthy = false
   }

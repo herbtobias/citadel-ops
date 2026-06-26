@@ -13,7 +13,12 @@ const operation = computed(() => projects.activeOperation(pid.value))
 
 const initials = computed(() => {
   const n = (user.value as any)?.name ?? 'HQ'
-  return n.split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
+  return n
+    .split(/\s+/)
+    .map((w: string) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 })
 
 async function logout() {
@@ -23,22 +28,35 @@ async function logout() {
 }
 
 // ── Notifications ──
-interface Notif { id: string, type: string, payload: any, createdAt: string, readAt: string | null }
+interface Notif {
+  id: string
+  type: string
+  payload: any
+  createdAt: string
+  readAt: string | null
+}
 const notifOpen = ref(false)
 const notifs = ref<Notif[]>([])
 const unread = ref(0)
 
 async function loadNotifs() {
   try {
-    const r = await $fetch<{ unread: number, notifications: Notif[] }>('/api/v1/notifications?limit=20')
+    const r = await $fetch<{ unread: number; notifications: Notif[] }>(
+      '/api/v1/notifications?limit=20',
+    )
     notifs.value = r.notifications
     unread.value = r.unread
+  } catch {
+    /* not logged in / no access */
   }
-  catch { /* not logged in / no access */ }
 }
 async function markAllRead() {
   await $fetch('/api/v1/notifications/read', { method: 'POST', body: {} })
   await loadNotifs()
+}
+function toggleNotifs() {
+  notifOpen.value = !notifOpen.value
+  if (notifOpen.value) loadNotifs()
 }
 onMounted(loadNotifs)
 watch(() => route.fullPath, loadNotifs)
@@ -46,7 +64,7 @@ watch(() => route.fullPath, loadNotifs)
 // ── Live intervention alerts ──
 // The bell + a toast surface actionable agent events in real time, on any page.
 const { push } = useToasts()
-const TOAST_FOR: Record<string, { tone: 'info' | 'accent' | 'destructive', title: string }> = {
+const TOAST_FOR: Record<string, { tone: 'info' | 'accent' | 'destructive'; title: string }> = {
   submitted_for_review: { tone: 'accent', title: 'Mission needs review' },
   blocked: { tone: 'destructive', title: 'Mission blocked' },
   lease_expired: { tone: 'destructive', title: 'Lease expired — mission re-queued' },
@@ -92,7 +110,9 @@ onBeforeUnmount(() => clearTimeout(notifTimer))
           v-for="l in ['en', 'de']"
           :key="l"
           class="px-2 py-1 text-xs uppercase"
-          :class="locale === l ? 'bg-accent text-background' : 'text-muted-foreground hover:text-accent'"
+          :class="
+            locale === l ? 'bg-accent text-background' : 'text-muted-foreground hover:text-accent'
+          "
           @click="setLocale(l as 'en' | 'de')"
         >
           {{ l }}
@@ -101,17 +121,31 @@ onBeforeUnmount(() => clearTimeout(notifTimer))
 
       <!-- Notifications -->
       <div class="relative">
-        <button class="relative text-muted-foreground hover:text-accent" @click="notifOpen = !notifOpen; notifOpen && loadNotifs()">
+        <button class="relative text-muted-foreground hover:text-accent" @click="toggleNotifs">
           <Icon name="lucide:bell" class="size-5" />
-          <span v-if="unread" class="absolute -right-1.5 -top-1.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-background ct-glow-sm">{{ unread }}</span>
+          <span
+            v-if="unread"
+            class="absolute -right-1.5 -top-1.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-background ct-glow-sm"
+            >{{ unread }}</span
+          >
         </button>
-        <div v-if="notifOpen" class="ct-card absolute right-0 top-8 z-50 w-80 border border-border bg-card p-3 shadow-xl">
+        <div
+          v-if="notifOpen"
+          class="ct-card absolute right-0 top-8 z-50 w-80 border border-border bg-card p-3 shadow-xl"
+        >
           <div class="mb-2 flex items-center justify-between">
             <span class="ct-label text-muted-foreground">Notifications</span>
-            <button v-if="unread" class="ct-label text-accent hover:underline" @click="markAllRead">mark all read</button>
+            <button v-if="unread" class="ct-label text-accent hover:underline" @click="markAllRead">
+              mark all read
+            </button>
           </div>
           <ul class="max-h-80 space-y-2 overflow-y-auto">
-            <li v-for="n in notifs" :key="n.id" class="border-b border-border/50 pb-2 text-sm" :class="n.readAt ? 'opacity-50' : ''">
+            <li
+              v-for="n in notifs"
+              :key="n.id"
+              class="border-b border-border/50 pb-2 text-sm"
+              :class="n.readAt ? 'opacity-50' : ''"
+            >
               <span class="ct-label text-accent-tertiary">{{ n.type.replace('_', ' ') }}</span>
               <p v-if="n.payload?.message" class="text-muted-foreground">{{ n.payload.message }}</p>
             </li>
@@ -127,7 +161,11 @@ onBeforeUnmount(() => clearTimeout(notifTimer))
         >
           {{ initials }}
         </div>
-        <button class="text-muted-foreground hover:text-destructive" title="Sign out" @click="logout">
+        <button
+          class="text-muted-foreground hover:text-destructive"
+          title="Sign out"
+          @click="logout"
+        >
           <Icon name="lucide:log-out" class="size-5" />
         </button>
       </div>

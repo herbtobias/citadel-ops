@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { allowedTransitions, assertTransition, canTransition } from '../../server/utils/state-machine'
+import {
+  allowedTransitions,
+  assertTransition,
+  canTransition,
+} from '../../server/utils/state-machine'
 
 describe('mission state-machine', () => {
   it('allows the EGM design path designing → cold_read → ready', () => {
@@ -34,8 +38,7 @@ describe('mission state-machine', () => {
     expect(() => assertTransition('backlog', 'done')).toThrowError(/Illegal transition/)
     try {
       assertTransition('backlog', 'done')
-    }
-    catch (e: any) {
+    } catch (e: any) {
       expect(e.statusCode).toBe(422)
     }
   })

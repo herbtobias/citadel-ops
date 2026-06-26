@@ -24,18 +24,36 @@ export default defineEventHandler(async (event) => {
   const key = generateLicenseKey()
   const expiresAt = expiresInDays ? new Date(Date.now() + expiresInDays * 86400_000) : null
 
-  const [lic] = await db.insert(schema.licenses).values({
-    orgId: project.orgId, projectId, agentAlias, hashedKey: hashLicenseKey(key),
-    sectors, status: 'active', expiresAt,
-  }).returning()
+  const [lic] = await db
+    .insert(schema.licenses)
+    .values({
+      orgId: project.orgId,
+      projectId,
+      agentAlias,
+      hashedKey: hashLicenseKey(key),
+      sectors,
+      status: 'active',
+      expiresAt,
+    })
+    .returning()
+  if (!lic) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
   await logActivity({
-    projectId, actorType: 'human', actorUserId: manager.id,
-    event: 'license_issued', message: `Issued license to ${agentAlias} [${sectors.join(', ')}]`,
+    projectId,
+    actorType: 'human',
+    actorUserId: manager.id,
+    event: 'license_issued',
+    message: `Issued license to ${agentAlias} [${sectors.join(', ')}]`,
     metadata: { licenseId: lic.id },
   })
 
   setResponseStatus(event, 201)
   // key is shown only here — never retrievable again.
-  return { id: lic.id, agentAlias: lic.agentAlias, sectors: lic.sectors, expiresAt: lic.expiresAt, key }
+  return {
+    id: lic.id,
+    agentAlias: lic.agentAlias,
+    sectors: lic.sectors,
+    expiresAt: lic.expiresAt,
+    key,
+  }
 })

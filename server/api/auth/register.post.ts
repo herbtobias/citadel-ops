@@ -19,9 +19,16 @@ export default defineEventHandler(async (event) => {
   const [existing] = await db.select().from(schema.users).where(eq(schema.users.email, lower))
   if (existing) throw createError({ statusCode: 409, statusMessage: 'Email already registered' })
 
-  const [user] = await db.insert(schema.users).values({
-    email: lower, name, passwordHash: hashPassword(password), systemRole: 'user',
-  }).returning()
+  const [user] = await db
+    .insert(schema.users)
+    .values({
+      email: lower,
+      name,
+      passwordHash: hashPassword(password),
+      systemRole: 'user',
+    })
+    .returning()
+  if (!user) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
   await setUserSession(event, {
     user: { id: user.id, email: user.email, name: user.name, systemRole: user.systemRole },

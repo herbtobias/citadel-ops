@@ -40,22 +40,32 @@ type RefInput = {
 export async function createReference(input: RefInput) {
   const sourceKind = input.sourceKind ?? 'mission'
   const targetKind = input.targetKind ?? 'mission'
-  const [dup] = await db.select().from(references).where(and(
-    eq(references.sourceKind, sourceKind),
-    eq(references.sourceId, input.sourceId),
-    eq(references.targetKind, targetKind),
-    eq(references.targetId, input.targetId),
-    eq(references.linkType, input.linkType),
-  ))
+  const [dup] = await db
+    .select()
+    .from(references)
+    .where(
+      and(
+        eq(references.sourceKind, sourceKind),
+        eq(references.sourceId, input.sourceId),
+        eq(references.targetKind, targetKind),
+        eq(references.targetId, input.targetId),
+        eq(references.linkType, input.linkType),
+      ),
+    )
   if (dup) return dup
-  const [row] = await db.insert(references).values({
-    projectId: input.projectId,
-    sourceKind, sourceId: input.sourceId,
-    targetKind, targetId: input.targetId,
-    linkType: input.linkType,
-    note: input.note ?? null,
-    createdByLicenseId: input.createdByLicenseId ?? null,
-  }).returning()
+  const [row] = await db
+    .insert(references)
+    .values({
+      projectId: input.projectId,
+      sourceKind,
+      sourceId: input.sourceId,
+      targetKind,
+      targetId: input.targetId,
+      linkType: input.linkType,
+      note: input.note ?? null,
+      createdByLicenseId: input.createdByLicenseId ?? null,
+    })
+    .returning()
   return row
 }
 

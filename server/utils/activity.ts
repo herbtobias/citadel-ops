@@ -41,21 +41,27 @@ function computeHash(prevHash: string | null, entry: LogInput): string {
 // Appends one entry to The Wire, chaining off the most recent project entry.
 export async function logActivity(input: LogInput) {
   const [prev] = input.projectId
-    ? await db.select({ hash: activityLog.hash }).from(activityLog)
+    ? await db
+        .select({ hash: activityLog.hash })
+        .from(activityLog)
         .where(eq(activityLog.projectId, input.projectId))
-        .orderBy(desc(activityLog.createdAt)).limit(1)
+        .orderBy(desc(activityLog.createdAt))
+        .limit(1)
     : []
 
   const prevHash = prev?.hash ?? null
   const hash = computeHash(prevHash, input)
   const traceId = input.traceId ?? getTraceId()
 
-  const [row] = await db.insert(activityLog).values({
-    ...input,
-    traceId,
-    prevHash,
-    hash,
-  }).returning()
+  const [row] = await db
+    .insert(activityLog)
+    .values({
+      ...input,
+      traceId,
+      prevHash,
+      hash,
+    })
+    .returning()
 
   // Fan out to the live event bus (SSE/webhooks).
   publishEvent({
@@ -71,19 +77,31 @@ export async function logActivity(input: LogInput) {
 // Tamper-evidence: walk the project's chain in order, recompute each hash and check
 // linkage. Returns the first broken entry if any. §24.
 export async function verifyProjectChain(projectId: string) {
-  const rows = await db.select().from(activityLog)
+  const rows = await db
+    .select()
+    .from(activityLog)
     .where(eq(activityLog.projectId, projectId))
     .orderBy(asc(activityLog.createdAt))
 
   let prevHash: string | null = null
   for (const r of rows) {
     const expected = computeHash(prevHash, {
-      projectId: r.projectId, missionId: r.missionId, event: r.event,
-      fromStatus: r.fromStatus, toStatus: r.toStatus, message: r.message,
-      actorType: r.actorType, actorLicenseId: r.actorLicenseId, actorUserId: r.actorUserId,
+      projectId: r.projectId,
+      missionId: r.missionId,
+      event: r.event,
+      fromStatus: r.fromStatus,
+      toStatus: r.toStatus,
+      message: r.message,
+      actorType: r.actorType,
+      actorLicenseId: r.actorLicenseId,
+      actorUserId: r.actorUserId,
     })
     if (r.prevHash !== prevHash || r.hash !== expected) {
-      return { intact: false, entries: rows.length, brokenAt: { id: r.id, event: r.event, createdAt: r.createdAt } }
+      return {
+        intact: false,
+        entries: rows.length,
+        brokenAt: { id: r.id, event: r.event, createdAt: r.createdAt },
+      }
     }
     prevHash = r.hash
   }

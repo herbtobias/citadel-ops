@@ -8,27 +8,27 @@ export const useMissionsStore = defineStore('missions', () => {
   async function fetchMissions(projectId: string): Promise<Mission[]> {
     // useRequestFetch forwards the session cookie during SSR (plain $fetch on client).
     const data = await useRequestFetch()<Mission[]>(`/api/v1/projects/${projectId}/missions`)
-    missions.value = [...missions.value.filter(m => m.projectId !== projectId), ...data]
+    missions.value = [...missions.value.filter((m) => m.projectId !== projectId), ...data]
     return data
   }
 
   function byProject(projectId: string): Mission[] {
-    return missions.value.filter(m => m.projectId === projectId)
+    return missions.value.filter((m) => m.projectId === projectId)
   }
 
   function byKey(key: string): Mission | undefined {
-    return missions.value.find(m => m.key === key)
+    return missions.value.find((m) => m.key === key)
   }
 
   function byStatus(projectId: string, status: MissionStatus): Mission[] {
     return byProject(projectId)
-      .filter(m => m.status === status)
+      .filter((m) => m.status === status)
       .sort((a, b) => a.orderIndex - b.orderIndex)
   }
 
   // Optimistic move; the server enforces the state-machine and rolls back on 422.
   async function moveMission(id: string, newStatus: MissionStatus) {
-    const m = missions.value.find(x => x.id === id)
+    const m = missions.value.find((x) => x.id === id)
     if (!m || m.status === newStatus) return
     const prev = m.status
     m.status = newStatus
@@ -38,8 +38,7 @@ export const useMissionsStore = defineStore('missions', () => {
         body: { to: newStatus },
       })
       Object.assign(m, updated)
-    }
-    catch (e) {
+    } catch (e) {
       m.status = prev
       throw e
     }

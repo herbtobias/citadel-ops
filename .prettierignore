@@ -1,0 +1,15 @@
+# Generated / vendored — not ours to format.
+.nuxt
+.output
+.data
+dist
+node_modules
+coverage
+drizzle
+# Self-contained static landing page — hand-crafted inline CSS/JS, deployed
+# separately (Pages); not part of the app's format pipeline.
+site
+pnpm-lock.yaml
+package-lock.json
+*.min.js
+*.min.css

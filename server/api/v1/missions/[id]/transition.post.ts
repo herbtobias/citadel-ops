@@ -35,29 +35,59 @@ export default defineEventHandler(async (event) => {
   await db.update(schema.missions).set(patch).where(eq(schema.missions.id, id))
 
   await logActivity({
-    projectId: m.projectId, missionId: id, actorType: 'human', actorUserId: user.id,
-    event: 'transitioned', fromStatus: m.status, toStatus: body.to,
+    projectId: m.projectId,
+    missionId: id,
+    actorType: 'human',
+    actorUserId: user.id,
+    event: 'transitioned',
+    fromStatus: m.status,
+    toStatus: body.to,
     message: body.message ?? `${m.status} → ${body.to}`,
   })
 
   // Cancel-cascade (§24): cancelling a mission cancels its still-open spawned children.
   if (body.to === 'cancelled') {
-    const childRefs = await db.select().from(schema.references).where(and(
-      eq(schema.references.targetKind, 'mission'),
-      eq(schema.references.targetId, id),
-      eq(schema.references.linkType, 'spawned_from'),
-    ))
-    const childIds = childRefs.map(r => r.sourceId)
+    const childRefs = await db
+      .select()
+      .from(schema.references)
+      .where(
+        and(
+          eq(schema.references.targetKind, 'mission'),
+          eq(schema.references.targetId, id),
+          eq(schema.references.linkType, 'spawned_from'),
+        ),
+      )
+    const childIds = childRefs.map((r) => r.sourceId)
     if (childIds.length) {
-      const children = await db.select().from(schema.missions).where(and(
-        inArray(schema.missions.id, childIds),
-        inArray(schema.missions.status, ['backlog', 'designing', 'cold_read', 'ready', 'in_progress', 'in_review', 'blocked']),
-      ))
+      const children = await db
+        .select()
+        .from(schema.missions)
+        .where(
+          and(
+            inArray(schema.missions.id, childIds),
+            inArray(schema.missions.status, [
+              'backlog',
+              'designing',
+              'cold_read',
+              'ready',
+              'in_progress',
+              'in_review',
+              'blocked',
+            ]),
+          ),
+        )
       for (const c of children) {
-        await db.update(schema.missions).set({ status: 'cancelled', updatedAt: new Date() }).where(eq(schema.missions.id, c.id))
+        await db
+          .update(schema.missions)
+          .set({ status: 'cancelled', updatedAt: new Date() })
+          .where(eq(schema.missions.id, c.id))
         await logActivity({
-          projectId: c.projectId, missionId: c.id, actorType: 'system',
-          event: 'cancel_cascade', fromStatus: c.status, toStatus: 'cancelled',
+          projectId: c.projectId,
+          missionId: c.id,
+          actorType: 'system',
+          event: 'cancel_cascade',
+          fromStatus: c.status,
+          toStatus: 'cancelled',
           message: `Cancelled via cascade from ${m.key}`,
         })
       }

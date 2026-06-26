@@ -27,13 +27,20 @@ describe.skipIf(!RUN)('integration: The Wire + data (requires TEST_DATABASE_URL)
     const { INVERSE_LINK } = await import('../../server/utils/references')
 
     const [web] = await db.select().from(schema.projects).where(eq(schema.projects.key, 'WEB'))
-    const refs = await db.select().from(schema.references).where(eq(schema.references.projectId, web!.id))
+    const refs = await db
+      .select()
+      .from(schema.references)
+      .where(eq(schema.references.projectId, web!.id))
 
     for (const r of refs) {
-      const hasInverse = refs.some(o =>
-        o.sourceKind === r.targetKind && o.sourceId === r.targetId
-        && o.targetKind === r.sourceKind && o.targetId === r.sourceId
-        && o.linkType === INVERSE_LINK[r.linkType])
+      const hasInverse = refs.some(
+        (o) =>
+          o.sourceKind === r.targetKind &&
+          o.sourceId === r.targetId &&
+          o.targetKind === r.sourceKind &&
+          o.targetId === r.sourceId &&
+          o.linkType === INVERSE_LINK[r.linkType],
+      )
       expect(hasInverse, `missing inverse for ${r.linkType}`).toBe(true)
     }
   })

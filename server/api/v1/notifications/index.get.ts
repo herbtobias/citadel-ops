@@ -13,13 +13,27 @@ export default defineEventHandler(async (event) => {
     ? and(eq(schema.notifications.userId, user.id), isNull(schema.notifications.readAt))
     : eq(schema.notifications.userId, user.id)
 
-  const rows = await db.select().from(schema.notifications)
-    .where(where).orderBy(desc(schema.notifications.createdAt)).limit(limit)
+  const rows = await db
+    .select()
+    .from(schema.notifications)
+    .where(where)
+    .orderBy(desc(schema.notifications.createdAt))
+    .limit(limit)
 
-  const unread = await db.$count(schema.notifications, and(eq(schema.notifications.userId, user.id), isNull(schema.notifications.readAt)))
+  const unread = await db.$count(
+    schema.notifications,
+    and(eq(schema.notifications.userId, user.id), isNull(schema.notifications.readAt)),
+  )
 
   return {
     unread,
-    notifications: rows.map(n => ({ id: n.id, type: n.type, payload: n.payload, projectId: n.projectId, readAt: n.readAt, createdAt: n.createdAt })),
+    notifications: rows.map((n) => ({
+      id: n.id,
+      type: n.type,
+      payload: n.payload,
+      projectId: n.projectId,
+      readAt: n.readAt,
+      createdAt: n.createdAt,
+    })),
   }
 })

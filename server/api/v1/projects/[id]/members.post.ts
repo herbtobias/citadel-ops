@@ -16,17 +16,40 @@ export default defineEventHandler(async (event) => {
   const manager = await assertOrgManager(event, project.orgId)
   const { email } = await parseBody(event, schema_)
 
-  const [target] = await db.select().from(schema.users).where(eq(schema.users.email, email.toLowerCase()))
+  const [target] = await db
+    .select()
+    .from(schema.users)
+    .where(eq(schema.users.email, email.toLowerCase()))
   if (!target) throw createError({ statusCode: 404, statusMessage: 'User not found' })
 
-  const [member] = await db.select().from(schema.orgMemberships)
-    .where(and(eq(schema.orgMemberships.orgId, project.orgId), eq(schema.orgMemberships.userId, target.id)))
-  if (!member) throw createError({ statusCode: 422, statusMessage: 'User is not a member of this organization' })
+  const [member] = await db
+    .select()
+    .from(schema.orgMemberships)
+    .where(
+      and(
+        eq(schema.orgMemberships.orgId, project.orgId),
+        eq(schema.orgMemberships.userId, target.id),
+      ),
+    )
+  if (!member)
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'User is not a member of this organization',
+    })
 
-  const [existing] = await db.select().from(schema.projectMemberships)
-    .where(and(eq(schema.projectMemberships.projectId, projectId), eq(schema.projectMemberships.userId, target.id)))
+  const [existing] = await db
+    .select()
+    .from(schema.projectMemberships)
+    .where(
+      and(
+        eq(schema.projectMemberships.projectId, projectId),
+        eq(schema.projectMemberships.userId, target.id),
+      ),
+    )
   if (!existing) {
-    await db.insert(schema.projectMemberships).values({ projectId, userId: target.id, grantedByUserId: manager.id })
+    await db
+      .insert(schema.projectMemberships)
+      .values({ projectId, userId: target.id, grantedByUserId: manager.id })
   }
 
   setResponseStatus(event, 201)

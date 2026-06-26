@@ -10,7 +10,10 @@ const schema_ = z.object({ key: z.string().min(1) })
 
 export default defineEventHandler(async (event) => {
   const { key } = await parseBody(event, schema_)
-  const [lic] = await db.select().from(schema.licenses).where(eq(schema.licenses.hashedKey, hashLicenseKey(key)))
+  const [lic] = await db
+    .select()
+    .from(schema.licenses)
+    .where(eq(schema.licenses.hashedKey, hashLicenseKey(key)))
 
   if (!lic) return { valid: false, reason: 'unknown' }
   if (lic.status !== 'active') return { valid: false, reason: lic.status }

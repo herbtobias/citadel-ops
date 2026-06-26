@@ -2,9 +2,24 @@
 const route = useRoute()
 const projectId = computed(() => route.params.projectId as string)
 
-interface Gate { key: string, name: string, appliesToStatus: string, rule: Record<string, boolean>, blocking: boolean }
-interface Harness { key: string, name: string, commands: Record<string, string> }
-interface Guidelines { activeThemeKey: string, themeKey: string, guideline: { title: string, bodyMarkdown: string } | null, themes: { key: string, name: string }[] }
+interface Gate {
+  key: string
+  name: string
+  appliesToStatus: string
+  rule: Record<string, boolean>
+  blocking: boolean
+}
+interface Harness {
+  key: string
+  name: string
+  commands: Record<string, string>
+}
+interface Guidelines {
+  activeThemeKey: string
+  themeKey: string
+  guideline: { title: string; bodyMarkdown: string } | null
+  themes: { key: string; name: string }[]
+}
 
 const { data } = await useAsyncData(
   'q-branch',
@@ -21,7 +36,9 @@ const { data } = await useAsyncData(
 )
 
 function ruleList(rule: Record<string, boolean>) {
-  return Object.entries(rule).filter(([, v]) => v).map(([k]) => k)
+  return Object.entries(rule)
+    .filter(([, v]) => v)
+    .map(([k]) => k)
 }
 </script>
 
@@ -36,17 +53,32 @@ function ruleList(rule: Record<string, boolean>) {
     <section class="ct-card border border-border bg-card p-5">
       <h2 class="ct-label mb-3 text-muted-foreground">Quality Gates</h2>
       <ul class="space-y-3">
-        <li v-for="g in data?.gates" :key="g.key" class="border-b border-border/50 pb-3 last:border-0">
+        <li
+          v-for="g in data?.gates"
+          :key="g.key"
+          class="border-b border-border/50 pb-3 last:border-0"
+        >
           <div class="flex items-center justify-between">
             <span class="font-medium">{{ g.name }}</span>
-            <span class="ct-label rounded bg-muted px-1.5 py-0.5 text-accent-tertiary">@ {{ g.appliesToStatus }}</span>
+            <span class="ct-label rounded bg-muted px-1.5 py-0.5 text-accent-tertiary"
+              >@ {{ g.appliesToStatus }}</span
+            >
           </div>
           <div class="mt-1 flex flex-wrap gap-1">
-            <span v-for="r in ruleList(g.rule)" :key="r" class="ct-label rounded bg-muted px-1.5 py-0.5 text-muted-foreground">{{ r }}</span>
-            <span v-if="g.blocking" class="ct-label rounded bg-muted px-1.5 py-0.5 text-destructive">blocking</span>
+            <span
+              v-for="r in ruleList(g.rule)"
+              :key="r"
+              class="ct-label rounded bg-muted px-1.5 py-0.5 text-muted-foreground"
+              >{{ r }}</span
+            >
+            <span v-if="g.blocking" class="ct-label rounded bg-muted px-1.5 py-0.5 text-destructive"
+              >blocking</span
+            >
           </div>
         </li>
-        <li v-if="!data?.gates?.length" class="text-sm text-muted-foreground">No gates configured.</li>
+        <li v-if="!data?.gates?.length" class="text-sm text-muted-foreground">
+          No gates configured.
+        </li>
       </ul>
     </section>
 
@@ -62,7 +94,9 @@ function ruleList(rule: Record<string, boolean>) {
           </li>
         </ul>
       </div>
-      <p v-if="!data?.harness?.length" class="text-sm text-muted-foreground">No harness configured.</p>
+      <p v-if="!data?.harness?.length" class="text-sm text-muted-foreground">
+        No harness configured.
+      </p>
     </section>
 
     <!-- Design Guideline + Theme registry -->
@@ -73,14 +107,23 @@ function ruleList(rule: Record<string, boolean>) {
       </div>
       <template v-if="data?.design?.guideline">
         <p class="font-medium">{{ data.design.guideline.title }}</p>
-        <p class="mt-1 text-sm leading-relaxed text-muted-foreground">{{ data.design.guideline.bodyMarkdown }}</p>
+        <p class="mt-1 text-sm leading-relaxed text-muted-foreground">
+          {{ data.design.guideline.bodyMarkdown }}
+        </p>
       </template>
       <p v-else class="text-sm text-muted-foreground">No guideline for the active theme.</p>
 
       <div class="mt-4 flex flex-wrap gap-2">
-        <span v-for="t in data?.design?.themes" :key="t.key"
+        <span
+          v-for="t in data?.design?.themes"
+          :key="t.key"
           class="ct-label rounded-[var(--radius-card)] border border-border px-2 py-1"
-          :class="t.key === data?.design?.activeThemeKey ? 'border-accent text-accent' : 'text-muted-foreground'">
+          :class="
+            t.key === data?.design?.activeThemeKey
+              ? 'border-accent text-accent'
+              : 'text-muted-foreground'
+          "
+        >
           {{ t.name }}
         </span>
       </div>

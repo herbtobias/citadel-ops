@@ -11,26 +11,38 @@ export default defineEventHandler(async (event) => {
   if (!project) throw createError({ statusCode: 404, statusMessage: 'Project not found' })
   const manager = await assertOrgManager(event, project.orgId)
 
-  const done = await db.select().from(schema.missions)
+  const done = await db
+    .select()
+    .from(schema.missions)
     .where(and(eq(schema.missions.projectId, projectId), eq(schema.missions.status, 'done')))
   const summary = done.length
-    ? `Completed (${done.length}): ${done.map(m => `${m.key} ${m.title}`).slice(0, 30).join('; ')}`
+    ? `Completed (${done.length}): ${done
+        .map((m) => `${m.key} ${m.title}`)
+        .slice(0, 30)
+        .join('; ')}`
     : 'No completed missions yet.'
 
   const path = 'ARCHIVE/completed'
-  const [existing] = await db.select().from(schema.knowledgeDocs)
+  const [existing] = await db
+    .select()
+    .from(schema.knowledgeDocs)
     .where(and(eq(schema.knowledgeDocs.projectId, projectId), eq(schema.knowledgeDocs.path, path)))
 
   if (existing) {
-    await db.update(schema.knowledgeDocs).set({ summary, updatedAt: new Date() }).where(eq(schema.knowledgeDocs.id, existing.id))
-  }
-  else {
+    await db
+      .update(schema.knowledgeDocs)
+      .set({ summary, updatedAt: new Date() })
+      .where(eq(schema.knowledgeDocs.id, existing.id))
+  } else {
     await db.insert(schema.knowledgeDocs).values({ projectId, path, level: 0, summary })
   }
 
   await logActivity({
-    projectId, actorType: 'human', actorUserId: manager.id,
-    event: 'archive_refreshed', message: `Archivist refreshed (${done.length} completed missions)`,
+    projectId,
+    actorType: 'human',
+    actorUserId: manager.id,
+    event: 'archive_refreshed',
+    message: `Archivist refreshed (${done.length} completed missions)`,
   })
 
   return { ok: true, completedMissions: done.length, summary }

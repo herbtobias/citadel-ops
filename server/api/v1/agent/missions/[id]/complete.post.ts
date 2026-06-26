@@ -23,7 +23,8 @@ export default defineEventHandler(async (event) => {
 
   const [m] = await db.select().from(schema.missions).where(eq(schema.missions.id, id))
   if (!m) throw createError({ statusCode: 404, statusMessage: 'Mission not found' })
-  if (m.claimedByLicenseId !== lic.id) throw createError({ statusCode: 403, statusMessage: 'Mission not claimed by this license' })
+  if (m.claimedByLicenseId !== lic.id)
+    throw createError({ statusCode: 403, statusMessage: 'Mission not claimed by this license' })
 
   assertTransition(m.status, 'done')
   // Enforce Q-Branch gates for completion (harness pass, artifacts, acceptance, §18).
@@ -31,20 +32,33 @@ export default defineEventHandler(async (event) => {
 
   const run = async () => {
     const now = new Date()
-    await db.update(schema.missions).set({
-      status: 'done', result: body.result, outcome: body.outcome ?? null,
-      completedAt: now, updatedAt: now,
-      leaseExpiresAt: null, heartbeatAt: null,
-    }).where(eq(schema.missions.id, id))
+    await db
+      .update(schema.missions)
+      .set({
+        status: 'done',
+        result: body.result,
+        outcome: body.outcome ?? null,
+        completedAt: now,
+        updatedAt: now,
+        leaseExpiresAt: null,
+        heartbeatAt: null,
+      })
+      .where(eq(schema.missions.id, id))
 
     // Close the open deployment for this mission.
-    await db.update(schema.deployments)
+    await db
+      .update(schema.deployments)
       .set({ runnerStatus: body.result === 'failed' ? 'failed' : 'succeeded', finishedAt: now })
       .where(and(eq(schema.deployments.missionId, id), isNull(schema.deployments.finishedAt)))
 
     await logActivity({
-      projectId: m.projectId, missionId: id, actorType: 'agent', actorLicenseId: lic.id,
-      event: 'completed', fromStatus: m.status, toStatus: 'done',
+      projectId: m.projectId,
+      missionId: id,
+      actorType: 'agent',
+      actorLicenseId: lic.id,
+      event: 'completed',
+      fromStatus: m.status,
+      toStatus: 'done',
       message: `${lic.agentAlias} completed mission (${body.result})`,
     })
     const mission = await serializeMissionById(id)

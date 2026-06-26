@@ -4,7 +4,9 @@
 import { genTraceId, traceIdFromHeaders, traceStore } from '~~/server/utils/tracing'
 
 export default defineEventHandler((event) => {
-  const traceId = traceIdFromHeaders(getHeader(event, 'traceparent'), getHeader(event, 'x-trace-id')) || genTraceId()
+  const traceId =
+    traceIdFromHeaders(getHeader(event, 'traceparent'), getHeader(event, 'x-trace-id')) ||
+    genTraceId()
   event.context.traceId = traceId
   // enterWith binds the id for the rest of this request's async chain.
   traceStore.enterWith({ traceId })

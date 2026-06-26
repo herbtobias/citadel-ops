@@ -11,14 +11,20 @@ export default defineEventHandler(async (event) => {
   if (licRows.length === 0) return []
 
   // Current mission per license = an in-progress mission it has claimed.
-  const active = await db.select({ key: schema.missions.key, lic: schema.missions.claimedByLicenseId })
+  const active = await db
+    .select({ key: schema.missions.key, lic: schema.missions.claimedByLicenseId })
     .from(schema.missions)
-    .where(and(
-      eq(schema.missions.projectId, id),
-      eq(schema.missions.status, 'in_progress'),
-      inArray(schema.missions.claimedByLicenseId, licRows.map(l => l.id)),
-    ))
-  const currentByLic = new Map(active.filter(a => a.lic).map(a => [a.lic!, a.key]))
+    .where(
+      and(
+        eq(schema.missions.projectId, id),
+        eq(schema.missions.status, 'in_progress'),
+        inArray(
+          schema.missions.claimedByLicenseId,
+          licRows.map((l) => l.id),
+        ),
+      ),
+    )
+  const currentByLic = new Map(active.filter((a) => a.lic).map((a) => [a.lic!, a.key]))
 
-  return licRows.map(l => serializeAgent(l, currentByLic.get(l.id) ?? null))
+  return licRows.map((l) => serializeAgent(l, currentByLic.get(l.id) ?? null))
 })

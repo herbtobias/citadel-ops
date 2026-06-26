@@ -11,27 +11,46 @@ export default defineEventHandler(async (event) => {
   if (!lic) throw createError({ statusCode: 404, statusMessage: 'License not found' })
   const manager = await assertOrgManager(event, lic.orgId)
 
-  await db.update(schema.licenses)
+  await db
+    .update(schema.licenses)
     .set({ status: 'revoked', revokedAt: new Date(), revokedBy: manager.id })
     .where(eq(schema.licenses.id, id))
 
   // Re-queue any in-progress missions this agent held.
-  const held = await db.select().from(schema.missions)
-    .where(and(eq(schema.missions.claimedByLicenseId, id), eq(schema.missions.status, 'in_progress')))
+  const held = await db
+    .select()
+    .from(schema.missions)
+    .where(
+      and(eq(schema.missions.claimedByLicenseId, id), eq(schema.missions.status, 'in_progress')),
+    )
   for (const m of held) {
-    await db.update(schema.missions).set({
-      status: 'ready', claimedByLicenseId: null, claimedAt: null, leaseExpiresAt: null, heartbeatAt: null,
-    }).where(eq(schema.missions.id, m.id))
+    await db
+      .update(schema.missions)
+      .set({
+        status: 'ready',
+        claimedByLicenseId: null,
+        claimedAt: null,
+        leaseExpiresAt: null,
+        heartbeatAt: null,
+      })
+      .where(eq(schema.missions.id, m.id))
     await logActivity({
-      projectId: m.projectId, missionId: m.id, actorType: 'system',
-      event: 'stand_down', fromStatus: 'in_progress', toStatus: 'ready',
+      projectId: m.projectId,
+      missionId: m.id,
+      actorType: 'system',
+      event: 'stand_down',
+      fromStatus: 'in_progress',
+      toStatus: 'ready',
       message: `License revoked; re-queued ${m.key}`,
     })
   }
 
   await logActivity({
-    projectId: lic.projectId, actorType: 'human', actorUserId: manager.id,
-    event: 'license_revoked', message: `Revoked license for ${lic.agentAlias}`,
+    projectId: lic.projectId,
+    actorType: 'human',
+    actorUserId: manager.id,
+    event: 'license_revoked',
+    message: `Revoked license for ${lic.agentAlias}`,
     metadata: { licenseId: id, requeued: held.length },
   })
 

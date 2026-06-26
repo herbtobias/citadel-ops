@@ -5,7 +5,8 @@ import { subscribeEvents } from '~~/server/utils/events'
 
 export default defineEventHandler(async (event) => {
   const projectId = getQuery(event).projectId as string | undefined
-  if (!projectId) throw createError({ statusCode: 400, statusMessage: 'projectId query param required' })
+  if (!projectId)
+    throw createError({ statusCode: 400, statusMessage: 'projectId query param required' })
   await assertProjectAccess(event, projectId)
 
   const stream = createEventStream(event)

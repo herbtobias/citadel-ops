@@ -4,8 +4,11 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { createCitadelServer } from '../mcp/citadel'
 
-export async function connectInMemory(opts?: { baseUrl?: string, license?: string }) {
-  const server = createCitadelServer({ baseUrl: opts?.baseUrl ?? 'http://localhost:0', license: opts?.license ?? 'test' })
+export async function connectInMemory(opts?: { baseUrl?: string; license?: string }) {
+  const server = createCitadelServer({
+    baseUrl: opts?.baseUrl ?? 'http://localhost:0',
+    license: opts?.license ?? 'test',
+  })
   const [clientT, serverT] = InMemoryTransport.createLinkedPair()
   await server.connect(serverT)
   const client = new Client({ name: 'test', version: '1.0.0' })
@@ -21,5 +24,5 @@ export async function listCitadelTools() {
 }
 
 export async function listCitadelToolNames(): Promise<string[]> {
-  return (await listCitadelTools()).map(t => t.name)
+  return (await listCitadelTools()).map((t) => t.name)
 }

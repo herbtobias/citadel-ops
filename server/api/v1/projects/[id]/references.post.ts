@@ -19,23 +19,32 @@ export default defineEventHandler(async (event) => {
   const { user } = await assertProjectWrite(event, projectId)
   const { sourceKey, targetKey, linkType } = await parseBody(event, schema_)
 
-  if (sourceKey === targetKey) throw createError({ statusCode: 422, statusMessage: 'Cannot link a mission to itself' })
+  if (sourceKey === targetKey)
+    throw createError({ statusCode: 422, statusMessage: 'Cannot link a mission to itself' })
 
   const findMission = async (key: string) => {
-    const [m] = await db.select().from(schema.missions)
+    const [m] = await db
+      .select()
+      .from(schema.missions)
       .where(and(eq(schema.missions.projectId, projectId), eq(schema.missions.key, key)))
     return m
   }
   const source = await findMission(sourceKey)
   const target = await findMission(targetKey)
-  if (!source) throw createError({ statusCode: 404, statusMessage: `Mission ${sourceKey} not found` })
-  if (!target) throw createError({ statusCode: 404, statusMessage: `Mission ${targetKey} not found` })
+  if (!source)
+    throw createError({ statusCode: 404, statusMessage: `Mission ${sourceKey} not found` })
+  if (!target)
+    throw createError({ statusCode: 404, statusMessage: `Mission ${targetKey} not found` })
 
   await createBidirectional({ projectId, sourceId: source.id, targetId: target.id, linkType })
 
   await logActivity({
-    projectId, missionId: source.id, actorType: 'human', actorUserId: user.id,
-    event: 'linked', message: `${sourceKey} ${linkType} ${targetKey}`,
+    projectId,
+    missionId: source.id,
+    actorType: 'human',
+    actorUserId: user.id,
+    event: 'linked',
+    message: `${sourceKey} ${linkType} ${targetKey}`,
     metadata: { targetMissionId: target.id, linkType },
   })
 
