@@ -225,24 +225,64 @@ async function seed() {
   })
 
   // ── The Archive: knowledge docs (layered summaries) ──
+  // The Archive — what a Scout would have filed after recon of an existing repo
+  // (summaries = "peanuts & hay", bodyMarkdown = the deep read), plus an INTEL/ doc
+  // as the Interrogator would persist it after debriefing the operator.
   await db.insert(knowledgeDocs).values([
     {
       projectId: web.id,
       path: 'README',
       level: 0,
       summary: 'Marketing site relaunch — Nuxt 4, editorial design, pricing + checkout flow.',
+      bodyMarkdown: [
+        '# WEB — Marketing site relaunch',
+        '',
+        '**Stack:** Nuxt 4, Vue 3, Tailwind v4 (semantic tokens), Pinia, @nuxtjs/i18n (EN/DE).',
+        '**Shape:** SSR marketing site + a small Nitro API for pricing and (planned) checkout.',
+        '**Build/test:** `npm run dev`, `npm run build`, `npm run test` (vitest).',
+        '',
+        'See `server/` and `app/` for the two halves.',
+      ].join('\n'),
     },
     {
       projectId: web.id,
       path: 'server/',
       level: 1,
       summary: 'Nitro API: pricing endpoint, checkout integration (planned).',
+      bodyMarkdown: [
+        '## server/ — Nitro API',
+        '',
+        '- `GET /api/pricing` returns the 3 tiers (the only live endpoint).',
+        '- Checkout (Stripe) is **planned, not built** — the biggest open area.',
+        '- No auth layer yet; endpoints are public.',
+      ].join('\n'),
     },
     {
       projectId: web.id,
       path: 'app/',
       level: 1,
       summary: 'Vue pages + components; semantic-token theming (DEFCON 5 active).',
+      bodyMarkdown: [
+        '## app/ — Vue front-end',
+        '',
+        '- Pages + components consume **semantic tokens only** (no hard-coded colors).',
+        '- i18n strings live in `i18n/locales/{en,de}.json`.',
+        '- Theming via `[data-theme]`; DEFCON 5 is the active theme.',
+      ].join('\n'),
+    },
+    {
+      projectId: web.id,
+      path: 'INTEL/constraints',
+      level: 0,
+      summary: 'Operator debrief: launch deadline, GDPR/EU residency, no checkout downtime.',
+      bodyMarkdown: [
+        '## INTEL — Constraints (from operator debrief)',
+        '',
+        '- **Deadline:** public relaunch must ship before the autumn campaign.',
+        '- **Compliance:** EU data residency + GDPR; no PII in logs.',
+        '- **Risk area:** checkout must not regress existing pricing display.',
+        '- **Convention:** all copy is bilingual (EN/DE) — never ship EN-only strings.',
+      ].join('\n'),
     },
   ])
 
@@ -294,6 +334,18 @@ async function seed() {
     scopes: ['plan'],
     status: 'active',
     lastSeenAt: new Date('2026-06-25T08:05:00Z'),
+  })
+  // A Scout/Interrogator: the `recon` scope lets it write The Archive when onboarding
+  // a brownfield project (analyze the repo, debrief the operator) upstream of planning.
+  await db.insert(licenses).values({
+    orgId: org.id,
+    projectId: web.id,
+    agentAlias: '010',
+    hashedKey: hashKey('lic_010_demo'),
+    sectors: ['BACKEND'],
+    scopes: ['recon'],
+    status: 'active',
+    lastSeenAt: new Date('2026-06-25T08:00:00Z'),
   })
 
   // ── Operation (= Sprint) ──
@@ -508,7 +560,7 @@ async function seed() {
   })
 
   console.log(
-    `✓ Seeded org=${org.slug} projects=[WEB,APP] missions=${rows.length} licenses=4 (incl. 008 planner) users=4`,
+    `✓ Seeded org=${org.slug} projects=[WEB,APP] missions=${rows.length} licenses=5 (incl. 008 planner, 010 scout) users=4`,
   )
   console.log(`  logins (password "${DEV_PASSWORD}"):`)
   console.log(`    ${HQ_EMAIL}  → super_admin (all)`)

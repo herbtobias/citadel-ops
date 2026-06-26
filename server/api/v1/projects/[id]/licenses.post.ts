@@ -11,9 +11,10 @@ import { logActivity } from '~~/server/utils/activity'
 const schema_ = z.object({
   agentAlias: z.string().min(1).max(40),
   sectors: z.array(sectorSchema).min(1),
-  // Capability scopes (currently just `plan` — the Planner capability).
+  // Capability scopes: `plan` (Planner — groom Operations/Missions), `recon`
+  // (Scout/Interrogator — write The Archive when onboarding a brownfield project).
   scopes: z
-    .array(z.enum(['plan']))
+    .array(z.enum(['plan', 'recon']))
     .optional()
     .default([]),
   expiresInDays: z.number().int().positive().max(365).optional(),

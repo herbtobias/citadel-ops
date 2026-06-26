@@ -79,6 +79,21 @@ export function assertPlanScope(lic: License): void {
   }
 }
 
+// `recon` lets an agent write into The Archive (KnowledgeDocs) — used by the Scout
+// (analyzes an existing codebase) and the Interrogator (debriefs the operator) when
+// onboarding a brownfield project, upstream of planning. Both roles share this scope.
+export const RECON_SCOPE = 'recon'
+
+// Guard for the Archive-write endpoint — 403s an agent whose License lacks `recon`.
+export function assertReconScope(lic: License): void {
+  if (!licenseHasScope(lic, RECON_SCOPE)) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'License lacks the `recon` scope (Scout/Interrogator capability required)',
+    })
+  }
+}
+
 // Watchdog: re-queue missions whose lease expired (crashed/stuck agents). Returns
 // the count re-queued. Called opportunistically before each claim. §21.
 export async function sweepExpiredLeases(projectId: string): Promise<number> {
