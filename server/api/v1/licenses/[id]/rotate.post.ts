@@ -10,15 +10,23 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')!
   const [lic] = await db.select().from(schema.licenses).where(eq(schema.licenses.id, id))
   if (!lic) throw createError({ statusCode: 404, statusMessage: 'License not found' })
-  if (lic.status !== 'active') throw createError({ statusCode: 422, statusMessage: 'Only active licenses can be rotated' })
+  if (lic.status !== 'active')
+    throw createError({ statusCode: 422, statusMessage: 'Only active licenses can be rotated' })
   const manager = await assertOrgManager(event, lic.orgId)
 
   const key = generateLicenseKey()
-  await db.update(schema.licenses).set({ hashedKey: hashLicenseKey(key) }).where(eq(schema.licenses.id, id))
+  await db
+    .update(schema.licenses)
+    .set({ hashedKey: hashLicenseKey(key) })
+    .where(eq(schema.licenses.id, id))
 
   await logActivity({
-    projectId: lic.projectId, actorType: 'human', actorUserId: manager.id,
-    event: 'license_rotated', message: `Rotated key for ${lic.agentAlias}`, metadata: { licenseId: id },
+    projectId: lic.projectId,
+    actorType: 'human',
+    actorUserId: manager.id,
+    event: 'license_rotated',
+    message: `Rotated key for ${lic.agentAlias}`,
+    metadata: { licenseId: id },
   })
 
   return { id, agentAlias: lic.agentAlias, key }

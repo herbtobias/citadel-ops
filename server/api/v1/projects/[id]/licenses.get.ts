@@ -7,8 +7,11 @@ export default defineEventHandler(async (event) => {
   const projectId = getRouterParam(event, 'id')!
   await assertProjectAccess(event, projectId)
 
-  const rows = await db.select().from(schema.licenses).where(eq(schema.licenses.projectId, projectId))
-  return rows.map(l => ({
+  const rows = await db
+    .select()
+    .from(schema.licenses)
+    .where(eq(schema.licenses.projectId, projectId))
+  return rows.map((l) => ({
     id: l.id,
     agentAlias: l.agentAlias,
     sectors: l.sectors,

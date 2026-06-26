@@ -23,21 +23,52 @@ export default defineEventHandler(async (event) => {
   // Reject if already an active member.
   const [existingUser] = await db.select().from(schema.users).where(eq(schema.users.email, lower))
   if (existingUser) {
-    const [m] = await db.select().from(schema.orgMemberships)
-      .where(and(eq(schema.orgMemberships.orgId, orgId), eq(schema.orgMemberships.userId, existingUser.id)))
+    const [m] = await db
+      .select()
+      .from(schema.orgMemberships)
+      .where(
+        and(
+          eq(schema.orgMemberships.orgId, orgId),
+          eq(schema.orgMemberships.userId, existingUser.id),
+        ),
+      )
     if (m) throw createError({ statusCode: 409, statusMessage: 'Already a member' })
   }
 
   // Supersede any prior pending invite for this email+org.
-  await db.update(schema.invitations).set({ status: 'revoked' })
-    .where(and(eq(schema.invitations.orgId, orgId), eq(schema.invitations.email, lower), eq(schema.invitations.status, 'pending')))
+  await db
+    .update(schema.invitations)
+    .set({ status: 'revoked' })
+    .where(
+      and(
+        eq(schema.invitations.orgId, orgId),
+        eq(schema.invitations.email, lower),
+        eq(schema.invitations.status, 'pending'),
+      ),
+    )
 
   const token = randomBytes(24).toString('hex')
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-  const [inv] = await db.insert(schema.invitations).values({
-    orgId, email: lower, orgRole: role, projectIds, token, invitedByUserId: user.id, expiresAt,
-  }).returning()
+  const [inv] = await db
+    .insert(schema.invitations)
+    .values({
+      orgId,
+      email: lower,
+      orgRole: role,
+      projectIds,
+      token,
+      invitedByUserId: user.id,
+      expiresAt,
+    })
+    .returning()
+  if (!inv) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
   setResponseStatus(event, 201)
-  return { id: inv.id, email: inv.email, role: inv.orgRole, token: inv.token, acceptUrl: `/accept-invite?token=${inv.token}` }
+  return {
+    id: inv.id,
+    email: inv.email,
+    role: inv.orgRole,
+    token: inv.token,
+    acceptUrl: `/accept-invite?token=${inv.token}`,
+  }
 })

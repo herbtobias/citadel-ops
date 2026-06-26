@@ -30,9 +30,9 @@ const priorityColor: Record<string, string> = {
   >
     <div class="mb-2 flex items-center justify-between">
       <span class="ct-label text-accent">{{ mission.key }}</span>
-      <span
-        class="ct-label rounded border border-border px-1.5 py-0.5 text-muted-foreground"
-      >{{ mission.sector }}</span>
+      <span class="ct-label rounded border border-border px-1.5 py-0.5 text-muted-foreground">{{
+        mission.sector
+      }}</span>
     </div>
 
     <p class="mb-2 line-clamp-2 text-sm font-medium leading-snug">{{ mission.title }}</p>
@@ -51,7 +51,11 @@ const priorityColor: Record<string, string> = {
 
     <div class="flex items-center justify-between text-muted-foreground">
       <div class="flex items-center gap-2">
-        <Icon :name="typeIcon[mission.type]" class="size-4" :class="priorityColor[mission.priority]" />
+        <Icon
+          :name="typeIcon[mission.type] ?? ''"
+          class="size-4"
+          :class="priorityColor[mission.priority]"
+        />
         <span v-if="mission.estimatePoints" class="ct-label">{{ mission.estimatePoints }}pt</span>
       </div>
       <div class="flex items-center gap-2">
@@ -65,7 +69,8 @@ const priorityColor: Record<string, string> = {
           v-if="mission.claimedByAlias"
           class="flex size-6 items-center justify-center rounded-full border border-accent text-[10px] text-accent"
           :title="`Agent ${mission.claimedByAlias}`"
-        >{{ mission.claimedByAlias }}</span>
+          >{{ mission.claimedByAlias }}</span
+        >
       </div>
     </div>
   </article>

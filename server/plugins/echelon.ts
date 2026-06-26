@@ -24,7 +24,8 @@ export default defineNitroPlugin((nitroApp) => {
         stack: error?.stack ? String(error.stack).slice(0, 8000) : null,
         context: { url, statusCode: status },
       })
+    } catch {
+      /* never let telemetry crash the request */
     }
-    catch { /* never let telemetry crash the request */ }
   })
 })

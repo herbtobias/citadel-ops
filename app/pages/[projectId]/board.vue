@@ -11,11 +11,9 @@ watchEffect(() => {
 })
 
 // Payload-transferred on first load; refetches on project switch (watch).
-await useAsyncData(
-  'board-missions',
-  () => missions.fetchMissions(projectId.value),
-  { watch: [projectId] },
-)
+await useAsyncData('board-missions', () => missions.fetchMissions(projectId.value), {
+  watch: [projectId],
+})
 
 // Live board: any mission event (claimed / transitioned / completed / …) re-pulls
 // the missions so cards move on their own — debounced to coalesce bursts. §13.
@@ -31,7 +29,10 @@ onBeforeUnmount(() => clearTimeout(liveTimer))
   <div class="flex h-full flex-col gap-4">
     <div class="flex items-center gap-3">
       <FilterBar class="min-w-0 flex-1" />
-      <span class="ct-label flex shrink-0 items-center gap-1.5 text-muted-foreground" title="Board updates live as agents work">
+      <span
+        class="ct-label flex shrink-0 items-center gap-1.5 text-muted-foreground"
+        title="Board updates live as agents work"
+      >
         <span class="size-2 rounded-full bg-accent ct-glow-sm" /> live
       </span>
     </div>

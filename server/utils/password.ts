@@ -15,6 +15,7 @@ export function hashPassword(password: string): string {
 export function verifyPassword(stored: string | null | undefined, password: string): boolean {
   if (!stored || !stored.includes(':')) return false
   const [salt, hash] = stored.split(':')
+  if (!salt || !hash) return false
   const expected = Buffer.from(hash, 'hex')
   const actual = scryptSync(password, salt, KEYLEN)
   return expected.length === actual.length && timingSafeEqual(expected, actual)

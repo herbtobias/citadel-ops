@@ -20,9 +20,11 @@ beforeAll(async () => {
 
 describe.skipIf(!run)('HTTP behaviour scenario (requires CITADEL_URL + seeded server)', () => {
   it('every workflow step passes', () => {
-    const failed = steps.filter(s => !s.ok)
+    const failed = steps.filter((s) => !s.ok)
     if (failed.length) {
-      throw new Error(`failed steps:\n${failed.map(s => `  ✗ ${s.name}: ${s.detail}`).join('\n')}`)
+      throw new Error(
+        `failed steps:\n${failed.map((s) => `  ✗ ${s.name}: ${s.detail}`).join('\n')}`,
+      )
     }
     expect(steps.length).toBeGreaterThan(10)
   })

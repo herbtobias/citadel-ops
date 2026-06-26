@@ -10,8 +10,7 @@ describe('per-license rate limit', () => {
     try {
       enforceRateLimit(key, 3)
       throw new Error('expected rate limit to trip')
-    }
-    catch (e: any) {
+    } catch (e: any) {
       expect(e.statusCode).toBe(429)
     }
   })

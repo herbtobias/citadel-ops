@@ -25,7 +25,7 @@ const EXPECTED_TOOLS = [
 
 describe('MCP server: citadel tool surface', () => {
   it('exposes exactly the expected tool set', async () => {
-    const names = (await listCitadelTools()).map(t => t.name).sort()
+    const names = (await listCitadelTools()).map((t) => t.name).sort()
     expect(names).toEqual(EXPECTED_TOOLS)
   })
 
@@ -39,7 +39,7 @@ describe('MCP server: citadel tool surface', () => {
 
   it('declares the right required parameters for key tools', async () => {
     const tools = await listCitadelTools()
-    const byName = Object.fromEntries(tools.map(t => [t.name, t]))
+    const byName = Object.fromEntries(tools.map((t) => [t.name, t]))
 
     expect(byName.citadel_get_mission.inputSchema.required).toContain('missionId')
     expect(byName.citadel_hand_off_mission.inputSchema.required).toEqual(

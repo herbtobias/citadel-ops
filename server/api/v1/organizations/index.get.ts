@@ -8,15 +8,26 @@ export default defineEventHandler(async (event) => {
 
   if (isSuperAdmin(user)) {
     const orgs = await db.select().from(schema.organizations)
-    return orgs.map(o => ({ id: o.id, name: o.name, slug: o.slug, role: 'manager' as const }))
+    return orgs.map((o) => ({ id: o.id, name: o.name, slug: o.slug, role: 'manager' as const }))
   }
 
-  const memberships = await db.select().from(schema.orgMemberships)
-    .where(and(eq(schema.orgMemberships.userId, user.id), eq(schema.orgMemberships.status, 'active')))
+  const memberships = await db
+    .select()
+    .from(schema.orgMemberships)
+    .where(
+      and(eq(schema.orgMemberships.userId, user.id), eq(schema.orgMemberships.status, 'active')),
+    )
   if (memberships.length === 0) return []
 
-  const orgs = await db.select().from(schema.organizations)
-    .where(inArray(schema.organizations.id, memberships.map(m => m.orgId)))
-  const roleByOrg = new Map(memberships.map(m => [m.orgId, m.role]))
-  return orgs.map(o => ({ id: o.id, name: o.name, slug: o.slug, role: roleByOrg.get(o.id) }))
+  const orgs = await db
+    .select()
+    .from(schema.organizations)
+    .where(
+      inArray(
+        schema.organizations.id,
+        memberships.map((m) => m.orgId),
+      ),
+    )
+  const roleByOrg = new Map(memberships.map((m) => [m.orgId, m.role]))
+  return orgs.map((o) => ({ id: o.id, name: o.name, slug: o.slug, role: roleByOrg.get(o.id) }))
 })

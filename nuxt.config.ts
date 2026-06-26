@@ -12,7 +12,16 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/fonts',
     'nuxt-auth-utils',
+    '@nuxt/eslint',
   ],
+
+  // Generate a flat-config preset under .nuxt/ that eslint.config.mjs extends.
+  // Stylistic rules are off — Prettier owns formatting.
+  eslint: {
+    config: {
+      stylistic: false,
+    },
+  },
 
   css: ['~/assets/css/main.css'],
 
@@ -20,9 +29,7 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
 
-  components: [
-    { path: '~/components', pathPrefix: false },
-  ],
+  components: [{ path: '~/components', pathPrefix: false }],
 
   // Theme fonts — both seed themes. Loaded once; the active theme picks via tokens.
   fonts: {

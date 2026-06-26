@@ -30,9 +30,12 @@ async function main() {
     console.error(`        ${s.detail}`)
   }
 
-  const failed = steps.filter(s => !s.ok)
+  const failed = steps.filter((s) => !s.ok)
   console.error(`\n  ${steps.length - failed.length}/${steps.length} steps passed.\n`)
   process.exit(failed.length ? 1 : 0)
 }
 
-main().catch((e) => { console.error('demo failed:', e?.message ?? e); process.exit(1) })
+main().catch((e) => {
+  console.error('demo failed:', e?.message ?? e)
+  process.exit(1)
+})

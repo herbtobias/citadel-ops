@@ -57,24 +57,30 @@ export async function serializeMissionById(id: string) {
 
 async function hydrateMissions(rows: Row<typeof missions>[]) {
   if (rows.length === 0) return []
-  const missionIds = rows.map(m => m.id)
+  const missionIds = rows.map((m) => m.id)
   const projectId = rows[0]!.projectId
 
   // Bulk: licenses (alias), references (links), artifacts, comment counts.
-  const licIds = [...new Set(rows.map(m => m.claimedByLicenseId).filter(Boolean) as string[])]
+  const licIds = [...new Set(rows.map((m) => m.claimedByLicenseId).filter(Boolean) as string[])]
   const licRows = licIds.length
     ? await db.select().from(licenses).where(inArray(licenses.id, licIds))
     : []
-  const aliasById = new Map(licRows.map(l => [l.id, l.agentAlias]))
+  const aliasById = new Map(licRows.map((l) => [l.id, l.agentAlias]))
 
   // References sourced from these missions + the operation "part_of" link.
   const refRows = await db.select().from(references).where(eq(references.projectId, projectId))
   // Resolve target ids → keys for both missions and operations in this project.
-  const projMissions = await db.select({ id: missions.id, key: missions.key }).from(missions).where(eq(missions.projectId, projectId))
-  const projOps = await db.select({ id: operations.id, key: operations.key }).from(operations).where(eq(operations.projectId, projectId))
+  const projMissions = await db
+    .select({ id: missions.id, key: missions.key })
+    .from(missions)
+    .where(eq(missions.projectId, projectId))
+  const projOps = await db
+    .select({ id: operations.id, key: operations.key })
+    .from(operations)
+    .where(eq(operations.projectId, projectId))
   const keyById = new Map<string, string>([
-    ...projMissions.map(m => [m.id, m.key] as const),
-    ...projOps.map(o => [o.id, o.key] as const),
+    ...projMissions.map((m) => [m.id, m.key] as const),
+    ...projOps.map((o) => [o.id, o.key] as const),
   ])
 
   const artRows = await db.select().from(artifacts).where(inArray(artifacts.missionId, missionIds))
@@ -85,14 +91,18 @@ async function hydrateMissions(rows: Row<typeof missions>[]) {
     artByMission.set(a.missionId, list)
   }
 
-  const commentRows = await db.select({ missionId: comments.missionId }).from(comments).where(inArray(comments.missionId, missionIds))
+  const commentRows = await db
+    .select({ missionId: comments.missionId })
+    .from(comments)
+    .where(inArray(comments.missionId, missionIds))
   const commentCount = new Map<string, number>()
-  for (const c of commentRows) commentCount.set(c.missionId, (commentCount.get(c.missionId) ?? 0) + 1)
+  for (const c of commentRows)
+    commentCount.set(c.missionId, (commentCount.get(c.missionId) ?? 0) + 1)
 
   return rows.map((m) => {
     const links = refRows
-      .filter(r => r.sourceKind === 'mission' && r.sourceId === m.id)
-      .map(r => ({
+      .filter((r) => r.sourceKind === 'mission' && r.sourceId === m.id)
+      .map((r) => ({
         linkType: r.linkType,
         targetKind: r.targetKind,
         targetKey: keyById.get(r.targetId) ?? r.targetId,
@@ -100,7 +110,12 @@ async function hydrateMissions(rows: Row<typeof missions>[]) {
       }))
     // Synthesize the operation "part_of" link the frontend expects.
     if (m.operationId && keyById.has(m.operationId)) {
-      links.unshift({ linkType: 'part_of', targetKind: 'operation', targetKey: keyById.get(m.operationId)!, note: undefined })
+      links.unshift({
+        linkType: 'part_of',
+        targetKind: 'operation',
+        targetKey: keyById.get(m.operationId)!,
+        note: undefined,
+      })
     }
 
     return {
@@ -125,8 +140,13 @@ async function hydrateMissions(rows: Row<typeof missions>[]) {
       handoffDepth: m.handoffDepth,
       sharedContext: m.sharedContext ?? null,
       links,
-      artifacts: (artByMission.get(m.id) ?? []).map(a => ({ id: a.id, kind: a.kind, url: a.url, label: a.label })),
-      claimedByAlias: m.claimedByLicenseId ? aliasById.get(m.claimedByLicenseId) ?? null : null,
+      artifacts: (artByMission.get(m.id) ?? []).map((a) => ({
+        id: a.id,
+        kind: a.kind,
+        url: a.url,
+        label: a.label,
+      })),
+      claimedByAlias: m.claimedByLicenseId ? (aliasById.get(m.claimedByLicenseId) ?? null) : null,
       outcome: m.outcome,
       result: m.result,
       commentCount: commentCount.get(m.id) ?? 0,

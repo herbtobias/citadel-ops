@@ -2,14 +2,25 @@
 // session auth) and Bearer support (for agent licenses), used by both the automated
 // HTTP scenario test and the narrated `npm run demo`.
 
-export interface StepResult { name: string, ok: boolean, detail: string }
+export interface StepResult {
+  name: string
+  ok: boolean
+  detail: string
+}
 
-export interface ApiResult { status: number, data: any }
+export interface ApiResult {
+  status: number
+  data: any
+}
 
 export function makeClient(baseUrl: string) {
   let cookie = ''
 
-  async function api(method: string, path: string, opts: { body?: unknown, bearer?: string, idem?: string } = {}): Promise<ApiResult> {
+  async function api(
+    method: string,
+    path: string,
+    opts: { body?: unknown; bearer?: string; idem?: string } = {},
+  ): Promise<ApiResult> {
     const headers: Record<string, string> = {}
     if (opts.body !== undefined) headers['content-type'] = 'application/json'
     if (cookie) headers.cookie = cookie
@@ -25,9 +36,12 @@ export function makeClient(baseUrl: string) {
     if (setCookies.length) cookie = setCookies.map((c: string) => c.split(';')[0]).join('; ')
 
     const text = await res.text()
-    let data: any = null
-    try { data = text ? JSON.parse(text) : null }
-    catch { data = text }
+    let data: any
+    try {
+      data = text ? JSON.parse(text) : null
+    } catch {
+      data = text
+    }
     return { status: res.status, data }
   }
 
@@ -50,8 +64,7 @@ export function makeRunner() {
     try {
       const detail = await fn()
       steps.push({ name, ok: true, detail })
-    }
-    catch (e: any) {
+    } catch (e: any) {
       steps.push({ name, ok: false, detail: String(e?.message ?? e) })
     }
   }
@@ -66,6 +79,7 @@ export async function isReachable(baseUrl: string): Promise<boolean> {
   try {
     const res = await fetch(baseUrl + '/health')
     return res.ok
+  } catch {
+    return false
   }
-  catch { return false }
 }

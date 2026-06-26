@@ -12,7 +12,13 @@ export default defineEventHandler(async (event) => {
   if (!project) throw createError({ statusCode: 404, statusMessage: 'Project not found' })
   await assertOrgManager(event, project.orgId)
 
-  await db.delete(schema.projectMemberships)
-    .where(and(eq(schema.projectMemberships.projectId, projectId), eq(schema.projectMemberships.userId, userId)))
+  await db
+    .delete(schema.projectMemberships)
+    .where(
+      and(
+        eq(schema.projectMemberships.projectId, projectId),
+        eq(schema.projectMemberships.userId, userId),
+      ),
+    )
   return { ok: true }
 })

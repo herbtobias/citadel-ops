@@ -14,21 +14,38 @@ export default defineEventHandler(async (event) => {
   const requested = (getQuery(event).theme as string | undefined) ?? 'active'
   const themeKey = requested === 'active' ? project.settings.activeThemeKey : requested
 
-  const guidelines = await db.select().from(schema.designGuidelines)
-    .where(and(eq(schema.designGuidelines.projectId, projectId), eq(schema.designGuidelines.themeKey, themeKey)))
+  const guidelines = await db
+    .select()
+    .from(schema.designGuidelines)
+    .where(
+      and(
+        eq(schema.designGuidelines.projectId, projectId),
+        eq(schema.designGuidelines.themeKey, themeKey),
+      ),
+    )
 
   // Theme registry visible to this org (org-level or project-level entries).
-  const themes = await db.select().from(schema.themes).where(or(
-    eq(schema.themes.projectId, projectId),
-    and(eq(schema.themes.orgId, project.orgId), isNull(schema.themes.projectId)),
-  ))
+  const themes = await db
+    .select()
+    .from(schema.themes)
+    .where(
+      or(
+        eq(schema.themes.projectId, projectId),
+        and(eq(schema.themes.orgId, project.orgId), isNull(schema.themes.projectId)),
+      ),
+    )
 
   return {
     activeThemeKey: project.settings.activeThemeKey,
     themeKey,
     guideline: guidelines[0]
-      ? { title: guidelines[0].title, themeKey: guidelines[0].themeKey, bodyMarkdown: guidelines[0].bodyMarkdown, version: guidelines[0].version }
+      ? {
+          title: guidelines[0].title,
+          themeKey: guidelines[0].themeKey,
+          bodyMarkdown: guidelines[0].bodyMarkdown,
+          version: guidelines[0].version,
+        }
       : null,
-    themes: themes.map(t => ({ key: t.key, name: t.name, tokens: t.tokens })),
+    themes: themes.map((t) => ({ key: t.key, name: t.name, tokens: t.tokens })),
   }
 })

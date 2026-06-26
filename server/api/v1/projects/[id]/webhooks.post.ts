@@ -18,9 +18,16 @@ export default defineEventHandler(async (event) => {
   await assertOrgManager(event, project.orgId)
 
   const body = await parseBody(event, schema_)
-  const [sub] = await db.insert(schema.webhookSubscriptions).values({
-    projectId, url: body.url, events: body.events, secret: body.secret ?? null,
-  }).returning()
+  const [sub] = await db
+    .insert(schema.webhookSubscriptions)
+    .values({
+      projectId,
+      url: body.url,
+      events: body.events,
+      secret: body.secret ?? null,
+    })
+    .returning()
+  if (!sub) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
   setResponseStatus(event, 201)
   return { id: sub.id, url: sub.url, events: sub.events, active: sub.active }

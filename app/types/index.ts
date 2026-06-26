@@ -1,21 +1,8 @@
 // Citadel Ops — shared domain types (§3 of the concept). All terms English.
 
-export type Sector =
-  | 'FRONTEND'
-  | 'BACKEND'
-  | 'QA'
-  | 'INFRA'
-  | 'SECURITY'
-  | 'DESIGN'
+export type Sector = 'FRONTEND' | 'BACKEND' | 'QA' | 'INFRA' | 'SECURITY' | 'DESIGN'
 
-export type MissionType =
-  | 'design'
-  | 'feature'
-  | 'test'
-  | 'bugfix'
-  | 'spike'
-  | 'chore'
-  | 'research'
+export type MissionType = 'design' | 'feature' | 'test' | 'bugfix' | 'spike' | 'chore' | 'research'
 
 export type MissionStatus =
   | 'backlog'

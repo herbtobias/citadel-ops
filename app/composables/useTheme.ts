@@ -8,8 +8,16 @@ export interface ThemeMeta {
 }
 
 export const THEMES: ThemeMeta[] = [
-  { key: 'defcon-5', name: 'DEFCON 5', blurb: 'Editorial poster design — vermillion, sharp, type-led.' },
-  { key: 'cyberwar', name: 'Cyberwar', blurb: 'Neon HUD — scanlines and glow, dialed back for legibility.' },
+  {
+    key: 'defcon-5',
+    name: 'DEFCON 5',
+    blurb: 'Editorial poster design — vermillion, sharp, type-led.',
+  },
+  {
+    key: 'cyberwar',
+    name: 'Cyberwar',
+    blurb: 'Neon HUD — scanlines and glow, dialed back for legibility.',
+  },
 ]
 
 const STORAGE_KEY = 'citadel-theme-override'

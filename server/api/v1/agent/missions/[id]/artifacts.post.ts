@@ -20,15 +20,28 @@ export default defineEventHandler(async (event) => {
 
   const [m] = await db.select().from(schema.missions).where(eq(schema.missions.id, missionId))
   if (!m) throw createError({ statusCode: 404, statusMessage: 'Mission not found' })
-  if (m.claimedByLicenseId !== lic.id) throw createError({ statusCode: 403, statusMessage: 'Mission not claimed by this license' })
+  if (m.claimedByLicenseId !== lic.id)
+    throw createError({ statusCode: 403, statusMessage: 'Mission not claimed by this license' })
 
-  const [a] = await db.insert(schema.artifacts).values({
-    missionId, kind: body.kind, url: body.url, label: body.label, createdByLicenseId: lic.id,
-  }).returning()
+  const [a] = await db
+    .insert(schema.artifacts)
+    .values({
+      missionId,
+      kind: body.kind,
+      url: body.url,
+      label: body.label,
+      createdByLicenseId: lic.id,
+    })
+    .returning()
+  if (!a) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
   await logActivity({
-    projectId: m.projectId, missionId, actorType: 'agent', actorLicenseId: lic.id,
-    event: 'artifact_attached', message: `Attached ${body.kind}: ${body.label}`,
+    projectId: m.projectId,
+    missionId,
+    actorType: 'agent',
+    actorLicenseId: lic.id,
+    event: 'artifact_attached',
+    message: `Attached ${body.kind}: ${body.label}`,
   })
 
   setResponseStatus(event, 201)

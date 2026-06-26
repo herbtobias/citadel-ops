@@ -16,13 +16,23 @@ export default defineEventHandler(async (event) => {
   const { reason } = await parseBody(event, schema_)
   const [m] = await db.select().from(schema.missions).where(eq(schema.missions.id, id))
   if (!m) throw createError({ statusCode: 404, statusMessage: 'Mission not found' })
-  if (m.claimedByLicenseId !== lic.id) throw createError({ statusCode: 403, statusMessage: 'Mission not claimed by this license' })
+  if (m.claimedByLicenseId !== lic.id)
+    throw createError({ statusCode: 403, statusMessage: 'Mission not claimed by this license' })
 
   assertTransition(m.status, 'blocked')
-  await db.update(schema.missions).set({ status: 'blocked', updatedAt: new Date() }).where(eq(schema.missions.id, id))
+  await db
+    .update(schema.missions)
+    .set({ status: 'blocked', updatedAt: new Date() })
+    .where(eq(schema.missions.id, id))
   await logActivity({
-    projectId: m.projectId, missionId: id, actorType: 'agent', actorLicenseId: lic.id,
-    event: 'blocked', fromStatus: m.status, toStatus: 'blocked', message: reason,
+    projectId: m.projectId,
+    missionId: id,
+    actorType: 'agent',
+    actorLicenseId: lic.id,
+    event: 'blocked',
+    fromStatus: m.status,
+    toStatus: 'blocked',
+    message: reason,
   })
   return serializeMissionById(id)
 })

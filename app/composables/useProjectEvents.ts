@@ -12,21 +12,35 @@ export interface LiveEvent {
   ts: number
 }
 
-export function useProjectEvents(projectId: Ref<string | undefined>, onEvent: (e: LiveEvent) => void) {
+export function useProjectEvents(
+  projectId: Ref<string | undefined>,
+  onEvent: (e: LiveEvent) => void,
+) {
   let es: EventSource | null = null
 
   function connect() {
-    if (es) { es.close(); es = null }
+    if (es) {
+      es.close()
+      es = null
+    }
     const id = unref(projectId)
     if (!id || !import.meta.client) return
     es = new EventSource(`/api/v1/events?projectId=${id}`)
     es.onmessage = (ev) => {
-      try { onEvent(JSON.parse(ev.data) as LiveEvent) }
-      catch { /* ignore malformed frames (e.g. the initial hello) */ }
+      try {
+        onEvent(JSON.parse(ev.data) as LiveEvent)
+      } catch {
+        /* ignore malformed frames (e.g. the initial hello) */
+      }
     }
   }
 
   onMounted(connect)
   watch(projectId, connect)
-  onBeforeUnmount(() => { if (es) { es.close(); es = null } })
+  onBeforeUnmount(() => {
+    if (es) {
+      es.close()
+      es = null
+    }
+  })
 }

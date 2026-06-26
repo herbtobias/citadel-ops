@@ -12,8 +12,11 @@ export default defineEventHandler(async (event) => {
     : []
 
   await logActivity({
-    projectId: lic.projectId, actorType: 'agent', actorLicenseId: lic.id,
-    event: 'checked_in', message: `${lic.agentAlias} checked in`,
+    projectId: lic.projectId,
+    actorType: 'agent',
+    actorLicenseId: lic.id,
+    event: 'checked_in',
+    message: `${lic.agentAlias} checked in`,
   })
 
   return {

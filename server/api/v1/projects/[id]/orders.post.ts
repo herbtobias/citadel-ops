@@ -22,18 +22,26 @@ export default defineEventHandler(async (event) => {
   const manager = await assertOrgManager(event, project.orgId)
 
   const body = await parseBody(event, schema_)
-  const [order] = await db.insert(schema.controlOrders).values({
-    projectId, type: body.type,
-    targetLicenseId: body.targetLicenseId ?? null,
-    targetSector: body.targetSector ?? null,
-    broadcast: body.broadcast,
-    payload: body.payload ?? null,
-    issuedByUserId: manager.id,
-  }).returning()
+  const [order] = await db
+    .insert(schema.controlOrders)
+    .values({
+      projectId,
+      type: body.type,
+      targetLicenseId: body.targetLicenseId ?? null,
+      targetSector: body.targetSector ?? null,
+      broadcast: body.broadcast,
+      payload: body.payload ?? null,
+      issuedByUserId: manager.id,
+    })
+    .returning()
+  if (!order) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
   await logActivity({
-    projectId, actorType: 'human', actorUserId: manager.id,
-    event: 'order_issued', message: `Order: ${body.type}`,
+    projectId,
+    actorType: 'human',
+    actorUserId: manager.id,
+    event: 'order_issued',
+    message: `Order: ${body.type}`,
     metadata: { orderId: order.id, type: body.type },
   })
 

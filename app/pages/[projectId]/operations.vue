@@ -28,8 +28,7 @@ async function plan() {
     objective.value = ''
     activate.value = false
     await refresh()
-  }
-  catch (e: any) {
+  } catch (e: any) {
     error.value = e?.data?.statusMessage || e?.statusMessage || 'Could not plan operation'
   }
 }
@@ -40,7 +39,10 @@ async function close(op: Operation) {
 }
 
 const statusColor: Record<string, string> = {
-  active: 'text-accent', planned: 'text-accent-tertiary', completed: 'text-muted-foreground', archived: 'text-muted-foreground',
+  active: 'text-accent',
+  planned: 'text-accent-tertiary',
+  completed: 'text-muted-foreground',
+  archived: 'text-muted-foreground',
 }
 </script>
 
@@ -54,16 +56,27 @@ const statusColor: Record<string, string> = {
     <section v-if="isManager" class="ct-card border border-border bg-card p-5">
       <h2 class="ct-label mb-3 text-muted-foreground">Plan Operation</h2>
       <form class="space-y-3" @submit.prevent="plan">
-        <input v-model="codename" required placeholder="Operation codename (e.g. Operation Daybreak)"
-          class="w-full rounded-[var(--radius-card)] border border-border bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none">
-        <textarea v-model="objective" rows="2" placeholder="Objective"
-          class="w-full rounded-[var(--radius-card)] border border-border bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none" />
+        <input
+          v-model="codename"
+          required
+          placeholder="Operation codename (e.g. Operation Daybreak)"
+          class="w-full rounded-[var(--radius-card)] border border-border bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none"
+        />
+        <textarea
+          v-model="objective"
+          rows="2"
+          placeholder="Objective"
+          class="w-full rounded-[var(--radius-card)] border border-border bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none"
+        />
         <div class="flex items-center justify-between">
           <label class="ct-label flex items-center gap-2 text-muted-foreground">
-            <input v-model="activate" type="checkbox"> activate immediately
+            <input v-model="activate" type="checkbox" /> activate immediately
           </label>
-          <button type="submit" :disabled="!codename"
-            class="ct-glow-sm rounded-[var(--radius-card)] bg-accent px-4 py-2 text-sm font-bold text-background hover:opacity-90 disabled:opacity-40">
+          <button
+            type="submit"
+            :disabled="!codename"
+            class="ct-glow-sm rounded-[var(--radius-card)] bg-accent px-4 py-2 text-sm font-bold text-background hover:opacity-90 disabled:opacity-40"
+          >
             Plan
           </button>
         </div>
@@ -74,7 +87,11 @@ const statusColor: Record<string, string> = {
     <section class="ct-card border border-border bg-card p-5">
       <h2 class="ct-label mb-3 text-muted-foreground">Operations</h2>
       <ul class="space-y-3">
-        <li v-for="op in operations" :key="op.id" class="border-b border-border/50 pb-3 last:border-0">
+        <li
+          v-for="op in operations"
+          :key="op.id"
+          class="border-b border-border/50 pb-3 last:border-0"
+        >
           <div class="flex items-center justify-between">
             <div>
               <span class="ct-label text-accent">{{ op.key }}</span>
@@ -82,8 +99,13 @@ const statusColor: Record<string, string> = {
             </div>
             <div class="flex items-center gap-3">
               <span class="ct-label" :class="statusColor[op.status]">{{ op.status }}</span>
-              <button v-if="isManager && op.status !== 'completed' && op.status !== 'archived'"
-                class="ct-label text-muted-foreground hover:text-destructive" @click="close(op)">close</button>
+              <button
+                v-if="isManager && op.status !== 'completed' && op.status !== 'archived'"
+                class="ct-label text-muted-foreground hover:text-destructive"
+                @click="close(op)"
+              >
+                close
+              </button>
             </div>
           </div>
           <p v-if="op.objective" class="mt-1 text-sm text-muted-foreground">{{ op.objective }}</p>

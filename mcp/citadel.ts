@@ -13,7 +13,7 @@ export interface CitadelClientOpts {
 export function makeCitadelClient({ baseUrl, license }: CitadelClientOpts) {
   let projectId: string | null = null
 
-  async function api(path: string, opts: { method?: string, body?: unknown } = {}) {
+  async function api(path: string, opts: { method?: string; body?: unknown } = {}) {
     const res = await fetch(baseUrl + path, {
       method: opts.method ?? 'GET',
       headers: { Authorization: `Bearer ${license}`, 'content-type': 'application/json' },
@@ -50,63 +50,111 @@ export function registerCitadelTools(server: McpServer, client: Client) {
     description: string,
     shape: z.ZodRawShape,
     handler: (args: any) => Promise<unknown>,
-  ) => server.registerTool(name, { description, inputSchema: shape }, async (args: any) => {
-    try { return ok(await handler(args ?? {})) }
-    catch (e: any) { return { isError: true, content: [{ type: 'text' as const, text: String(e?.message ?? e) }] } }
-  })
+  ) =>
+    server.registerTool(name, { description, inputSchema: shape }, async (args: any) => {
+      try {
+        return ok(await handler(args ?? {}))
+      } catch (e: any) {
+        return {
+          isError: true,
+          content: [{ type: 'text' as const, text: String(e?.message ?? e) }],
+        }
+      }
+    })
 
   // ── Onboarding & intel ──
-  t('citadel_acquire_license', 'Check in the License and get the agent context (alias, sectors, project).', {},
-    () => client.api('/api/v1/agent/check-in', { method: 'POST' }))
+  t(
+    'citadel_acquire_license',
+    'Check in the License and get the agent context (alias, sectors, project).',
+    {},
+    () => client.api('/api/v1/agent/check-in', { method: 'POST' }),
+  )
 
-  t('citadel_get_briefing', 'Fetch the layered project Briefing (vision, active operation, Q-equipment, Archive).',
+  t(
+    'citadel_get_briefing',
+    'Fetch the layered project Briefing (vision, active operation, Q-equipment, Archive).',
     { operation: z.string().optional() },
-    async ({ operation }) => client.api(`/api/v1/projects/${await client.pid()}/briefing${operation ? `?operation=${operation}` : ''}`))
+    async ({ operation }) =>
+      client.api(
+        `/api/v1/projects/${await client.pid()}/briefing${operation ? `?operation=${operation}` : ''}`,
+      ),
+  )
 
-  t('citadel_get_quality_gates', 'List the project Quality Gates.', {},
-    async () => client.api(`/api/v1/projects/${await client.pid()}/quality-gates`))
+  t('citadel_get_quality_gates', 'List the project Quality Gates.', {}, async () =>
+    client.api(`/api/v1/projects/${await client.pid()}/quality-gates`),
+  )
 
-  t('citadel_get_harness', 'List the Harness Definitions (build/test/lint commands).', {},
-    async () => client.api(`/api/v1/projects/${await client.pid()}/harness`))
+  t(
+    'citadel_get_harness',
+    'List the Harness Definitions (build/test/lint commands).',
+    {},
+    async () => client.api(`/api/v1/projects/${await client.pid()}/harness`),
+  )
 
-  t('citadel_get_design_guidelines', 'Get the Design Guideline + theme registry for the active (or named) theme.',
+  t(
+    'citadel_get_design_guidelines',
+    'Get the Design Guideline + theme registry for the active (or named) theme.',
     { theme: z.string().optional() },
-    async ({ theme }) => client.api(`/api/v1/projects/${await client.pid()}/design-guidelines?theme=${theme ?? 'active'}`))
+    async ({ theme }) =>
+      client.api(
+        `/api/v1/projects/${await client.pid()}/design-guidelines?theme=${theme ?? 'active'}`,
+      ),
+  )
 
   // ── Orders & work ──
-  t('citadel_check_orders', 'Check for unconsumed control orders (pause/stand_down/redirect). standDown=true means stop.', {},
-    () => client.api('/api/v1/agent/orders'))
+  t(
+    'citadel_check_orders',
+    'Check for unconsumed control orders (pause/stand_down/redirect). standDown=true means stop.',
+    {},
+    () => client.api('/api/v1/agent/orders'),
+  )
 
-  t('citadel_claim_next_mission', 'Atomically claim the next ready mission in your sector(s).', {},
-    () => client.api('/api/v1/agent/claim-next', { method: 'POST' }))
+  t(
+    'citadel_claim_next_mission',
+    'Atomically claim the next ready mission in your sector(s).',
+    {},
+    () => client.api('/api/v1/agent/claim-next', { method: 'POST' }),
+  )
 
-  t('citadel_get_mission', 'Get a mission by id.', { missionId: z.string() },
-    ({ missionId }) => client.api(`/api/v1/missions/${missionId}`))
+  t('citadel_get_mission', 'Get a mission by id.', { missionId: z.string() }, ({ missionId }) =>
+    client.api(`/api/v1/missions/${missionId}`),
+  )
 
-  t('citadel_list_missions', 'List all missions in the project.', {},
-    async () => client.api(`/api/v1/projects/${await client.pid()}/missions`))
+  t('citadel_list_missions', 'List all missions in the project.', {}, async () =>
+    client.api(`/api/v1/projects/${await client.pid()}/missions`),
+  )
 
   // ── EGM ──
-  t('citadel_file_dossier', 'File a design dossier for a mission (moves designing→cold_read).',
+  t(
+    'citadel_file_dossier',
+    'File a design dossier for a mission (moves designing→cold_read).',
     {
       missionId: z.string(),
       title: z.string(),
       sections: z.record(z.string(), z.string()).optional(),
       affectedFiles: z.array(z.string()).optional(),
     },
-    ({ missionId, ...body }) => client.api(`/api/v1/missions/${missionId}/dossier`, { method: 'POST', body }))
+    ({ missionId, ...body }) =>
+      client.api(`/api/v1/missions/${missionId}/dossier`, { method: 'POST', body }),
+  )
 
-  t('citadel_run_cold_read', 'Submit a Cold Read verdict as a zero-context Recruit (pass→ready, fail→designing).',
+  t(
+    'citadel_run_cold_read',
+    'Submit a Cold Read verdict as a zero-context Recruit (pass→ready, fail→designing).',
     {
       dossierId: z.string(),
       verdict: z.enum(['pass', 'fail']),
       comprehensionNotes: z.string().optional(),
       openQuestions: z.array(z.string()).optional(),
     },
-    ({ dossierId, ...body }) => client.api(`/api/v1/dossiers/${dossierId}/cold-read`, { method: 'POST', body }))
+    ({ dossierId, ...body }) =>
+      client.api(`/api/v1/dossiers/${dossierId}/cold-read`, { method: 'POST', body }),
+  )
 
   // ── Hand-off & collaboration ──
-  t('citadel_hand_off_mission', 'Hand off a new mission in another sector with shared context + a typed reference.',
+  t(
+    'citadel_hand_off_mission',
+    'Hand off a new mission in another sector with shared context + a typed reference.',
     {
       missionId: z.string(),
       sector: z.enum(['FRONTEND', 'BACKEND', 'QA', 'INFRA', 'SECURITY', 'DESIGN']),
@@ -114,40 +162,74 @@ export function registerCitadelTools(server: McpServer, client: Client) {
       title: z.string(),
       objective: z.string().optional(),
       briefing: z.string().optional(),
-      linkType: z.enum(['tests', 'fixes', 'blocks', 'relates_to', 'follow_up_of', 'duplicates']).optional(),
+      linkType: z
+        .enum(['tests', 'fixes', 'blocks', 'relates_to', 'follow_up_of', 'duplicates'])
+        .optional(),
       note: z.string().optional(),
     },
-    ({ missionId, ...body }) => client.api(`/api/v1/agent/missions/${missionId}/hand-off`, { method: 'POST', body }))
+    ({ missionId, ...body }) =>
+      client.api(`/api/v1/agent/missions/${missionId}/hand-off`, { method: 'POST', body }),
+  )
 
-  t('citadel_attach_artifact', 'Attach an artifact (pr/commit/file/url/test_report). test_report satisfies the harness gate.',
+  t(
+    'citadel_attach_artifact',
+    'Attach an artifact (pr/commit/file/url/test_report). test_report satisfies the harness gate.',
     {
       missionId: z.string(),
       kind: z.enum(['pr', 'commit', 'file', 'url', 'test_report']),
       url: z.string(),
       label: z.string(),
     },
-    ({ missionId, ...body }) => client.api(`/api/v1/agent/missions/${missionId}/artifacts`, { method: 'POST', body }))
+    ({ missionId, ...body }) =>
+      client.api(`/api/v1/agent/missions/${missionId}/artifacts`, { method: 'POST', body }),
+  )
 
-  t('citadel_add_comment', 'Add a comment / work-log entry to a mission.',
+  t(
+    'citadel_add_comment',
+    'Add a comment / work-log entry to a mission.',
     { missionId: z.string(), body: z.string() },
-    ({ missionId, body }) => client.api(`/api/v1/agent/missions/${missionId}/comments`, { method: 'POST', body: { body } }))
+    ({ missionId, body }) =>
+      client.api(`/api/v1/agent/missions/${missionId}/comments`, {
+        method: 'POST',
+        body: { body },
+      }),
+  )
 
   // ── Lifecycle ──
-  t('citadel_report_blocker', 'Report a blocker on a claimed mission (→ blocked).',
+  t(
+    'citadel_report_blocker',
+    'Report a blocker on a claimed mission (→ blocked).',
     { missionId: z.string(), reason: z.string() },
-    ({ missionId, reason }) => client.api(`/api/v1/agent/missions/${missionId}/block`, { method: 'POST', body: { reason } }))
+    ({ missionId, reason }) =>
+      client.api(`/api/v1/agent/missions/${missionId}/block`, { method: 'POST', body: { reason } }),
+  )
 
-  t('citadel_submit_for_review', 'Submit a claimed mission for review (→ in_review, non-blocking).',
+  t(
+    'citadel_submit_for_review',
+    'Submit a claimed mission for review (→ in_review, non-blocking).',
     { missionId: z.string() },
-    ({ missionId }) => client.api(`/api/v1/agent/missions/${missionId}/submit`, { method: 'POST' }))
+    ({ missionId }) => client.api(`/api/v1/agent/missions/${missionId}/submit`, { method: 'POST' }),
+  )
 
-  t('citadel_heartbeat', 'Extend the lease on a claimed mission.',
+  t(
+    'citadel_heartbeat',
+    'Extend the lease on a claimed mission.',
     { missionId: z.string() },
-    ({ missionId }) => client.api(`/api/v1/agent/missions/${missionId}/heartbeat`, { method: 'POST' }))
+    ({ missionId }) =>
+      client.api(`/api/v1/agent/missions/${missionId}/heartbeat`, { method: 'POST' }),
+  )
 
-  t('citadel_complete_mission', 'Complete a claimed mission (enforces Q-gates; → done).',
-    { missionId: z.string(), result: z.enum(['success', 'failed']).optional(), outcome: z.string().optional() },
-    ({ missionId, ...body }) => client.api(`/api/v1/agent/missions/${missionId}/complete`, { method: 'POST', body }))
+  t(
+    'citadel_complete_mission',
+    'Complete a claimed mission (enforces Q-gates; → done).',
+    {
+      missionId: z.string(),
+      result: z.enum(['success', 'failed']).optional(),
+      outcome: z.string().optional(),
+    },
+    ({ missionId, ...body }) =>
+      client.api(`/api/v1/agent/missions/${missionId}/complete`, { method: 'POST', body }),
+  )
 }
 
 // Builds a fully-wired MCP server for one License.

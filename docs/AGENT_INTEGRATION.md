@@ -1,7 +1,7 @@
 # Agent Integration Contract
 
 Citadel Ops is **agent-agnostic**. The server (REST API + MCP) is the source of truth and
-holds *all* the intelligence — the state machine, Quality Gates, Cold Read, leases, the
+holds _all_ the intelligence — the state machine, Quality Gates, Cold Read, leases, the
 kill-switch, the hash-chained audit. A Field-Agent is just something that **calls the tools**.
 Whether that agent is Claude Code, Google Antigravity, a Hermes model in your own harness, or a
 shell script is irrelevant to Citadel: it only checks the **License** and validates each call.
@@ -12,11 +12,11 @@ This document is the runtime-neutral contract. Any agent that honors it can part
 
 ## 1. Three layers (only the bottom one is runtime-specific)
 
-| Layer | What | Runtime coupling |
-|---|---|---|
-| **Protocol** | REST `/api/v1/agent/**` and MCP (`/api/mcp` + stdio) | none — open standards |
-| **Loop** | the mission loop in §4 (what to call, in what order) | none — this document |
-| **Driver** | how a concrete runtime executes the loop | runtime-specific (a thin adapter) |
+| Layer        | What                                                 | Runtime coupling                  |
+| ------------ | ---------------------------------------------------- | --------------------------------- |
+| **Protocol** | REST `/api/v1/agent/**` and MCP (`/api/mcp` + stdio) | none — open standards             |
+| **Loop**     | the mission loop in §4 (what to call, in what order) | none — this document              |
+| **Driver**   | how a concrete runtime executes the loop             | runtime-specific (a thin adapter) |
 
 If your agent speaks **MCP**, point it at the Citadel MCP server and give it §4 as instructions —
 that is the whole integration. If it doesn't, drive the same loop over plain **REST** (§3.2).
@@ -68,18 +68,18 @@ citadel_report_blocker         citadel_complete_mission        citadel_heartbeat
 
 The same loop without MCP. All require the `Authorization: Bearer` header.
 
-| Step | Method + path |
-|---|---|
-| Check in (identity + sectors + active project) | `POST /api/v1/agent/check-in` |
-| Read control orders (pause / stand-down / redirect) | `GET  /api/v1/agent/orders` |
-| Claim the next mission in your sector (atomic) | `POST /api/v1/agent/claim-next` |
+| Step                                                        | Method + path                               |
+| ----------------------------------------------------------- | ------------------------------------------- |
+| Check in (identity + sectors + active project)              | `POST /api/v1/agent/check-in`               |
+| Read control orders (pause / stand-down / redirect)         | `GET  /api/v1/agent/orders`                 |
+| Claim the next mission in your sector (atomic)              | `POST /api/v1/agent/claim-next`             |
 | Attach an artifact (pr / commit / file / url / test_report) | `POST /api/v1/agent/missions/:id/artifacts` |
-| Add a comment / work-log | `POST /api/v1/agent/missions/:id/comments` |
-| Heartbeat (extend the lease on long work) | `POST /api/v1/agent/missions/:id/heartbeat` |
-| Hand off to another sector | `POST /api/v1/agent/missions/:id/hand-off` |
-| Submit for review (non-blocking) | `POST /api/v1/agent/missions/:id/submit` |
-| Complete (Quality Gates enforced) | `POST /api/v1/agent/missions/:id/complete` |
-| Report a blocker | `POST /api/v1/agent/missions/:id/block` |
+| Add a comment / work-log                                    | `POST /api/v1/agent/missions/:id/comments`  |
+| Heartbeat (extend the lease on long work)                   | `POST /api/v1/agent/missions/:id/heartbeat` |
+| Hand off to another sector                                  | `POST /api/v1/agent/missions/:id/hand-off`  |
+| Submit for review (non-blocking)                            | `POST /api/v1/agent/missions/:id/submit`    |
+| Complete (Quality Gates enforced)                           | `POST /api/v1/agent/missions/:id/complete`  |
+| Report a blocker                                            | `POST /api/v1/agent/missions/:id/block`     |
 
 Briefing / gates / harness / design-guidelines are read from the project endpoints, e.g.
 `GET /api/v1/projects/:id/briefing`, `…/quality-gates`, `…/harness`, `…/design-guidelines?theme=active`.
@@ -110,6 +110,7 @@ what this one needs. This is mandatory: it keeps agents cheap and prevents conte
 ```
 
 ### Hard rules (the server enforces these; your driver must respect them)
+
 - **Sector scope.** Claiming only returns missions in your sectors. Everything else is a hand-off.
 - **Fresh context per mission.** Re-read briefing/dossier each time; do not carry stale state.
 - **Kill-switch.** Any `401 license_revoked` → stop at once.
@@ -125,12 +126,12 @@ what this one needs. This is mandatory: it keeps agents cheap and prevents conte
 All three implement §4; they differ only in step 5 ("work the mission"). See
 [`bin/citadel-agent.ts`](../bin/citadel-agent.ts) and [`.claude/skills/citadel-work/SKILL.md`](../.claude/skills/citadel-work/SKILL.md).
 
-| Driver | Command | Runtime |
-|---|---|---|
-| Claude skill (`/citadel-work`) | in a Claude Code session | Claude Code, loop inside the session |
-| Claude CLI | `citadel-agent --driver claude` | fresh Claude Code process per mission (Agent SDK) |
-| **Generic (BYO-agent)** | `citadel-agent --driver generic --exec "<cmd>"` | **any** runtime |
-| Dry-run | `citadel-agent --dry-run` | none (stub-completes; tests the loop) |
+| Driver                         | Command                                         | Runtime                                           |
+| ------------------------------ | ----------------------------------------------- | ------------------------------------------------- |
+| Claude skill (`/citadel-work`) | in a Claude Code session                        | Claude Code, loop inside the session              |
+| Claude CLI                     | `citadel-agent --driver claude`                 | fresh Claude Code process per mission (Agent SDK) |
+| **Generic (BYO-agent)**        | `citadel-agent --driver generic --exec "<cmd>"` | **any** runtime                                   |
+| Dry-run                        | `citadel-agent --dry-run`                       | none (stub-completes; tests the loop)             |
 
 ### The generic driver — bring your own agent
 
@@ -160,6 +161,7 @@ agent §4 as its task instructions — no Citadel code changes.
 - or stdio: command `node`, args `[".../mcp/stdio.ts"]`, env `CITADEL_URL` + `CITADEL_LICENSE`.
 
 **Non-MCP runtime (e.g. a Hermes model in your harness).** Two options:
+
 1. Wrap it as `--exec` for the generic driver (above) — Citadel orchestrates the loop, your harness
    does one mission per invocation.
 2. Or implement §4 yourself against the REST API (§3.2) inside your harness.

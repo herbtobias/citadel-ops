@@ -16,6 +16,7 @@ what this mission needs.
 > the same contract via MCP or the `citadel-agent --driver generic` CLI.
 
 ## Prerequisites
+
 The `citadel` MCP server must be configured (see `.mcp.json`) with `CITADEL_URL` and your
 `CITADEL_LICENSE`. If the tools aren't available, tell the user to configure it and stop.
 
@@ -49,6 +50,7 @@ The `citadel` MCP server must be configured (see `.mcp.json`) with `CITADEL_URL`
 8. **Next mission** — clear your working context for the previous mission and go to step 3.
 
 ## Rules
+
 - Respect your **sector** scope; hand off everything else.
 - Re-read briefing/dossier **per mission**; don't carry stale context across missions.
 - If a write tool returns `401 license_revoked`, HQ pulled your license — stop at once.

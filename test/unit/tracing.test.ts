@@ -7,8 +7,9 @@ describe('trace id extraction', () => {
   })
 
   it('parses the trace-id out of a W3C traceparent', () => {
-    expect(traceIdFromHeaders('00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01', null))
-      .toBe('4bf92f3577b34da6a3ce929d0e0e4736')
+    expect(
+      traceIdFromHeaders('00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01', null),
+    ).toBe('4bf92f3577b34da6a3ce929d0e0e4736')
   })
 
   it('returns null when no headers are present', () => {

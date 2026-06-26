@@ -9,7 +9,7 @@ const isSuperAdmin = computed(() => (user.value as any)?.systemRole === 'super_a
 const isManager = computed(() => isSuperAdmin.value || orgs.activeRole === 'manager')
 
 // Projects in the active organization only.
-const orgProjects = computed(() => projects.projects.filter(p => p.orgId === orgs.activeOrgId))
+const orgProjects = computed(() => projects.projects.filter((p) => p.orgId === orgs.activeOrgId))
 
 const showNewOrg = ref(false)
 const showNewProject = ref(false)
@@ -55,7 +55,7 @@ async function onSwitchProject(id: string) {
 // Switching org navigates to the first project of that org (if any).
 async function onSwitchOrg(id: string) {
   orgs.setActiveOrg(id)
-  const first = projects.projects.find(p => p.orgId === id)
+  const first = projects.projects.find((p) => p.orgId === id)
   if (first) await onSwitchProject(first.id)
 }
 </script>
@@ -68,14 +68,21 @@ async function onSwitchOrg(id: string) {
     <!-- Brand + project switcher -->
     <div class="flex h-16 items-center gap-2 border-b border-border px-4">
       <Icon name="lucide:shield-half" class="size-6 text-accent" />
-      <span v-if="ui.sidebarOpen" class="ct-heading text-sm font-bold tracking-widest">CITADEL OPS</span>
+      <span v-if="ui.sidebarOpen" class="ct-heading text-sm font-bold tracking-widest"
+        >CITADEL OPS</span
+      >
     </div>
 
     <div v-if="ui.sidebarOpen" class="space-y-3 border-b border-border p-3">
       <div v-if="orgs.orgs.length">
         <div class="mb-2 flex items-center justify-between">
           <p class="ct-label text-muted-foreground">Organization</p>
-          <button v-if="isSuperAdmin" class="ct-label text-muted-foreground hover:text-accent" title="New organization" @click="showNewOrg = true">
+          <button
+            v-if="isSuperAdmin"
+            class="ct-label text-muted-foreground hover:text-accent"
+            title="New organization"
+            @click="showNewOrg = true"
+          >
             <Icon name="lucide:plus" class="size-4" />
           </button>
         </div>
@@ -92,7 +99,12 @@ async function onSwitchOrg(id: string) {
       <div>
         <div class="mb-2 flex items-center justify-between">
           <p class="ct-label text-muted-foreground">Project</p>
-          <button v-if="isManager" class="ct-label text-muted-foreground hover:text-accent" title="New project" @click="showNewProject = true">
+          <button
+            v-if="isManager"
+            class="ct-label text-muted-foreground hover:text-accent"
+            title="New project"
+            @click="showNewProject = true"
+          >
             <Icon name="lucide:plus" class="size-4" />
           </button>
         </div>
@@ -111,7 +123,12 @@ async function onSwitchOrg(id: string) {
     </div>
 
     <NewOrgModal :open="showNewOrg" @close="showNewOrg = false" @created="onOrgCreated" />
-    <NewProjectModal :open="showNewProject" :org-id="orgs.activeOrgId" @close="showNewProject = false" @created="onProjectCreated" />
+    <NewProjectModal
+      :open="showNewProject"
+      :org-id="orgs.activeOrgId"
+      @close="showNewProject = false"
+      @created="onProjectCreated"
+    />
 
     <!-- Nav -->
     <nav class="flex-1 space-y-1 p-2">
@@ -131,7 +148,10 @@ async function onSwitchOrg(id: string) {
       class="m-2 flex items-center justify-center rounded-[var(--radius-card)] p-2 text-muted-foreground hover:bg-muted hover:text-accent"
       @click="ui.toggleSidebar()"
     >
-      <Icon :name="ui.sidebarOpen ? 'lucide:panel-left-close' : 'lucide:panel-left-open'" class="size-5" />
+      <Icon
+        :name="ui.sidebarOpen ? 'lucide:panel-left-close' : 'lucide:panel-left-open'"
+        class="size-5"
+      />
     </button>
   </aside>
 </template>

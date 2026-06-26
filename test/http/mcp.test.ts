@@ -16,7 +16,9 @@ beforeAll(async () => {
   client = await connectInMemory({ baseUrl: URL!, license: 'lic_006_demo' })
 }, 60_000)
 
-afterAll(async () => { await client?.close() })
+afterAll(async () => {
+  await client?.close()
+})
 
 const call = async (name: string, args: Record<string, unknown> = {}) => {
   const res = await client.callTool({ name, arguments: args })
@@ -45,7 +47,10 @@ describe.skipIf(!run)('MCP citadel tools → REST (requires CITADEL_URL + seeded
   })
 
   it('surfaces REST errors as tool errors (not crashes)', async () => {
-    const res = await client.callTool({ name: 'citadel_get_mission', arguments: { missionId: 'not-a-uuid' } })
+    const res = await client.callTool({
+      name: 'citadel_get_mission',
+      arguments: { missionId: 'not-a-uuid' },
+    })
     expect(res.isError).toBe(true)
   })
 })

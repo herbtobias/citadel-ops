@@ -6,9 +6,7 @@ const props = defineProps<{ projectId: string }>()
 const projects = useProjectsStore()
 const missionsStore = useMissionsStore()
 
-const columns = computed<MissionStatus[]>(
-  () => projects.byId(props.projectId)?.statusColumns ?? [],
-)
+const columns = computed<MissionStatus[]>(() => projects.byId(props.projectId)?.statusColumns ?? [])
 
 function columnMissions(status: MissionStatus) {
   return missionsStore.byStatus(props.projectId, status)
@@ -31,13 +29,19 @@ const showLines = ref(true)
 const scrollEl = ref<HTMLElement | null>(null)
 const svgSize = ref({ w: 0, h: 0 })
 
-interface Line { x1: number, y1: number, x2: number, y2: number, key: string }
+interface Line {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  key: string
+}
 const lines = ref<Line[]>([])
 
 // Unordered, deduplicated mission→mission edges (one line per related pair).
 const edges = computed(() => {
   const seen = new Set<string>()
-  const out: { a: string, b: string }[] = []
+  const out: { a: string; b: string }[] = []
   for (const m of missionsStore.byProject(props.projectId)) {
     for (const l of m.links) {
       if (l.targetKind !== 'mission') continue
@@ -87,7 +91,9 @@ onMounted(() => {
   }
 })
 onBeforeUnmount(() => ro?.disconnect())
-watch([() => missionsStore.byProject(props.projectId), showLines, columns], scheduleMeasure, { deep: true })
+watch([() => missionsStore.byProject(props.projectId), showLines, columns], scheduleMeasure, {
+  deep: true,
+})
 
 // A gentle quadratic curve between two points.
 function path(l: Line) {
@@ -119,7 +125,15 @@ function path(l: Line) {
         :viewBox="`0 0 ${svgSize.w} ${svgSize.h}`"
       >
         <defs>
-          <marker id="ct-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <marker
+            id="ct-arrow"
+            viewBox="0 0 10 10"
+            refX="8"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto-start-reverse"
+          >
             <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--color-accent-tertiary)" />
           </marker>
         </defs>
@@ -145,11 +159,7 @@ function path(l: Line) {
         @move="onMove"
       />
 
-      <MissionDetail
-        :mission="selected"
-        @close="selected = null"
-        @open-key="openByKey"
-      />
+      <MissionDetail :mission="selected" @close="selected = null" @open-key="openByKey" />
     </div>
   </div>
 </template>

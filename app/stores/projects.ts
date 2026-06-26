@@ -18,16 +18,16 @@ export const useProjectsStore = defineStore('projects', () => {
 
   async function fetchOperations(projectId: string): Promise<Operation[]> {
     const ops = await useRequestFetch()<Operation[]>(`/api/v1/projects/${projectId}/operations`)
-    operations.value = [...operations.value.filter(o => o.projectId !== projectId), ...ops]
+    operations.value = [...operations.value.filter((o) => o.projectId !== projectId), ...ops]
     return ops
   }
 
   function byId(id: string): Project | undefined {
-    return projects.value.find(p => p.id === id)
+    return projects.value.find((p) => p.id === id)
   }
 
   function activeOperation(projectId: string): Operation | undefined {
-    return operations.value.find(o => o.projectId === projectId && o.status === 'active')
+    return operations.value.find((o) => o.projectId === projectId && o.status === 'active')
   }
 
   return { projects, operations, loaded, fetchProjects, fetchOperations, byId, activeOperation }
