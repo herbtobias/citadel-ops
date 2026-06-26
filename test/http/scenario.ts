@@ -1,5 +1,5 @@
 // Citadel Ops — end-to-end behaviour scenario. Drives the running server through the
-// full agile/agent workflow (auth → tenancy → M Desk → EGM → DSPTCH → gates → hand-off
+// full agile/agent workflow (auth → tenancy → M Desk → Cold Read → DSPTCH → gates → hand-off
 // → concurrency → kill-switch → tamper-evidence) and records a pass/fail per step.
 // Assumes a freshly seeded DB (the demo runner re-seeds first).
 import { assert, makeClient, makeRunner, type StepResult } from './harness'
@@ -77,7 +77,7 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
     return `created ${r.data.key} (backlog)`
   })
 
-  await step('EGM: designing → dossier → Cold Read → ready', async () => {
+  await step('Archive: designing → dossier → Cold Read → ready', async () => {
     let r = await hq.post(`/api/v1/missions/${featId}/transition`, { to: 'designing' })
     assert(r.status === 200, `to designing failed: ${r.status}`)
     // HQ files the dossier (no claim needed for a user) → cold_read
@@ -102,7 +102,7 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
   })
 
   await step(
-    'Gate: ready transition requires the Goldfish (proven via fresh mission)',
+    'Gate: ready transition requires the Cold Read (proven via fresh mission)',
     async () => {
       const m = await hq.post(`/api/v1/projects/${webId}/missions`, {
         title: 'No-dossier mission',
@@ -111,7 +111,7 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
       await hq.post(`/api/v1/missions/${m.data.id}/transition`, { to: 'designing' })
       const r = await hq.post(`/api/v1/missions/${m.data.id}/transition`, { to: 'ready' })
       assert(r.status === 422, `expected 422 (no Cold Read), got ${r.status}`)
-      return `requireGoldfish blocked ready → 422`
+      return `requireColdRead blocked ready → 422`
     },
   )
 

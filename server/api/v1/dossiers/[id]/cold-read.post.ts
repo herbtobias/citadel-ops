@@ -1,4 +1,4 @@
-// POST /api/v1/dossiers/:id/cold-read — record a Cold Read verdict (Goldfish gate, §7).
+// POST /api/v1/dossiers/:id/cold-read — record a Cold Read verdict (the Cold Read gate, §7).
 // A zero-context Recruit (a different license than the author) proves understanding.
 // pass → mission cold_read→ready; fail → cold_read→designing (revise).
 import { z } from 'zod'

@@ -28,7 +28,7 @@ export async function checkGates(
   for (const g of gates) {
     const rule = g.rule
 
-    if (rule.requireGoldfish) {
+    if (rule.requireColdRead) {
       if (!mission.dossierId) {
         throw createError({
           statusCode: 422,

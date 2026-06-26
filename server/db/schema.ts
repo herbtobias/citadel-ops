@@ -419,7 +419,7 @@ export const qualityGates = pgTable('quality_gates', {
   rule: jsonb('rule')
     .$type<{
       requireArtifacts?: boolean
-      requireGoldfish?: boolean
+      requireColdRead?: boolean
       requireAcceptanceChecked?: boolean
       requireHarnessPass?: boolean
     }>()

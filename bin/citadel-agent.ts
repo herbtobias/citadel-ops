@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Citadel Ops — `citadel-agent` CLI driver (Local Agent Mode, §20).
-// Pulls missions one at a time and works each in a FRESH context (EGM):
+// Pulls missions one at a time and works each in a FRESH context (per mission):
 //   check-in → loop { check_orders → claim_next → work → complete → next }
 // until the backlog is empty or HQ issues stand_down.
 //
@@ -69,7 +69,7 @@ async function workMissionDryRun(mission: any) {
 }
 
 // Bring-your-own-agent: spawn an arbitrary command in a fresh process per mission
-// (EGM). The mission context, the license, and the MCP stdio entrypoint are handed
+// (fresh context per mission). The mission context, the license, and the MCP stdio entrypoint are handed
 // over via env, so any runtime (Hermes, Antigravity, a shell script) can pick up the
 // work and drive it through the citadel tools — exactly what the Claude driver does.
 async function workMissionWithExec(mission: any, cmd: string) {

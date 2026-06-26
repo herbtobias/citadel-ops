@@ -5,7 +5,7 @@
 #
 # The driver runs the model-agnostic mission loop (check-in → orders → claim → work →
 # complete → next) and spawns this script once per claimed mission, in a fresh process
-# (EGM), with the mission context + License + MCP entrypoint in the environment:
+# (fresh context per mission), with the mission context + License + MCP entrypoint in the environment:
 #
 #   CITADEL_URL  CITADEL_LICENSE  CITADEL_MCP_STDIO
 #   CITADEL_MISSION_ID  CITADEL_MISSION_KEY  CITADEL_MISSION_TITLE

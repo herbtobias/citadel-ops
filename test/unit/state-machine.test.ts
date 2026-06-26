@@ -6,7 +6,7 @@ import {
 } from '../../server/utils/state-machine'
 
 describe('mission state-machine', () => {
-  it('allows the EGM design path designing → cold_read → ready', () => {
+  it('allows the design path designing → cold_read → ready', () => {
     expect(canTransition('designing', 'cold_read')).toBe(true)
     expect(canTransition('cold_read', 'ready')).toBe(true)
     expect(canTransition('cold_read', 'designing')).toBe(true) // fail → revise

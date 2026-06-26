@@ -210,7 +210,7 @@ export function registerCitadelTools(server: McpServer, client: Client) {
     (body) => client.api('/api/v1/agent/links', { method: 'POST', body }),
   )
 
-  // ── EGM ──
+  // ── The Archive & Cold Read ──
   t(
     'citadel_file_dossier',
     'File a design dossier for a mission (moves designing→cold_read).',

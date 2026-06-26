@@ -4,7 +4,7 @@ import type { missionStatus } from '../db/schema'
 
 export type MissionStatusValue = (typeof missionStatus.enumValues)[number]
 
-// Allowed target statuses for each status. EGM gate: designing → cold_read → ready.
+// Allowed target statuses for each status. Cold Read gate: designing → cold_read → ready.
 const TRANSITIONS: Record<MissionStatusValue, MissionStatusValue[]> = {
   backlog: ['designing', 'ready', 'cancelled'],
   designing: ['cold_read', 'ready', 'backlog', 'cancelled'],

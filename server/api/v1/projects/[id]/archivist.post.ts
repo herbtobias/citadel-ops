@@ -1,5 +1,5 @@
 // POST /api/v1/projects/:id/archivist — refresh The Archive (§24). Summarizes recently
-// completed missions into a knowledge doc so EGM context stays current. Manager only.
+// completed missions into a knowledge doc so the Archive context stays current. Manager only.
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { assertOrgManager } from '~~/server/utils/auth'
