@@ -6,6 +6,8 @@ dist
 node_modules
 coverage
 drizzle
+# Drizzle-generated migrations + snapshots — generated artifacts, not hand-formatted.
+server/db/migrations
 # Self-contained static landing page — hand-crafted inline CSS/JS, deployed
 # separately (Pages); not part of the app's format pipeline.
 site
