@@ -1,5 +1,11 @@
 // Redirects unauthenticated users to /login. Public routes are exempt.
-const PUBLIC = new Set(['/login', '/register', '/accept-invite'])
+const PUBLIC = new Set([
+  '/login',
+  '/register',
+  '/accept-invite',
+  '/forgot-password',
+  '/reset-password',
+])
 
 export default defineNuxtRouteMiddleware((to) => {
   const { loggedIn } = useUserSession()

@@ -314,6 +314,8 @@ claim, closed on complete; runner status + token/cost fields) observable via
 `citadel-agent` driver. Container orchestration/autoscaling/egress isolation remain out of scope.
 
 **P10 — Hardening** ✓ Per-license **rate limiting** (429 on exceed; per-project `callsPerMin`);
+**account recovery** (password-reset flow — single-use, expiring, hashed tokens, mailed link, no
+account enumeration) + **login throttle** (ip+email lockout after repeated failures);
 **tamper-evidence** verify endpoint (`audit-verify` walks the hash chain, flags the broken entry);
 **license rotation** (new key, old → 401); **cancel-cascade** (cancelling a mission cancels its
 open spawned children); **FinOps** cost-attribution scaffolding (`finops` endpoint sums spend per
