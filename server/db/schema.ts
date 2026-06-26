@@ -101,6 +101,7 @@ export const notificationType = pgEnum('notification_type', [
   'lease_expired',
   'handed_off',
   'cold_read_failed',
+  'archive_updated',
 ])
 export const errorLevel = pgEnum('error_level', ['error', 'fatal'])
 export const errorSource = pgEnum('error_source', ['frontend', 'api', 'mcp', 'runner'])

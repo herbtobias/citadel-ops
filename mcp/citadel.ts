@@ -112,6 +112,14 @@ export function registerCitadelTools(server: McpServer, client: Client) {
       client.api(`/api/v1/agent/knowledge?path=${encodeURIComponent(path)}`, { method: 'DELETE' }),
   )
 
+  t(
+    'citadel_finish_recon',
+    'Signal the end of a recon run after filing KnowledgeDocs. Raises ONE Archive-updated ' +
+      'notification for HQ (instead of a bell per doc). Call it once when done. Requires `recon`.',
+    {},
+    () => client.api('/api/v1/agent/knowledge/finish', { method: 'POST', body: {} }),
+  )
+
   t('citadel_get_quality_gates', 'List the project Quality Gates.', {}, async () =>
     client.api(`/api/v1/projects/${await client.pid()}/quality-gates`),
   )

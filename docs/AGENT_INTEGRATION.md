@@ -71,8 +71,9 @@ citadel_report_blocker         citadel_complete_mission        citadel_heartbeat
 citadel_plan_operation         citadel_create_mission          citadel_update_mission
 citadel_link_missions
 
-# Brownfield onboarding — read for any license, write/delete require the `recon` scope:
+# Brownfield onboarding — read for any license, write/delete/finish require the `recon` scope:
 citadel_read_archive           citadel_write_knowledge         citadel_delete_knowledge
+citadel_finish_recon
 ```
 
 ### 3.2 REST — `/api/v1/agent/**`

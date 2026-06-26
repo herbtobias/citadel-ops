@@ -112,7 +112,19 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
       hqArchive.status === 200 && hqDoc?.bodyMarkdown?.includes('endpoints.'),
       `HQ archive read missing body: ${JSON.stringify(hqArchive.data)}`,
     )
-    return `recon gated (403 without); Scout filed server/api → Archive (agent + HQ read)`
+
+    // Finishing the recon run raises exactly ONE archive_updated notification for HQ
+    // (not a bell per doc). Leiter writes it async off the event bus — poll briefly.
+    const fin = await hq.post('/api/v1/agent/knowledge/finish', {}, { bearer: scout.data.key })
+    assert(fin.status === 200 && fin.data.docCount >= 1, `finish → ${JSON.stringify(fin.data)}`)
+    let notified = false
+    for (let i = 0; i < 20 && !notified; i++) {
+      const notifs = await hq.get('/api/v1/notifications?limit=20')
+      notified = (notifs.data.notifications ?? []).some((n: any) => n.type === 'archive_updated')
+      if (!notified) await new Promise((r) => setTimeout(r, 100))
+    }
+    assert(notified, 'no archive_updated notification after finish_recon')
+    return `recon gated; Scout filed → Archive (agent + HQ read); finish → 1 notification`
   })
 
   await step('Deletion: agent retracts a doc; manager purges INTEL/ subtree', async () => {
