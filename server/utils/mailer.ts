@@ -52,6 +52,19 @@ function escapeHtml(s: string): string {
   )
 }
 
+export async function sendPasswordResetEmail(opts: { to: string; resetUrl: string }) {
+  const subject = 'Reset your Citadel Ops password'
+  const text =
+    `A password reset was requested for your Citadel Ops account.\n\n` +
+    `Reset it here: ${opts.resetUrl}\n\nThis link expires in 1 hour. ` +
+    `If you didn't request this, ignore this email.`
+  const html =
+    `<p>A password reset was requested for your Citadel Ops account.</p>` +
+    `<p><a href="${opts.resetUrl}">Reset your password</a> — expires in 1 hour.</p>` +
+    `<p>If you didn't request this, you can safely ignore this email.</p>`
+  return sendMail({ to: opts.to, subject, text, html })
+}
+
 export async function sendInvitationEmail(opts: {
   to: string
   orgName: string
