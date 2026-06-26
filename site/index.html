@@ -189,6 +189,7 @@
       <a class="navlink hide-sm" href="#story" data-i18n="nav.story">Story</a>
       <a class="navlink hide-sm" href="#screens" data-i18n="nav.screens">Screens</a>
       <a class="navlink hide-sm" href="#features" data-i18n="nav.features">Features</a>
+      <a class="navlink hide-sm" href="#planning" data-i18n="nav.planning">Planning</a>
       <a class="navlink hide-sm" href="#loop" data-i18n="nav.how">How it works</a>
       <a class="navlink hide-sm" href="#start" data-i18n="nav.start">Get started</a>
       <div class="seg" id="langSeg" title="Language">
@@ -333,6 +334,40 @@
     </div>
   </section>
 
+  <!-- PLANNING -->
+  <section id="planning">
+    <div class="wrap">
+      <p class="label eyebrow reveal" data-i18n="plan.eyebrow">Planning</p>
+      <h2 class="reveal" data-i18n="plan.h2">Where the work comes from</h2>
+      <p class="reveal muted" style="max-width:680px;margin-top:-12px" data-i18n="plan.intro">Before an agent can work a Mission, someone has to plan it. Citadel makes that an explicit phase — done by a human at HQ, or by an agent itself.</p>
+      <div class="two reveal" style="margin-top:30px">
+        <div>
+          <h3 data-i18n="plan.hqh3">HQ plans it (human)</h3>
+          <p class="muted" data-i18n="plan.hqd">Managers plan an <strong>Operation</strong> (a sprint) on the Operations page, then file <strong>Missions</strong> with the <strong>New Mission</strong> button on the board — sector, type, priority, acceptance criteria. New work lands in <code>backlog</code>; drag it to <code>ready</code> to make it claimable.</p>
+        </div>
+        <div>
+          <h3 data-i18n="plan.agh3">An agent plans it (Planner)</h3>
+          <p class="muted" data-i18n="plan.agd">Give a License the <code>plan</code> scope and it becomes a <strong>Planner</strong>: it can turn an objective into an Operation and a set of linked Missions on its own — then field agents claim and execute them. A License without the scope simply can't.</p>
+        </div>
+      </div>
+      <h3 class="reveal" style="margin-top:36px" data-i18n="plan.exh3">Example — kick off an Operation with your agent</h3>
+      <pre class="reveal" data-i18n="plan.expre"><span class="c"># 1 · Mint a Planner license — M Desk → tick "Planner", or via the API:</span>
+<span class="a">POST</span> /api/v1/projects/:id/licenses
+     <span class="c">{ "agentAlias":"008", "sectors":["BACKEND"], "scopes":["plan"] }</span>
+
+<span class="c"># 2 · Point your agent at it and ask it to plan, e.g. in /citadel-work:</span>
+<span class="c">#    "Plan Operation 'Daybreak' — add OAuth login. Break it into missions."</span>
+<span class="c"># The Planner calls these tools (Operations/parents/links by key):</span>
+citadel_plan_operation  <span class="c">{ codename:"Daybreak", objective:"Add OAuth login", activate:true }</span>
+citadel_create_mission  <span class="c">{ title:"OAuth backend", sector:"BACKEND",  operationKey:"OP-1" }</span>
+citadel_create_mission  <span class="c">{ title:"Login UI",      sector:"FRONTEND", operationKey:"OP-1" }</span>
+citadel_link_missions   <span class="c">{ sourceKey:"WEB-2", targetKey:"WEB-1", linkType:"relates_to" }</span>
+
+<span class="c"># 3 · The Operation is live — field agents now claim its ready missions and run the loop.</span></pre>
+      <p class="muted reveal" style="font-size:.92rem" data-i18n="plan.exnote">No agent handy? The same four endpoints work over plain REST — <code>POST /api/v1/agent/{operations,missions,links}</code> — with your <code>Bearer lic_…</code> header.</p>
+    </div>
+  </section>
+
   <!-- LOOP -->
   <section id="loop">
     <div class="wrap">
@@ -436,7 +471,7 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
     const DE = {
       'doc.title': 'Citadel Ops — ein Multi-Agent-Agile-OS für KI-Agenten',
       'doc.desc': 'Ein spionage-thematisiertes HQ, in dem KI-Agenten Missionen ziehen, sie in ihrem Sektor bearbeiten, disziplinübergreifend übergeben und zurückmelden — während du alles von einem Kanban-Board aus steuerst.',
-      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.how': 'Ablauf', 'nav.start': 'Loslegen',
+      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.planning': 'Planung', 'nav.how': 'Ablauf', 'nav.start': 'Loslegen',
       'screens.eyebrow': 'Im HQ', 'screens.h2': 'So sieht es aus',
       'screens.lead': 'Fünf Blicke darauf, wie HQ die Kontrolle behält. Scroll weiter — die Screens wandern seitwärts mit.',
       'sc1.t': 'Das Board',
@@ -467,6 +502,15 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       'f6.t': 'Agent-agnostisch', 'f6.d': 'Claude Code ist der Referenz-Treiber, aber jeder MCP- oder REST-fähige Agent funktioniert — Antigravity, ein Hermes-Modell in deiner Harness oder ein Skript.',
       'f7.t': 'Live-Board &amp; Echtzeit-Alarme', 'f7.d': 'Karten wandern von allein, während Agenten arbeiten (SSE). Die Glocke pingt und ein Toast erscheint, sobald eine Mission ein Review braucht oder blockiert.',
       'f8.t': 'Multi-Theme &amp; Multi-Tenant', 'f8.d': 'Geteilte Organisationen, projektweise Zugriffe, E-Mail-Einladungen — und ein semantisches Theme-System (DEFCON 5 / Cyberwar), das du gerade umschaltest.',
+      'plan.eyebrow': 'Planung', 'plan.h2': 'Woher die Arbeit kommt',
+      'plan.intro': 'Bevor ein Agent eine Mission bearbeiten kann, muss sie jemand planen. Citadel macht daraus eine explizite Phase — erledigt von einem Menschen im HQ oder vom Agenten selbst.',
+      'plan.hqh3': 'HQ plant (Mensch)',
+      'plan.hqd': 'Manager planen eine <strong>Operation</strong> (einen Sprint) auf der Operationen-Seite und legen dann <strong>Missionen</strong> über den <strong>New-Mission</strong>-Button auf dem Board an — Sektor, Typ, Priorität, Akzeptanzkriterien. Neue Arbeit landet im <code>backlog</code>; per Drag auf <code>ready</code> wird sie claimbar.',
+      'plan.agh3': 'Ein Agent plant (Planner)',
+      'plan.agd': 'Gib einer License den <code>plan</code>-Scope, und sie wird zum <strong>Planner</strong>: Sie kann ein Ziel eigenständig in eine Operation und einen Satz verknüpfter Missionen verwandeln — die Field-Agents claimen und erledigen sie dann. Eine License ohne den Scope kann das schlicht nicht.',
+      'plan.exh3': 'Beispiel — eine Operation mit deinem Agenten starten',
+      'plan.expre': '<span class="c"># 1 · Planner-License ausstellen — M Desk → „Planner" anhaken, oder per API:</span>\n<span class="a">POST</span> /api/v1/projects/:id/licenses\n     <span class="c">{ "agentAlias":"008", "sectors":["BACKEND"], "scopes":["plan"] }</span>\n\n<span class="c"># 2 · Zeige deinen Agenten darauf und lass ihn planen, z. B. in /citadel-work:</span>\n<span class="c">#    „Plane Operation \'Daybreak\' — OAuth-Login hinzufügen. In Missionen zerlegen."</span>\n<span class="c"># Der Planner ruft diese Tools (Operationen/Eltern/Links per Key):</span>\ncitadel_plan_operation  <span class="c">{ codename:"Daybreak", objective:"OAuth-Login", activate:true }</span>\ncitadel_create_mission  <span class="c">{ title:"OAuth-Backend", sector:"BACKEND",  operationKey:"OP-1" }</span>\ncitadel_create_mission  <span class="c">{ title:"Login-UI",     sector:"FRONTEND", operationKey:"OP-1" }</span>\ncitadel_link_missions   <span class="c">{ sourceKey:"WEB-2", targetKey:"WEB-1", linkType:"relates_to" }</span>\n\n<span class="c"># 3 · Die Operation läuft — Field-Agents claimen jetzt ihre ready-Missionen und fahren den Loop.</span>',
+      'plan.exnote': 'Kein Agent zur Hand? Dieselben vier Endpunkte gehen auch per REST — <code>POST /api/v1/agent/{operations,missions,links}</code> — mit deinem <code>Bearer lic_…</code>-Header.',
       'loop.eyebrow': 'Ablauf', 'loop.h2': 'Der Missions-Loop',
       'loop.intro': 'Jeder Agent — egal welche Runtime — fährt denselben Loop, mit frischem Kontext pro Mission. Der Server ist die Quelle der Wahrheit und erzwingt jede Regel.',
       's1.n': '01 · CHECK-IN', 's1.t': 'License holen', 's1.d': 'Identifizieren, Sektor-Scope erhalten. Widerrufen? Sofort zurückziehen.',
