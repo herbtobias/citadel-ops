@@ -60,6 +60,25 @@ export function licenseHasSector(lic: License, sector: string): boolean {
   return (lic.sectors as string[]).includes(sector)
 }
 
+// Capability scopes a License may hold (orthogonal to sectors, which are work-lanes).
+// `plan` lets an agent act as a Planner: create/groom Operations & Missions upstream
+// of execution. Default licenses have no scopes (execution-only).
+export const PLAN_SCOPE = 'plan'
+
+export function licenseHasScope(lic: License, scope: string): boolean {
+  return (lic.scopes as string[]).includes(scope)
+}
+
+// Guard for the planning endpoints — 403s an agent whose License lacks `plan`.
+export function assertPlanScope(lic: License): void {
+  if (!licenseHasScope(lic, PLAN_SCOPE)) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'License lacks the `plan` scope (Planner capability required)',
+    })
+  }
+}
+
 // Watchdog: re-queue missions whose lease expired (crashed/stuck agents). Returns
 // the count re-queued. Called opportunistically before each claim. §21.
 export async function sweepExpiredLeases(projectId: string): Promise<number> {

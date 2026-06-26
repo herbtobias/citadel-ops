@@ -12,6 +12,10 @@ const EXPECTED_TOOLS = [
   'citadel_claim_next_mission',
   'citadel_get_mission',
   'citadel_list_missions',
+  'citadel_plan_operation',
+  'citadel_create_mission',
+  'citadel_update_mission',
+  'citadel_link_missions',
   'citadel_file_dossier',
   'citadel_run_cold_read',
   'citadel_hand_off_mission',
@@ -48,6 +52,13 @@ describe('MCP server: citadel tool surface', () => {
     expect(byName.citadel_run_cold_read.inputSchema.required).toEqual(
       expect.arrayContaining(['dossierId', 'verdict']),
     )
+    expect(byName.citadel_create_mission.inputSchema.required).toEqual(
+      expect.arrayContaining(['title', 'sector']),
+    )
+    expect(byName.citadel_link_missions.inputSchema.required).toEqual(
+      expect.arrayContaining(['sourceKey', 'targetKey', 'linkType']),
+    )
+    expect(byName.citadel_plan_operation.inputSchema.required).toContain('codename')
     // acquire_license takes no required args
     expect(byName.citadel_acquire_license.inputSchema.required ?? []).toHaveLength(0)
   })

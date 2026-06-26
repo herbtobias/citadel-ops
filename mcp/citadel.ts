@@ -124,6 +124,92 @@ export function registerCitadelTools(server: McpServer, client: Client) {
     client.api(`/api/v1/projects/${await client.pid()}/missions`),
   )
 
+  // ── Planning (requires the `plan` scope on your License) ──
+  t(
+    'citadel_plan_operation',
+    'Plan an Operation (sprint). Created `planned`, or `active` if activate=true. Requires the `plan` scope.',
+    {
+      codename: z.string(),
+      objective: z.string().optional(),
+      sectorsInScope: z
+        .array(z.enum(['FRONTEND', 'BACKEND', 'QA', 'INFRA', 'SECURITY', 'DESIGN']))
+        .optional(),
+      capacityPoints: z.number().int().positive().nullable().optional(),
+      successCriteria: z.array(z.string()).optional(),
+      activate: z.boolean().optional(),
+    },
+    (body) => client.api('/api/v1/agent/operations', { method: 'POST', body }),
+  )
+
+  t(
+    'citadel_create_mission',
+    'Create a Mission in the backlog (or `ready`). Attach to an Operation/parent by key (OP-1 / WEB-42). Requires the `plan` scope.',
+    {
+      title: z.string(),
+      sector: z.enum(['FRONTEND', 'BACKEND', 'QA', 'INFRA', 'SECURITY', 'DESIGN']),
+      type: z
+        .enum(['design', 'feature', 'test', 'bugfix', 'spike', 'chore', 'research'])
+        .optional(),
+      objective: z.string().optional(),
+      briefing: z.string().optional(),
+      priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+      estimatePoints: z.number().int().positive().nullable().optional(),
+      acceptanceCriteria: z.array(z.string()).optional(),
+      requiredSkills: z.array(z.string()).optional(),
+      operationKey: z.string().optional(),
+      parentKey: z.string().optional(),
+      status: z.enum(['backlog', 'ready']).optional(),
+    },
+    (body) => client.api('/api/v1/agent/missions', { method: 'POST', body }),
+  )
+
+  t(
+    'citadel_update_mission',
+    'Groom an existing Mission (title/objective/priority/estimate/sector/operation by key, …). Not status. Requires the `plan` scope.',
+    {
+      mission: z.string().describe('mission id or key (WEB-42)'),
+      title: z.string().optional(),
+      objective: z.string().optional(),
+      briefing: z.string().optional(),
+      type: z
+        .enum(['design', 'feature', 'test', 'bugfix', 'spike', 'chore', 'research'])
+        .optional(),
+      sector: z.enum(['FRONTEND', 'BACKEND', 'QA', 'INFRA', 'SECURITY', 'DESIGN']).optional(),
+      priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+      estimatePoints: z.number().int().positive().nullable().optional(),
+      acceptanceCriteria: z.array(z.string()).optional(),
+      requiredSkills: z.array(z.string()).optional(),
+      orderIndex: z.number().int().optional(),
+      operationKey: z.string().nullable().optional(),
+    },
+    ({ mission, ...body }) =>
+      client.api(`/api/v1/agent/missions/${mission}`, { method: 'PATCH', body }),
+  )
+
+  t(
+    'citadel_link_missions',
+    'Link two missions by key with a typed, bidirectional reference. Requires the `plan` scope.',
+    {
+      sourceKey: z.string(),
+      targetKey: z.string(),
+      linkType: z.enum([
+        'spawned_from',
+        'spawns',
+        'tests',
+        'tested_by',
+        'fixes',
+        'fixed_by',
+        'blocks',
+        'blocked_by',
+        'relates_to',
+        'duplicates',
+        'part_of',
+        'follow_up_of',
+      ]),
+    },
+    (body) => client.api('/api/v1/agent/links', { method: 'POST', body }),
+  )
+
   // ── EGM ──
   t(
     'citadel_file_dossier',

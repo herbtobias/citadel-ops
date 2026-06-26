@@ -55,6 +55,50 @@ export const updateMissionSchema = z
   })
   .strict()
 
+// ── Planner (agent) schemas ──
+// Agents reason in keys (WEB-42, OP-1), not UUIDs, so the planning surface is
+// key-based (matching link_missions). A Planner may file work straight into the
+// backlog, or as `ready` to skip the design/cold-read gate for simple chores.
+export const agentCreateMissionSchema = z.object({
+  title: z.string().min(1).max(200),
+  objective: z.string().max(2000).optional().default(''),
+  briefing: z.string().max(20000).optional().default(''),
+  type: missionTypeSchema.optional().default('feature'),
+  sector: sectorSchema,
+  priority: prioritySchema.optional().default('medium'),
+  estimatePoints: z.number().int().positive().nullable().optional(),
+  acceptanceCriteria: z.array(z.string()).optional().default([]),
+  requiredSkills: z.array(z.string()).optional().default([]),
+  operationKey: z.string().optional(),
+  parentKey: z.string().optional(),
+  status: z.enum(['backlog', 'ready']).optional().default('backlog'),
+})
+
+export const agentUpdateMissionSchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    objective: z.string().max(2000).optional(),
+    briefing: z.string().max(20000).optional(),
+    type: missionTypeSchema.optional(),
+    sector: sectorSchema.optional(),
+    priority: prioritySchema.optional(),
+    estimatePoints: z.number().int().positive().nullable().optional(),
+    acceptanceCriteria: z.array(z.string()).optional(),
+    requiredSkills: z.array(z.string()).optional(),
+    orderIndex: z.number().int().optional(),
+    operationKey: z.string().nullable().optional(),
+  })
+  .strict()
+
+export const planOperationSchema = z.object({
+  codename: z.string().min(1).max(120),
+  objective: z.string().max(2000).optional().default(''),
+  sectorsInScope: z.array(sectorSchema).optional().default([]),
+  capacityPoints: z.number().int().positive().nullable().optional(),
+  successCriteria: z.array(z.string()).optional().default([]),
+  activate: z.boolean().optional().default(false),
+})
+
 export const transitionSchema = z.object({
   to: missionStatusSchema,
   message: z.string().max(2000).optional(),
