@@ -401,7 +401,7 @@ vice-versa. In CI they run as part of the **e2e** job under black-box coverage (
 ### Black-box coverage (route handlers)
 
 The vitest coverage above is scoped to the pure core (`server/utils/**` + `mcp/**`) — it can't see
-the **route handlers**, because the HTTP scenario and the Playwright specs drive a *separate*
+the **route handlers**, because the HTTP scenario and the Playwright specs drive a _separate_
 server process. `npm run test:coverage:e2e` closes that gap: it builds the app, boots the built
 Nitro server under V8 coverage (`NODE_V8_COVERAGE`), runs **both** suites against it, then uses
 `c8` to remap the bundle coverage back to source via the build's per-chunk sourcemaps.
