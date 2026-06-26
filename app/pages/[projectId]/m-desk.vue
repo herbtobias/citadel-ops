@@ -29,6 +29,7 @@ const { data: licenses, refresh } = await useAsyncData(
 const alias = ref('')
 const chosenSectors = ref<Sector[]>([])
 const planner = ref(false)
+const scout = ref(false)
 const issueError = ref('')
 const issuedKey = ref<string | null>(null)
 
@@ -47,13 +48,14 @@ async function issue() {
       body: {
         agentAlias: alias.value,
         sectors: chosenSectors.value,
-        scopes: planner.value ? ['plan'] : [],
+        scopes: [...(planner.value ? ['plan'] : []), ...(scout.value ? ['recon'] : [])],
       },
     })
     issuedKey.value = res.key
     alias.value = ''
     chosenSectors.value = []
     planner.value = false
+    scout.value = false
     await refresh()
   } catch (e: any) {
     issueError.value = e?.data?.statusMessage || e?.statusMessage || 'Could not issue license'
@@ -127,11 +129,16 @@ function fmt(d: string | null) {
             </button>
           </div>
         </div>
-        <div>
+        <div class="space-y-1.5">
           <label class="ct-label flex items-center gap-2 text-muted-foreground">
             <input v-model="planner" type="checkbox" />
             Planner — grant the <span class="text-accent">plan</span> scope (create &amp; groom
             Operations/Missions)
+          </label>
+          <label class="ct-label flex items-center gap-2 text-muted-foreground">
+            <input v-model="scout" type="checkbox" />
+            Scout — grant the <span class="text-accent">recon</span> scope (write The Archive for
+            brownfield onboarding)
           </label>
         </div>
         <p v-if="issueError" class="ct-label text-destructive">{{ issueError }}</p>
@@ -165,10 +172,15 @@ function fmt(d: string | null) {
             <td class="py-2 font-bold">{{ l.agentAlias }}</td>
             <td class="text-muted-foreground">{{ l.sectors.join(', ') }}</td>
             <td>
-              <span v-if="l.scopes?.includes('plan')" class="ct-label text-accent-tertiary"
-                >planner</span
-              >
-              <span v-else class="text-muted-foreground">—</span>
+              <span class="flex flex-wrap gap-1.5">
+                <span v-if="l.scopes?.includes('plan')" class="ct-label text-accent-tertiary"
+                  >planner</span
+                >
+                <span v-if="l.scopes?.includes('recon')" class="ct-label text-accent-secondary"
+                  >scout</span
+                >
+                <span v-if="!l.scopes?.length" class="text-muted-foreground">—</span>
+              </span>
             </td>
             <td>
               <span :class="l.status === 'active' ? 'text-accent' : 'text-destructive'">{{
