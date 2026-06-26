@@ -22,6 +22,7 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
   let dossierId = ''
   let qaMissionId = ''
   let bugfixId = ''
+  let scoutKey = ''
 
   await step('HQ signs in (session auth)', async () => {
     const r = await hq.post('/api/auth/login', { email: HQ, password: PW })
@@ -81,6 +82,7 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
       scopes: ['recon'],
     })
     assert(scout.status === 201 && scout.data.scopes.includes('recon'), 'scout license failed')
+    scoutKey = scout.data.key
     const wrote = await hq.post(
       '/api/v1/agent/knowledge',
       { path: 'server/api', level: 1, summary: 'Nitro routes', bodyMarkdown: '## API\nendpoints.' },
@@ -99,6 +101,47 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
       `archive read missing body: ${JSON.stringify(archive.data)}`,
     )
     return `recon gated (403 without); Scout filed server/api → Archive`
+  })
+
+  await step('Deletion: agent retracts a doc; manager purges INTEL/ subtree', async () => {
+    // The Scout retracts the doc it filed (recon scope).
+    const ret = await hq.del('/api/v1/agent/knowledge?path=server/api', { bearer: scoutKey })
+    assert(ret.status === 200 && ret.data.deleted === 1, `retract → ${JSON.stringify(ret.data)}`)
+    const after = await hq.get('/api/v1/agent/knowledge', { bearer: scoutKey })
+    assert(!after.data.some((d: any) => d.path === 'server/api'), 'doc still present after retract')
+
+    // HQ purges the seeded INTEL/ subtree (manager, by prefix).
+    const purge = await hq.del(`/api/v1/projects/${webId}/knowledge?prefix=INTEL/`)
+    assert(purge.status === 200 && purge.data.deleted >= 1, `purge → ${JSON.stringify(purge.data)}`)
+    const briefing = await hq.get(`/api/v1/projects/${webId}/briefing`)
+    const hasIntel = briefing.data.archive.knowledge.some((k: any) => k.path.startsWith('INTEL/'))
+    assert(!hasIntel, 'INTEL/ still in briefing after purge')
+    return `agent retracted server/api; HQ purged INTEL/* (${purge.data.deleted})`
+  })
+
+  await step('Purge: disposable project deletes with cascade (confirm-gated)', async () => {
+    const orgs = await hq.get('/api/v1/organizations')
+    const orgId = orgs.data.find((o: any) => o.slug === 'hq')?.id
+    assert(orgId, 'hq org not found')
+    const p = await hq.post(`/api/v1/organizations/${orgId}/projects`, {
+      key: 'TMP',
+      name: 'Disposable',
+      sectors: ['BACKEND'],
+    })
+    assert(p.status === 201, `create temp project → ${p.status}: ${JSON.stringify(p.data)}`)
+    const tmpId = p.data.id
+    // Wrong/absent confirm is refused.
+    const noConfirm = await hq.del(`/api/v1/projects/${tmpId}`)
+    assert(noConfirm.status === 422, `expected 422 without confirm, got ${noConfirm.status}`)
+    // Correct confirm purges it.
+    const del = await hq.del(`/api/v1/projects/${tmpId}?confirm=TMP`)
+    assert(
+      del.status === 200 && del.data.purged.project === 'TMP',
+      `purge → ${JSON.stringify(del.data)}`,
+    )
+    const gone = await hq.get(`/api/v1/projects/${tmpId}/missions`)
+    assert(gone.status === 404 || gone.status === 403, `project still reachable: ${gone.status}`)
+    return `created TMP, blocked w/o confirm, purged with ?confirm=TMP`
   })
 
   await step('Create a feature mission (backlog)', async () => {
