@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { parseBody, sectorSchema } from '~~/server/utils/validation'
+import { getUuidParam, parseBody, sectorSchema } from '~~/server/utils/validation'
 import { assertOrgManager } from '~~/server/utils/auth'
 import { serializeProject } from '~~/server/utils/dto'
 import type { ProjectSettings } from '~~/server/db/schema'
@@ -21,7 +21,7 @@ const schema_ = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const orgId = getRouterParam(event, 'id')!
+  const orgId = getUuidParam(event)
   await assertOrgManager(event, orgId)
   const body = await parseBody(event, schema_)
 

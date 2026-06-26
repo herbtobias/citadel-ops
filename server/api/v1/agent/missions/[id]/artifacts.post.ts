@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { parseBody } from '~~/server/utils/validation'
+import { getUuidParam, parseBody } from '~~/server/utils/validation'
 import { requireLicense } from '~~/server/utils/license'
 import { logActivity } from '~~/server/utils/activity'
 
@@ -14,7 +14,7 @@ const schema_ = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const missionId = getRouterParam(event, 'id')!
+  const missionId = getUuidParam(event)
   const lic = await requireLicense(event)
   const body = await parseBody(event, schema_)
 

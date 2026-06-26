@@ -4,7 +4,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { parseBody } from '~~/server/utils/validation'
+import { getUuidParam, parseBody } from '~~/server/utils/validation'
 import { resolveProjectActor } from '~~/server/utils/actor'
 import { logActivity } from '~~/server/utils/activity'
 
@@ -30,7 +30,7 @@ const schema_ = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const missionId = getRouterParam(event, 'id')!
+  const missionId = getUuidParam(event)
   const [mission] = await db.select().from(schema.missions).where(eq(schema.missions.id, missionId))
   if (!mission) throw createError({ statusCode: 404, statusMessage: 'Mission not found' })
 

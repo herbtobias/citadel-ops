@@ -2,9 +2,10 @@
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { assertOrgManager } from '~~/server/utils/auth'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   const [sub] = await db
     .select()
     .from(schema.webhookSubscriptions)

@@ -2,9 +2,10 @@
 import { desc, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { assertProjectAccess } from '~~/server/utils/auth'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const missionId = getRouterParam(event, 'id')!
+  const missionId = getUuidParam(event)
   const [m] = await db
     .select({ projectId: schema.missions.projectId })
     .from(schema.missions)

@@ -117,6 +117,25 @@ export const transitionSchema = z.object({
   result: z.enum(['success', 'failed']).optional(),
 })
 
+// Route ids in this codebase are Postgres `uuid` columns. Feeding a malformed id
+// straight into `eq(table.id, id)` makes Postgres throw 22P02 (string_to_uuid),
+// which surfaces as an unhandled 500. Validate at the route boundary instead.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_RE.test(value)
+}
+
+// Reads a route param and asserts it is a well-formed UUID, throwing 400 otherwise.
+// Use this anywhere a `:id` param flows into a uuid-typed DB lookup.
+export function getUuidParam(event: import('h3').H3Event, name = 'id'): string {
+  const value = getRouterParam(event, name)
+  if (!isUuid(value)) {
+    throw createError({ statusCode: 400, statusMessage: `Invalid ${name}: expected a UUID` })
+  }
+  return value
+}
+
 // Reads + validates a JSON body against a schema, throwing a 422 on failure.
 export async function parseBody<T extends z.ZodTypeAny>(
   event: import('h3').H3Event,

@@ -2,9 +2,10 @@
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { requireLicense, LEASE_MS } from '~~/server/utils/license'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   const lic = await requireLicense(event)
 
   const [m] = await db.select().from(schema.missions).where(eq(schema.missions.id, id))

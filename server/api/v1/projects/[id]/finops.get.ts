@@ -3,9 +3,10 @@
 import { eq, inArray } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { assertProjectAccess } from '~~/server/utils/auth'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const projectId = getRouterParam(event, 'id')!
+  const projectId = getUuidParam(event)
   const { project } = await assertProjectAccess(event, projectId)
 
   const deps = await db

@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import {
+  getUuidParam,
   parseBody,
   sectorSchema,
   missionTypeSchema,
@@ -33,7 +34,7 @@ const schema_ = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   const lic = await requireLicense(event)
   const body = await parseBody(event, schema_)
   const idemKey = getHeader(event, 'idempotency-key') || undefined

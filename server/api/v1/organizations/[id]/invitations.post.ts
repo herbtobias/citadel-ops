@@ -5,7 +5,7 @@ import { randomBytes } from 'node:crypto'
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { parseBody } from '~~/server/utils/validation'
+import { getUuidParam, parseBody } from '~~/server/utils/validation'
 import { assertOrgManager } from '~~/server/utils/auth'
 import { sendInvitationEmail } from '~~/server/utils/mailer'
 
@@ -16,7 +16,7 @@ const schema_ = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const orgId = getRouterParam(event, 'id')!
+  const orgId = getUuidParam(event)
   const user = await assertOrgManager(event, orgId)
   const { email, role, projectIds } = await parseBody(event, schema_)
   const lower = email.toLowerCase()

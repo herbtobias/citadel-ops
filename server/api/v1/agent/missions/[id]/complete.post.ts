@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { and, eq, isNull } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { parseBody } from '~~/server/utils/validation'
+import { getUuidParam, parseBody } from '~~/server/utils/validation'
 import { requireLicense, withIdempotency } from '~~/server/utils/license'
 import { assertTransition } from '~~/server/utils/state-machine'
 import { checkGates } from '~~/server/utils/gates'
@@ -16,7 +16,7 @@ const schema_ = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   const lic = await requireLicense(event)
   const body = await parseBody(event, schema_)
   const idemKey = getHeader(event, 'idempotency-key') || undefined

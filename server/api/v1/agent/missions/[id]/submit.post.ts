@@ -6,9 +6,10 @@ import { requireLicense } from '~~/server/utils/license'
 import { assertTransition } from '~~/server/utils/state-machine'
 import { logActivity } from '~~/server/utils/activity'
 import { serializeMissionById } from '~~/server/utils/dto'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   const lic = await requireLicense(event)
   const [m] = await db.select().from(schema.missions).where(eq(schema.missions.id, id))
   if (!m) throw createError({ statusCode: 404, statusMessage: 'Mission not found' })
