@@ -190,6 +190,7 @@
       <a class="navlink hide-sm" href="#screens" data-i18n="nav.screens">Screens</a>
       <a class="navlink hide-sm" href="#features" data-i18n="nav.features">Features</a>
       <a class="navlink hide-sm" href="#planning" data-i18n="nav.planning">Planning</a>
+      <a class="navlink hide-sm" href="#onboarding" data-i18n="nav.onboarding">Onboarding</a>
       <a class="navlink hide-sm" href="#loop" data-i18n="nav.how">How it works</a>
       <a class="navlink hide-sm" href="#start" data-i18n="nav.start">Get started</a>
       <div class="seg" id="langSeg" title="Language">
@@ -368,6 +369,44 @@ citadel_link_missions   <span class="c">{ sourceKey:"WEB-2", targetKey:"WEB-1", 
     </div>
   </section>
 
+  <!-- ONBOARDING (brownfield) -->
+  <section id="onboarding">
+    <div class="wrap">
+      <p class="label eyebrow reveal" data-i18n="onboard.eyebrow">Onboarding</p>
+      <h2 class="reveal" data-i18n="onboard.h2">Already have a codebase?</h2>
+      <p class="reveal muted" style="max-width:680px;margin-top:-12px" data-i18n="onboard.intro">Citadel isn't only for greenfield. Point it at an existing project and two agents fill The Archive before any planning — so the Planner reasons from reality, not a blank slate.</p>
+      <div class="two reveal" style="margin-top:30px">
+        <div>
+          <h3 data-i18n="onboard.scouth3">1 · The Scout reads the repo</h3>
+          <p class="muted" data-i18n="onboard.scoutd">The <strong>Scout</strong> (codename <em>Recon</em>) analyzes your existing codebase — stack, structure, conventions, what's built versus planned, the risky corners — and files each finding into <strong>The Archive</strong>.</p>
+        </div>
+        <div>
+          <h3 data-i18n="onboard.interh3">2 · The Interrogator debriefs you</h3>
+          <p class="muted" data-i18n="onboard.interd">Some things aren't in the code: goals, constraints, domain rules, why a decision was made. The <strong>Interrogator</strong> (codename <em>Debrief</em>) asks you, and writes your answers into the Archive under <code>INTEL/</code>.</p>
+        </div>
+      </div>
+      <div class="reveal" style="margin-top:18px;max-width:680px">
+        <h3 data-i18n="onboard.planh3">3 · The Planner asks what's next</h3>
+        <p class="muted" data-i18n="onboard.pland">With the Archive full, the <strong>Planner</strong> reads it all back and asks what you want — a new feature, higher code quality, a bug hunt — then turns your answer into an Operation and its Missions.</p>
+      </div>
+      <h3 class="reveal" style="margin-top:36px" data-i18n="onboard.exh3">Example — scout an existing repo</h3>
+      <pre class="reveal" data-i18n="onboard.expre"><span class="c"># 1 · Mint a Scout license — M Desk, scope "recon" (or seed lic_010_demo):</span>
+<span class="a">POST</span> /api/v1/projects/:id/licenses
+     <span class="c">{ "agentAlias":"010", "sectors":["BACKEND"], "scopes":["recon"] }</span>
+
+<span class="c"># 2 · Run the Scout (/citadel-scout) — it reads the repo and fills The Archive:</span>
+citadel_write_knowledge <span class="c">{ path:"README",  level:0, summary:"Nuxt 4 site — pricing + checkout" }</span>
+citadel_write_knowledge <span class="c">{ path:"server/", level:1, parentPath:"README", summary:"Nitro API …" }</span>
+
+<span class="c"># 3 · Run the Interrogator (/citadel-debrief) — it debriefs you into INTEL/:</span>
+citadel_write_knowledge <span class="c">{ path:"INTEL/constraints", summary:"GDPR + autumn deadline" }</span>
+
+<span class="c"># 4 · The Planner reads it all back, then plans against it:</span>
+citadel_read_archive    <span class="c">{ }  → README, server/, app/, INTEL/constraints …</span></pre>
+      <p class="muted reveal" style="font-size:.92rem" data-i18n="onboard.exnote">Scout and Interrogator share one <code>recon</code> scope; the Planner uses <code>plan</code>. The same flow runs over plain REST — see <code>examples/scout-codebase.sh</code>.</p>
+    </div>
+  </section>
+
   <!-- LOOP -->
   <section id="loop">
     <div class="wrap">
@@ -471,7 +510,7 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
     const DE = {
       'doc.title': 'Citadel Ops — ein Multi-Agent-Agile-OS für KI-Agenten',
       'doc.desc': 'Ein spionage-thematisiertes HQ, in dem KI-Agenten Missionen ziehen, sie in ihrem Sektor bearbeiten, disziplinübergreifend übergeben und zurückmelden — während du alles von einem Kanban-Board aus steuerst.',
-      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.planning': 'Planung', 'nav.how': 'Ablauf', 'nav.start': 'Loslegen',
+      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.planning': 'Planung', 'nav.onboarding': 'Onboarding', 'nav.how': 'Ablauf', 'nav.start': 'Loslegen',
       'screens.eyebrow': 'Im HQ', 'screens.h2': 'So sieht es aus',
       'screens.lead': 'Fünf Blicke darauf, wie HQ die Kontrolle behält. Scroll weiter — die Screens wandern seitwärts mit.',
       'sc1.t': 'Das Board',
@@ -511,6 +550,17 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       'plan.exh3': 'Beispiel — eine Operation mit deinem Agenten starten',
       'plan.expre': '<span class="c"># 1 · Planner-License ausstellen — M Desk → „Planner" anhaken, oder per API:</span>\n<span class="a">POST</span> /api/v1/projects/:id/licenses\n     <span class="c">{ "agentAlias":"008", "sectors":["BACKEND"], "scopes":["plan"] }</span>\n\n<span class="c"># 2 · Zeige deinen Agenten darauf und lass ihn planen, z. B. in /citadel-work:</span>\n<span class="c">#    „Plane Operation \'Daybreak\' — OAuth-Login hinzufügen. In Missionen zerlegen."</span>\n<span class="c"># Der Planner ruft diese Tools (Operationen/Eltern/Links per Key):</span>\ncitadel_plan_operation  <span class="c">{ codename:"Daybreak", objective:"OAuth-Login", activate:true }</span>\ncitadel_create_mission  <span class="c">{ title:"OAuth-Backend", sector:"BACKEND",  operationKey:"OP-1" }</span>\ncitadel_create_mission  <span class="c">{ title:"Login-UI",     sector:"FRONTEND", operationKey:"OP-1" }</span>\ncitadel_link_missions   <span class="c">{ sourceKey:"WEB-2", targetKey:"WEB-1", linkType:"relates_to" }</span>\n\n<span class="c"># 3 · Die Operation läuft — Field-Agents claimen jetzt ihre ready-Missionen und fahren den Loop.</span>',
       'plan.exnote': 'Kein Agent zur Hand? Dieselben vier Endpunkte gehen auch per REST — <code>POST /api/v1/agent/{operations,missions,links}</code> — mit deinem <code>Bearer lic_…</code>-Header.',
+      'onboard.eyebrow': 'Onboarding', 'onboard.h2': 'Schon eine Codebase?',
+      'onboard.intro': 'Citadel ist nicht nur für Greenfield. Richte es auf ein bestehendes Projekt, und zwei Agenten füllen das Archiv, bevor geplant wird — damit der Planner aus der Realität heraus denkt, nicht aus dem Nichts.',
+      'onboard.scouth3': '1 · Der Scout liest das Repo',
+      'onboard.scoutd': 'Der <strong>Scout</strong> (Deckname <em>Recon</em>) analysiert deine bestehende Codebase — Stack, Struktur, Konventionen, was gebaut ist vs. geplant, die heiklen Ecken — und legt jeden Befund im <strong>Archiv</strong> ab.',
+      'onboard.interh3': '2 · Der Verhörer befragt dich',
+      'onboard.interd': 'Manches steht nicht im Code: Ziele, Constraints, Domänenregeln, warum eine Entscheidung fiel. Der <strong>Verhörer</strong> (Deckname <em>Debrief</em>) fragt dich und schreibt deine Antworten unter <code>INTEL/</code> ins Archiv.',
+      'onboard.planh3': '3 · Der Planner fragt, was als Nächstes kommt',
+      'onboard.pland': 'Mit gefülltem Archiv liest der <strong>Planner</strong> alles zurück und fragt, was du willst — ein neues Feature, höhere Code-Qualität, eine Bug-Jagd — und macht daraus eine Operation und ihre Missionen.',
+      'onboard.exh3': 'Beispiel — ein bestehendes Repo auskundschaften',
+      'onboard.expre': '<span class="c"># 1 · Scout-License ausstellen — M Desk, Scope „recon" (oder Seed lic_010_demo):</span>\n<span class="a">POST</span> /api/v1/projects/:id/licenses\n     <span class="c">{ "agentAlias":"010", "sectors":["BACKEND"], "scopes":["recon"] }</span>\n\n<span class="c"># 2 · Den Scout starten (/citadel-scout) — er liest das Repo und füllt das Archiv:</span>\ncitadel_write_knowledge <span class="c">{ path:"README",  level:0, summary:"Nuxt-4-Site — Pricing + Checkout" }</span>\ncitadel_write_knowledge <span class="c">{ path:"server/", level:1, parentPath:"README", summary:"Nitro-API …" }</span>\n\n<span class="c"># 3 · Den Verhörer starten (/citadel-debrief) — er befragt dich ins INTEL/:</span>\ncitadel_write_knowledge <span class="c">{ path:"INTEL/constraints", summary:"GDPR + Herbst-Deadline" }</span>\n\n<span class="c"># 4 · Der Planner liest alles zurück und plant darauf:</span>\ncitadel_read_archive    <span class="c">{ }  → README, server/, app/, INTEL/constraints …</span>',
+      'onboard.exnote': 'Scout und Verhörer teilen sich einen <code>recon</code>-Scope; der Planner nutzt <code>plan</code>. Derselbe Ablauf läuft auch per REST — siehe <code>examples/scout-codebase.sh</code>.',
       'loop.eyebrow': 'Ablauf', 'loop.h2': 'Der Missions-Loop',
       'loop.intro': 'Jeder Agent — egal welche Runtime — fährt denselben Loop, mit frischem Kontext pro Mission. Der Server ist die Quelle der Wahrheit und erzwingt jede Regel.',
       's1.n': '01 · CHECK-IN', 's1.t': 'License holen', 's1.d': 'Identifizieren, Sektor-Scope erhalten. Widerrufen? Sofort zurückziehen.',

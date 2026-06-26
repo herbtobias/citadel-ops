@@ -80,6 +80,29 @@ export function registerCitadelTools(server: McpServer, client: Client) {
       ),
   )
 
+  // ── Brownfield onboarding (Scout · Interrogator) — requires the `recon` scope ──
+  t(
+    'citadel_read_archive',
+    'Read the full Archive (all KnowledgeDocs incl. bodyMarkdown) for the project. ' +
+      'Use before planning a brownfield project to see what the Scout/Interrogator filed.',
+    {},
+    () => client.api('/api/v1/agent/knowledge'),
+  )
+
+  t(
+    'citadel_write_knowledge',
+    'Write a KnowledgeDoc into The Archive (Scout repo-recon / Interrogator debrief). ' +
+      'Upserted per path; nest with parentPath. Requires the `recon` scope.',
+    {
+      path: z.string(),
+      summary: z.string(),
+      bodyMarkdown: z.string().optional(),
+      level: z.number().int().min(0).max(10).optional(),
+      parentPath: z.string().optional(),
+    },
+    (body) => client.api('/api/v1/agent/knowledge', { method: 'POST', body }),
+  )
+
   t('citadel_get_quality_gates', 'List the project Quality Gates.', {}, async () =>
     client.api(`/api/v1/projects/${await client.pid()}/quality-gates`),
   )

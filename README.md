@@ -183,7 +183,8 @@ is yours. [`examples/generic-agent.sh`](examples/generic-agent.sh) is a working 
 ### Demo agent licenses (Bearer keys, WEB project)
 
 `lic_007_demo` (007, BACKEND) · `lic_009_demo` (009, QA) · `lic_006_demo` (006, FRONTEND/DESIGN) ·
-`lic_008_demo` (008, BACKEND **+ `plan` scope** — a Planner).
+`lic_008_demo` (008, BACKEND **+ `plan` scope** — a Planner) ·
+`lic_010_demo` (010, BACKEND **+ `recon` scope** — a Scout/Interrogator).
 Agent loop endpoints: `POST /api/v1/agent/check-in` → `claim-next` → `…/missions/:id/heartbeat`
 → `…/hand-off` → `…/complete`; `GET /api/v1/agent/orders` for control.
 
@@ -209,6 +210,26 @@ CITADEL_LICENSE=lic_008_demo sh examples/plan-operation.sh   # plans OP + 2 link
 ```
 
 See [docs/AGENT_INTEGRATION.md → Kick off an Operation](docs/AGENT_INTEGRATION.md#kick-off-an-operation-with-a-planner-agent).
+
+### Onboard an existing codebase (brownfield)
+
+Greenfield, the Planner invents work from nothing. For an **existing** project you fill The
+Archive first, so the Planner reasons from reality. Three roles, run in order:
+
+1. **Scout** (`/citadel-scout`, `recon` scope) — reads the repo and files what it finds into The
+   Archive (`README` summary + a doc per area: stack, structure, conventions, build/test, risks).
+2. **Interrogator** (`/citadel-debrief`, `recon` scope) — interviews you for what code can't
+   reveal (goals, constraints, domain rules, deploy, decisions) and files it under `INTEL/*`.
+3. **Planner** (`/citadel-work`, `plan` scope) — reads it all back (`citadel_read_archive`), asks
+   what you want to pursue (new feature / raise code quality / fix bugs), then plans the Operation.
+
+The Scout's REST flow is a runnable script:
+
+```bash
+CITADEL_LICENSE=lic_010_demo sh examples/scout-codebase.sh   # files README + server/ + app/ docs
+```
+
+See [docs/AGENT_INTEGRATION.md → Brownfield onboarding](docs/AGENT_INTEGRATION.md#brownfield-onboarding-scout--interrogator--planner).
 
 ## Status
 

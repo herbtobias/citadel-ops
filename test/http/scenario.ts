@@ -65,6 +65,42 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
     return `issued D7,D8 [BACKEND], Q9 [QA]`
   })
 
+  await step('Brownfield onboarding: recon scope gates Archive writes', async () => {
+    // A plain BACKEND license (no recon scope) is 403'd on the Archive write.
+    const denied = await hq.post(
+      '/api/v1/agent/knowledge',
+      { path: 'README', summary: 'should be blocked' },
+      { bearer: devKey },
+    )
+    assert(denied.status === 403, `expected 403 without recon, got ${denied.status}`)
+
+    // Issue a Scout (recon scope) and write a KnowledgeDoc into The Archive.
+    const scout = await hq.post(`/api/v1/projects/${webId}/licenses`, {
+      agentAlias: 'S1',
+      sectors: ['BACKEND'],
+      scopes: ['recon'],
+    })
+    assert(scout.status === 201 && scout.data.scopes.includes('recon'), 'scout license failed')
+    const wrote = await hq.post(
+      '/api/v1/agent/knowledge',
+      { path: 'server/api', level: 1, summary: 'Nitro routes', bodyMarkdown: '## API\nendpoints.' },
+      { bearer: scout.data.key },
+    )
+    assert(
+      wrote.status === 201 && wrote.data.created === true,
+      `write → ${JSON.stringify(wrote.data)}`,
+    )
+
+    // The full Archive read carries the bodyMarkdown the Planner needs.
+    const archive = await hq.get('/api/v1/agent/knowledge', { bearer: scout.data.key })
+    const doc = archive.data.find((d: any) => d.path === 'server/api')
+    assert(
+      doc?.bodyMarkdown?.includes('endpoints.'),
+      `archive read missing body: ${JSON.stringify(archive.data)}`,
+    )
+    return `recon gated (403 without); Scout filed server/api → Archive`
+  })
+
   await step('Create a feature mission (backlog)', async () => {
     const r = await hq.post(`/api/v1/projects/${webId}/missions`, {
       title: 'Implement coupon codes',

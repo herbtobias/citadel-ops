@@ -99,6 +99,17 @@ export const planOperationSchema = z.object({
   activate: z.boolean().optional().default(false),
 })
 
+// Scout / Interrogator write into The Archive (KnowledgeDocs) when onboarding a
+// brownfield project. Docs are addressed by `path` (upserted per project) and nest
+// via `parentPath`. Requires the `recon` scope.
+export const agentWriteKnowledgeSchema = z.object({
+  path: z.string().min(1).max(200),
+  summary: z.string().max(2000),
+  bodyMarkdown: z.string().max(50000).optional().default(''),
+  level: z.number().int().min(0).max(10).optional().default(0),
+  parentPath: z.string().max(200).optional(),
+})
+
 export const transitionSchema = z.object({
   to: missionStatusSchema,
   message: z.string().max(2000).optional(),

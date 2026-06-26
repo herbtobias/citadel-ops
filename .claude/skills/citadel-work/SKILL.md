@@ -57,6 +57,13 @@ simple chores), `citadel_update_mission` (groom title/priority/estimate/operatio
 `citadel_link_missions` (typed cross-references). Address Operations/parents/links by key
 (OP-1 / WEB-42). Without the scope these tools return `403` — that's expected; just run the loop.
 
+**Brownfield project?** If the project already has a codebase, read what's known first:
+`citadel_read_archive` returns the full Archive that the Scout (`/citadel-scout`) and
+Interrogator (`/citadel-debrief`) filed (stack, structure, conventions, `INTEL/` constraints).
+Then ask the operator what they want to pursue — a new feature, raising code quality, fixing
+bugs — and turn that into an Operation + Missions. If the Archive is empty, suggest running the
+Scout and Interrogator first.
+
 ## Rules
 
 - Respect your **sector** scope; hand off everything else.
