@@ -34,7 +34,8 @@
     "db:push": "drizzle-kit push",
     "db:seed": "tsx server/db/seed.ts",
     "mcp:stdio": "tsx mcp/stdio.ts",
-    "agent": "tsx bin/citadel-agent.ts"
+    "agent": "tsx bin/citadel-agent.ts",
+    "test:coverage:e2e": "bash scripts/coverage-blackbox.sh"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.108",
@@ -63,6 +64,7 @@
     "@types/nodemailer": "^8.0.1",
     "@vitest/coverage-v8": "^4.1.9",
     "@vue/test-utils": "^2.4.10",
+    "c8": "^11.0.0",
     "drizzle-kit": "^0.31.1",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
