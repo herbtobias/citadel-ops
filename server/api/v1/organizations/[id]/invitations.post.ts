@@ -1,12 +1,13 @@
 // POST /api/v1/organizations/:id/invitations — invite a member by email (manager).
-// Email delivery is deferred (P8); the accept token/link is returned so it can be
-// shared manually in the meantime.
+// Sends the accept link by email (SMTP when configured, otherwise logged); the token
+// is also returned so it can be shared manually if mail isn't wired yet.
 import { randomBytes } from 'node:crypto'
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { parseBody } from '~~/server/utils/validation'
 import { assertOrgManager } from '~~/server/utils/auth'
+import { sendInvitationEmail } from '~~/server/utils/mailer'
 
 const schema_ = z.object({
   email: z.string().email(),
@@ -63,12 +64,28 @@ export default defineEventHandler(async (event) => {
     .returning()
   if (!inv) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
+  // Build an absolute accept link (configured base URL, else this request's origin).
+  const base = useRuntimeConfig().public.appUrl || getRequestURL(event).origin
+  const acceptUrl = `${base}/accept-invite?token=${inv.token}`
+
+  const [org] = await db
+    .select({ name: schema.organizations.name })
+    .from(schema.organizations)
+    .where(eq(schema.organizations.id, orgId))
+  const mail = await sendInvitationEmail({
+    to: lower,
+    orgName: org?.name ?? 'your team',
+    role,
+    acceptUrl,
+  })
+
   setResponseStatus(event, 201)
   return {
     id: inv.id,
     email: inv.email,
     role: inv.orgRole,
     token: inv.token,
-    acceptUrl: `/accept-invite?token=${inv.token}`,
+    acceptUrl,
+    emailSent: mail.sent,
   }
 })

@@ -61,5 +61,10 @@ export default defineNuxtConfig({
     session: {
       password: process.env.NUXT_SESSION_PASSWORD || '',
     },
+    sentryDsn: process.env.SENTRY_DSN || '',
+    public: {
+      sentryDsn: process.env.NUXT_PUBLIC_SENTRY_DSN || '',
+      appUrl: process.env.NUXT_PUBLIC_APP_URL || '',
+    },
   },
 })

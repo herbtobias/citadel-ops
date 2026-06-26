@@ -2,6 +2,8 @@
 // ErrorEvents correlated by traceId, so the Diagnostics view can reconstruct failures.
 import { db, schema } from '../db'
 import { getTraceId } from '../utils/tracing'
+import { captureError } from '../utils/sentry'
+import { logger } from '../utils/logger'
 
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook('error', async (error: any, ctx: any) => {
@@ -14,6 +16,10 @@ export default defineNitroPlugin((nitroApp) => {
       const status = error?.statusCode ?? 500
       // Only record genuine faults, not routine 4xx validation/auth.
       if (status < 500) return
+
+      // Structured log + Sentry (no-op unless SENTRY_DSN is set), both traceId-tagged.
+      logger.error({ traceId, url, statusCode: status, err: error }, 'unhandled api error')
+      captureError(error, { traceId, url, source: 'api' })
 
       await db.insert(schema.errorEvents).values({
         traceId,

@@ -304,6 +304,8 @@ create/close. (M Desk, Team, Q-Branch shipped in P3/P2/P5.)
 project members on review_requested / blocked / lease_expired / handed_off; list + mark-read API;
 topbar bell with unread badge + dropdown); outbound **webhooks** (HMAC-signed POST with one retry,
 delivery log; project CRUD). A Nitro plugin (Leiter) subscribes to the event bus and dispatches both.
+**Invitation emails** send via SMTP (Nodemailer — any provider or local Mailpit), with a dev
+log-fallback when SMTP is unconfigured (`emailSent` flag + accept link returned either way).
 
 **P9 — Remote/Cloud Runner** ◑ _Deferred by design (§19)._ The runner **contract** is documented
 in [RUNNER.md](RUNNER.md) and the building blocks are in place: Deployment lifecycle (opened on
@@ -314,9 +316,12 @@ claim, closed on complete; runner status + token/cost fields) observable via
 **P10 — Hardening** ✓ Per-license **rate limiting** (429 on exceed; per-project `callsPerMin`);
 **tamper-evidence** verify endpoint (`audit-verify` walks the hash chain, flags the broken entry);
 **license rotation** (new key, old → 401); **cancel-cascade** (cancelling a mission cancels its
-open spawned children); **FinOps** cost attribution (`finops`: spend by agent/operation + quota);
-**GDPR export** (`organizations/:id/export`, key material stripped); **Archivist** knowledge
-refresh. _Secret-store / Redis backplane / EU-region remain deferred infra (§19)._
+open spawned children); **FinOps** cost-attribution scaffolding (`finops` endpoint sums spend per
+agent/operation with quota fields — **note:** token/cost values are not yet instrumented; agents
+don't report spend, so figures currently read 0); **GDPR export** (`organizations/:id/export`, key
+material stripped); **GDPR purge** (project/org cascade delete, confirm-gated; Archive doc delete);
+**Archivist** knowledge refresh. _Token/cost instrumentation, secret-store, Redis backplane and
+EU-region remain deferred (§19)._
 
 **Ops Console & Admin** ✓ An **Ops Console** (`/:project/console`) to fire any API call by hand
 (method/path/JSON body, as HQ session or with an agent Bearer license; quick-action presets;
@@ -329,8 +334,11 @@ by `GET /api/v1/projects/:id/traces`.
 → AsyncLocalStorage → auto-stamped on The Wire + ErrorEvents; echoed in `x-trace-id` response
 header); **ErrorEvent capture** (Nitro error hook for 5xx + `POST /api/v1/errors` for
 frontend/runner/MCP); **`/health`** (DB readiness); **Diagnostics — Echelon** UI page (system
-health, Wire tamper-evidence, agent-run/runner status, error feed; live via SSE). _OpenTelemetry
-spans / Sentry / Prometheus / Grafana remain deferred infra (§19)._
+health, Wire tamper-evidence, agent-run/runner status, error feed; live via SSE). **Structured
+logging** (Pino JSON, secret-redacted, traceId-correlated), **Sentry** error tracking (server +
+client, env-gated), and **Prometheus** metrics (`GET /metrics` — RED histogram + process metrics,
+optional `METRICS_TOKEN` guard) are wired and no-op until configured. _Full OpenTelemetry/Tempo
+distributed tracing + Grafana dashboards + alerting remain deferred infra (§19)._
 
 ## Stack
 
