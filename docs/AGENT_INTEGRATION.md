@@ -33,9 +33,10 @@ Authorization: Bearer lic_xxxxxxxx
 
 - A License is scoped to an org/project and to one or more **Sectors** (FRONTEND, BACKEND, QA,
   INFRA, SECURITY, DESIGN). You may only claim missions in your sectors.
-- A License may also carry capability **scopes**. Today there is one: `plan` — the **Planner**
-  capability, which unlocks the planning tools (create/groom Operations & Missions). A License
-  without it is `403`'d on those endpoints.
+- A License may also carry capability **scopes**: `plan` — the **Planner** capability, which
+  unlocks the planning tools (create/groom Operations & Missions); and `recon` — the
+  **Scout/Interrogator** capability, which unlocks writing The Archive when onboarding a brownfield
+  project. A License without a scope is `403`'d on the corresponding endpoints.
 - HQ can **revoke** a License at any time (kill-switch). After revocation every write returns
   `401 license_revoked` → the agent must **stop immediately** (stand down).
 - Licenses are short-lived and rotatable. Treat the token as a secret; never write it into a
@@ -69,6 +70,9 @@ citadel_report_blocker         citadel_complete_mission        citadel_heartbeat
 # Planning — require the `plan` scope:
 citadel_plan_operation         citadel_create_mission          citadel_update_mission
 citadel_link_missions
+
+# Brownfield onboarding — read for any license, write requires the `recon` scope:
+citadel_read_archive           citadel_write_knowledge
 ```
 
 ### 3.2 REST — `/api/v1/agent/**`
@@ -97,6 +101,13 @@ Planning — require the `plan` scope (keys, not UUIDs):
 | Groom a Mission (id or key) | `PATCH /api/v1/agent/missions/:id` |
 | Link two missions by key    | `POST  /api/v1/agent/links`        |
 
+Brownfield onboarding — read for any project-bound license, write requires the `recon` scope:
+
+| Step                                  | Method + path                  |
+| ------------------------------------- | ------------------------------ |
+| Read the full Archive (incl. body)    | `GET  /api/v1/agent/knowledge` |
+| Write a KnowledgeDoc (upsert by path) | `POST /api/v1/agent/knowledge` |
+
 #### Kick off an Operation with a Planner agent
 
 A Planner turns one objective into an Operation + a set of linked Missions, which field agents
@@ -120,6 +131,37 @@ The same flow over plain REST is a runnable script:
 
 Briefing / gates / harness / design-guidelines are read from the project endpoints, e.g.
 `GET /api/v1/projects/:id/briefing`, `…/quality-gates`, `…/harness`, `…/design-guidelines?theme=active`.
+
+#### Brownfield onboarding (Scout · Interrogator · Planner)
+
+Greenfield, a Planner invents the work from nothing. For an **existing** codebase you first fill
+The Archive so the Planner has real context. Three roles, run in order:
+
+1. **Scout** (codename _Recon_, `recon` scope) — reads the actual repo and files what it finds
+   into The Archive via `citadel_write_knowledge`: a top-level `README` summary plus a doc per
+   major area (stack, structure, conventions, build/test, risks). Skill: `/citadel-scout`.
+2. **Interrogator** (codename _Debrief_, `recon` scope) — interviews the operator for what code
+   can't reveal (goals, constraints, domain rules, deploy, decisions) and files the answers under
+   `INTEL/*`. Skill: `/citadel-debrief`.
+3. **Planner** (`plan` scope) — `citadel_read_archive` to deep-read everything the first two
+   filed, asks the operator what to pursue (new feature / raise code quality / fix bugs), then
+   plans the Operation + Missions as above.
+
+```
+citadel_write_knowledge { path:"README", level:0, summary:"Nuxt 4 site — pricing + checkout",
+                          bodyMarkdown:"..." }
+citadel_write_knowledge { path:"server/", level:1, parentPath:"README", summary:"Nitro API ...",
+                          bodyMarkdown:"..." }
+citadel_write_knowledge { path:"INTEL/constraints", summary:"GDPR + autumn deadline",
+                          bodyMarkdown:"..." }            # Interrogator
+citadel_read_archive    {}                                # Planner deep-reads, then plans
+```
+
+KnowledgeDocs are upserted by `path` (writing the same path updates it) and surface in the
+Briefing's `archive.knowledge` (summaries) and in full via `citadel_read_archive`. The same flow
+over plain REST is a runnable script:
+[`examples/scout-codebase.sh`](../examples/scout-codebase.sh)
+(`CITADEL_LICENSE=lic_010_demo sh examples/scout-codebase.sh`).
 
 ---
 
