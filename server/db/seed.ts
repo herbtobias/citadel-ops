@@ -2,7 +2,7 @@
 // Run with `npm run db:seed` (tsx). Mirrors app/composables/useMockData.ts so the
 // HQ board renders the same hand-off chain from real data.
 import { createHash } from 'node:crypto'
-import { eq, inArray } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { db, schema } from './index'
 import { hashPassword } from '../utils/password'
 import { logActivity } from '../utils/activity'
@@ -52,55 +52,56 @@ async function seed() {
   const MANAGER_EMAIL = 'manager@citadel.test'
   const CONTRIB_EMAIL = 'agent.dev@citadel.test'
   const VIEWER_EMAIL = 'observer@citadel.test'
-  const ALL_EMAILS = [HQ_EMAIL, MANAGER_EMAIL, CONTRIB_EMAIL, VIEWER_EMAIL]
 
-  // Wipe any prior demo org (cascade clears everything below it), then the
-  // platform-global demo users (not covered by the org cascade).
+  // Wipe any prior demo org — the cascade clears everything below it (projects,
+  // missions, licenses, memberships). The platform-global demo users are NOT
+  // deleted: they're upserted by email below, keeping their ids stable. So if a
+  // demo account happens to own a real org you created in dev, that org keeps a
+  // valid owner reference and is never touched — the seed stays safe + idempotent.
   const [existing] = await db.select().from(organizations).where(eq(organizations.slug, ORG_SLUG))
   if (existing) {
     await db.delete(organizations).where(eq(organizations.id, existing.id))
     console.log('  cleared previous demo org')
   }
-  await db.delete(users).where(inArray(users.email, ALL_EMAILS))
 
-  // ── Users (password = "citadel123" for all) ──
+  // ── Users (password = "citadel123" for all) — upsert by email so re-seeding is
+  // non-destructive and ids stay stable across runs. ──
   const pw = hashPassword(DEV_PASSWORD)
-  const [hq] = await db
-    .insert(users)
-    .values({
-      email: HQ_EMAIL,
-      name: 'HQ',
-      passwordHash: pw,
-      systemRole: 'super_admin',
-    })
-    .returning()
-  const [manager] = await db
-    .insert(users)
-    .values({
-      email: MANAGER_EMAIL,
-      name: 'Moneypenny',
-      passwordHash: pw,
-      systemRole: 'user',
-    })
-    .returning()
-  const [contrib] = await db
-    .insert(users)
-    .values({
-      email: CONTRIB_EMAIL,
-      name: 'Agent Dev',
-      passwordHash: pw,
-      systemRole: 'user',
-    })
-    .returning()
-  const [viewer] = await db
-    .insert(users)
-    .values({
-      email: VIEWER_EMAIL,
-      name: 'Observer',
-      passwordHash: pw,
-      systemRole: 'user',
-    })
-    .returning()
+  const upsertUser = async (v: typeof users.$inferInsert) => {
+    const [u] = await db
+      .insert(users)
+      .values(v)
+      .onConflictDoUpdate({
+        target: users.email,
+        set: { name: v.name, passwordHash: v.passwordHash, systemRole: v.systemRole },
+      })
+      .returning()
+    return u
+  }
+  const hq = await upsertUser({
+    email: HQ_EMAIL,
+    name: 'HQ',
+    passwordHash: pw,
+    systemRole: 'super_admin',
+  })
+  const manager = await upsertUser({
+    email: MANAGER_EMAIL,
+    name: 'Moneypenny',
+    passwordHash: pw,
+    systemRole: 'user',
+  })
+  const contrib = await upsertUser({
+    email: CONTRIB_EMAIL,
+    name: 'Agent Dev',
+    passwordHash: pw,
+    systemRole: 'user',
+  })
+  const viewer = await upsertUser({
+    email: VIEWER_EMAIL,
+    name: 'Observer',
+    passwordHash: pw,
+    systemRole: 'user',
+  })
 
   // ── Organization + membership ──
   const [org] = await db

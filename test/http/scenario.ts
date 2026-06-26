@@ -104,7 +104,15 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
       doc?.bodyMarkdown?.includes('endpoints.'),
       `archive read missing body: ${JSON.stringify(archive.data)}`,
     )
-    return `recon gated (403 without); Scout filed server/api → Archive`
+
+    // HQ (session) sees the same Archive via the human-facing endpoint (The Archive view).
+    const hqArchive = await hq.get(`/api/v1/projects/${webId}/knowledge`)
+    const hqDoc = hqArchive.data.find((d: any) => d.path === 'server/api')
+    assert(
+      hqArchive.status === 200 && hqDoc?.bodyMarkdown?.includes('endpoints.'),
+      `HQ archive read missing body: ${JSON.stringify(hqArchive.data)}`,
+    )
+    return `recon gated (403 without); Scout filed server/api → Archive (agent + HQ read)`
   })
 
   await step('Deletion: agent retracts a doc; manager purges INTEL/ subtree', async () => {
