@@ -2,11 +2,15 @@
 // full agile/agent workflow (auth → tenancy → M Desk → Cold Read → DSPTCH → gates → hand-off
 // → concurrency → kill-switch → tamper-evidence) and records a pass/fail per step.
 // Assumes a freshly seeded DB (the demo runner re-seeds first).
+import { createHash } from 'node:crypto'
+import { eq } from 'drizzle-orm'
+import { db, schema } from '../../server/db'
 import { assert, makeClient, makeRunner, type StepResult } from './harness'
 
 const PW = 'citadel123'
 const HQ = 'hq@citadel.test'
 const CONTRIB = 'agent.dev@citadel.test'
+const MANAGER = 'manager@citadel.test'
 
 export async function runScenario(baseUrl: string): Promise<StepResult[]> {
   const hq = makeClient(baseUrl)
@@ -292,6 +296,54 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
     const r = await hq.get(`/api/v1/projects/${webId}/audit-verify`)
     assert(r.data.intact === true, `chain not intact: ${JSON.stringify(r.data)}`)
     return `chain intact (${r.data.entries} entries)`
+  })
+
+  await step('Auth: login throttles after repeated failures (429)', async () => {
+    const a = makeClient(baseUrl)
+    const codes: number[] = []
+    for (let i = 0; i < 11; i++) {
+      const r = await a.post('/api/auth/login', { email: 'throttle@test.invalid', password: 'x' })
+      codes.push(r.status)
+    }
+    assert(
+      codes.slice(0, 10).every((c) => c === 401) && codes[10] === 429,
+      `expected 10×401 then 429, got ${codes.join(',')}`,
+    )
+    return `10×401 → 429 (throttled)`
+  })
+
+  await step('Auth: forgot-password does not enumerate accounts', async () => {
+    const a = makeClient(baseUrl)
+    const unknown = await a.post('/api/auth/forgot-password', { email: 'nobody@example.com' })
+    const known = await a.post('/api/auth/forgot-password', { email: MANAGER })
+    assert(
+      unknown.status === 200 && known.status === 200,
+      `expected 200/200, got ${unknown.status}/${known.status}`,
+    )
+    return `unknown + known email both → 200`
+  })
+
+  await step('Auth: reset-password is single-use, expiring, and changes the password', async () => {
+    const a = makeClient(baseUrl)
+    const [mgr] = await db.select().from(schema.users).where(eq(schema.users.email, MANAGER))
+    assert(!!mgr, 'manager user missing')
+    const token = `reset_${'a'.repeat(40)}`
+    const tokenHash = createHash('sha256').update(token).digest('hex')
+    await db.insert(schema.passwordResetTokens).values({
+      userId: mgr!.id,
+      tokenHash,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    })
+
+    const reset = await a.post('/api/auth/reset-password', { token, password: 'newpass12345' })
+    assert(reset.status === 200, `reset → ${reset.status}`)
+    const reuse = await a.post('/api/auth/reset-password', { token, password: 'other12345' })
+    assert(reuse.status === 400, `reused token should 400, got ${reuse.status}`)
+
+    const ok = await a.post('/api/auth/login', { email: MANAGER, password: 'newpass12345' })
+    const old = await makeClient(baseUrl).post('/api/auth/login', { email: MANAGER, password: PW })
+    assert(ok.status === 200 && old.status === 401, `new=${ok.status} old=${old.status}`)
+    return `token single-use; password changed (old → 401)`
   })
 
   return steps

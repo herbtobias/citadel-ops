@@ -74,6 +74,12 @@ async function submit() {
         >
           {{ loading ? 'Authenticating…' : 'Acquire License' }}
         </button>
+
+        <NuxtLink
+          to="/forgot-password"
+          class="ct-label block text-center text-xs text-muted-foreground hover:underline"
+          >Forgot password?</NuxtLink
+        >
       </form>
 
       <p class="ct-label mt-6 text-xs text-muted-foreground">Demo: hq@citadel.test · citadel123</p>

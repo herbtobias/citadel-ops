@@ -40,3 +40,34 @@ export function enforceRateLimit(key: string, limitPerMin: number): void {
     })
   }
 }
+
+// Failed-login throttle (§22). Counts failures per key (ip+email); too many within
+// the window → 429 until it lapses. Cleared on a successful login. In-memory like the
+// rate limiter above (Redis at multi-instance scale, deferred).
+const loginAttempts = new Map<string, { count: number; resetAt: number }>()
+const LOGIN_MAX = Number.parseInt(process.env.LOGIN_MAX_ATTEMPTS || '10', 10)
+const LOGIN_WINDOW_MS = 15 * 60_000
+
+export function assertLoginAllowed(key: string): void {
+  const w = loginAttempts.get(key)
+  if (w && Date.now() < w.resetAt && w.count >= LOGIN_MAX) {
+    throw createError({
+      statusCode: 429,
+      statusMessage: 'Too many failed login attempts. Try again later.',
+    })
+  }
+}
+
+export function recordLoginFailure(key: string): void {
+  const now = Date.now()
+  let w = loginAttempts.get(key)
+  if (!w || now >= w.resetAt) {
+    w = { count: 0, resetAt: now + LOGIN_WINDOW_MS }
+    loginAttempts.set(key, w)
+  }
+  w.count++
+}
+
+export function clearLoginThrottle(key: string): void {
+  loginAttempts.delete(key)
+}

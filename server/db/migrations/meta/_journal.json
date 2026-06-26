@@ -15,6 +15,13 @@
       "when": 1782396416290,
       "tag": "0001_slim_roland_deschain",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782481446191,
+      "tag": "0002_woozy_marrow",
+      "breakpoints": true
     }
   ]
 }
