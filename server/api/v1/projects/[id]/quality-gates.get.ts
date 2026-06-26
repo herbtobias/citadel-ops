@@ -2,9 +2,10 @@
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { resolveProjectActor } from '~~/server/utils/actor'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const projectId = getRouterParam(event, 'id')!
+  const projectId = getUuidParam(event)
   await resolveProjectActor(event, projectId)
   const rows = await db
     .select()

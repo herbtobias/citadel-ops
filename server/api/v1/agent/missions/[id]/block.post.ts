@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { parseBody } from '~~/server/utils/validation'
+import { getUuidParam, parseBody } from '~~/server/utils/validation'
 import { requireLicense } from '~~/server/utils/license'
 import { assertTransition } from '~~/server/utils/state-machine'
 import { logActivity } from '~~/server/utils/activity'
@@ -11,7 +11,7 @@ import { serializeMissionById } from '~~/server/utils/dto'
 const schema_ = z.object({ reason: z.string().min(1).max(2000) })
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   const lic = await requireLicense(event)
   const { reason } = await parseBody(event, schema_)
   const [m] = await db.select().from(schema.missions).where(eq(schema.missions.id, id))

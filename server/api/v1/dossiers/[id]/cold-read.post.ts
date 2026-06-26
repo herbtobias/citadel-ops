@@ -4,7 +4,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { parseBody } from '~~/server/utils/validation'
+import { getUuidParam, parseBody } from '~~/server/utils/validation'
 import { resolveProjectActor } from '~~/server/utils/actor'
 import { assertTransition } from '~~/server/utils/state-machine'
 import { logActivity } from '~~/server/utils/activity'
@@ -16,7 +16,7 @@ const schema_ = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const dossierId = getRouterParam(event, 'id')!
+  const dossierId = getUuidParam(event)
   const [dossier] = await db.select().from(schema.dossiers).where(eq(schema.dossiers.id, dossierId))
   if (!dossier) throw createError({ statusCode: 404, statusMessage: 'Dossier not found' })
 

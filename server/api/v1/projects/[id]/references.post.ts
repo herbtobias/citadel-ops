@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { parseBody } from '~~/server/utils/validation'
+import { getUuidParam, parseBody } from '~~/server/utils/validation'
 import { assertProjectWrite } from '~~/server/utils/auth'
 import { createBidirectional } from '~~/server/utils/references'
 import { logActivity } from '~~/server/utils/activity'
@@ -15,7 +15,7 @@ const schema_ = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const projectId = getRouterParam(event, 'id')!
+  const projectId = getUuidParam(event)
   const { user } = await assertProjectWrite(event, projectId)
   const { sourceKey, targetKey, linkType } = await parseBody(event, schema_)
 

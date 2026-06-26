@@ -2,9 +2,10 @@
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { resolveProjectActor } from '~~/server/utils/actor'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const missionId = getRouterParam(event, 'id')!
+  const missionId = getUuidParam(event)
   const [mission] = await db.select().from(schema.missions).where(eq(schema.missions.id, missionId))
   if (!mission) throw createError({ statusCode: 404, statusMessage: 'Mission not found' })
   await resolveProjectActor(event, mission.projectId)

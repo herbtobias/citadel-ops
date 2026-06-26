@@ -2,9 +2,10 @@
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { assertOrgManager } from '~~/server/utils/auth'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const projectId = getRouterParam(event, 'id')!
+  const projectId = getUuidParam(event)
   const userId = getQuery(event).userId as string | undefined
   if (!userId) throw createError({ statusCode: 400, statusMessage: 'userId query param required' })
 

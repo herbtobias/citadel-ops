@@ -4,9 +4,10 @@
 import { and, eq, asc } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { resolveProjectActor } from '~~/server/utils/actor'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const projectId = getRouterParam(event, 'id')!
+  const projectId = getUuidParam(event)
   await resolveProjectActor(event, projectId)
 
   const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, projectId))

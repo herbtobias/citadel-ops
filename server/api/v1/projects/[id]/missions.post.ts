@@ -2,13 +2,13 @@
 // project-scoped key (e.g. WEB-48), logs to The Wire.
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { createMissionSchema, parseBody } from '~~/server/utils/validation'
+import { getUuidParam, createMissionSchema, parseBody } from '~~/server/utils/validation'
 import { assertProjectWrite } from '~~/server/utils/auth'
 import { logActivity } from '~~/server/utils/activity'
 import { serializeMissionById } from '~~/server/utils/dto'
 
 export default defineEventHandler(async (event) => {
-  const projectId = getRouterParam(event, 'id')!
+  const projectId = getUuidParam(event)
   const { user, project } = await assertProjectWrite(event, projectId)
   const body = await parseBody(event, createMissionSchema)
 

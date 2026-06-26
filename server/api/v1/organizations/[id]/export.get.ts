@@ -3,9 +3,10 @@
 import { eq, inArray } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { assertOrgManager } from '~~/server/utils/auth'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const orgId = getRouterParam(event, 'id')!
+  const orgId = getUuidParam(event)
   await assertOrgManager(event, orgId)
 
   const [org] = await db

@@ -2,7 +2,7 @@
 // The one place transitions are enforced (REST + later MCP share it). §12.
 import { and, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { transitionSchema, parseBody } from '~~/server/utils/validation'
+import { getUuidParam, transitionSchema, parseBody } from '~~/server/utils/validation'
 import { assertTransition } from '~~/server/utils/state-machine'
 import { assertMissionWrite } from '~~/server/utils/auth'
 import { checkGates } from '~~/server/utils/gates'
@@ -10,7 +10,7 @@ import { logActivity } from '~~/server/utils/activity'
 import { serializeMissionById } from '~~/server/utils/dto'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   const { user } = await assertMissionWrite(event, id)
   const body = await parseBody(event, transitionSchema)
 

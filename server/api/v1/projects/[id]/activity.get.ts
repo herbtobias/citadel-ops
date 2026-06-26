@@ -2,9 +2,10 @@
 import { desc, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { assertProjectAccess } from '~~/server/utils/auth'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const projectId = getRouterParam(event, 'id')!
+  const projectId = getUuidParam(event)
   await assertProjectAccess(event, projectId)
   const limit = Math.min(
     Number.parseInt((getQuery(event).limit as string) || '100', 10) || 100,

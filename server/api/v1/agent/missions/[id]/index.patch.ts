@@ -3,7 +3,7 @@
 // accepts a mission id or key (WEB-42); operation re-assignment is by key.
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { agentUpdateMissionSchema, parseBody } from '~~/server/utils/validation'
+import { agentUpdateMissionSchema, parseBody, isUuid } from '~~/server/utils/validation'
 import { requireLicense, assertPlanScope } from '~~/server/utils/license'
 import { logActivity } from '~~/server/utils/activity'
 import { serializeMissionById } from '~~/server/utils/dto'
@@ -17,14 +17,15 @@ export default defineEventHandler(async (event) => {
   const projectId = lic.projectId
   const body = await parseBody(event, agentUpdateMissionSchema)
 
-  // Resolve by id within the project, else by key.
+  // Resolve by id when the param is a UUID, else by key (WEB-42). A non-uuid param
+  // must take the key path — a malformed uuid would make Postgres throw 22P02.
   const [mission] = await db
     .select()
     .from(schema.missions)
     .where(
       and(
         eq(schema.missions.projectId, projectId),
-        param.includes('-') ? eq(schema.missions.key, param) : eq(schema.missions.id, param),
+        isUuid(param) ? eq(schema.missions.id, param) : eq(schema.missions.key, param),
       ),
     )
   if (!mission) throw createError({ statusCode: 404, statusMessage: `Mission ${param} not found` })

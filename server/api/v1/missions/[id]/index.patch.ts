@@ -2,13 +2,13 @@
 // status changes go through /transition).
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { updateMissionSchema, parseBody } from '~~/server/utils/validation'
+import { getUuidParam, updateMissionSchema, parseBody } from '~~/server/utils/validation'
 import { assertMissionWrite } from '~~/server/utils/auth'
 import { logActivity } from '~~/server/utils/activity'
 import { serializeMissionById } from '~~/server/utils/dto'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   const { user } = await assertMissionWrite(event, id)
   const body = await parseBody(event, updateMissionSchema)
 

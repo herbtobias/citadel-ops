@@ -3,9 +3,10 @@ import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { assertOrgManager } from '~~/server/utils/auth'
 import { logActivity } from '~~/server/utils/activity'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   const [op] = await db.select().from(schema.operations).where(eq(schema.operations.id, id))
   if (!op) throw createError({ statusCode: 404, statusMessage: 'Operation not found' })
   const [project] = await db

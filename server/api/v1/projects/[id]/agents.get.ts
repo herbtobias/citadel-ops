@@ -3,9 +3,10 @@ import { and, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { assertProjectAccess } from '~~/server/utils/auth'
 import { serializeAgent } from '~~/server/utils/dto'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   await assertProjectAccess(event, id)
   const licRows = await db.select().from(schema.licenses).where(eq(schema.licenses.projectId, id))
   if (licRows.length === 0) return []

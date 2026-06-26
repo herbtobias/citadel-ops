@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
-import { parseBody } from '~~/server/utils/validation'
+import { getUuidParam, parseBody } from '~~/server/utils/validation'
 import { assertOrgManager } from '~~/server/utils/auth'
 
 const schema_ = z.object({
@@ -12,7 +12,7 @@ const schema_ = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const projectId = getRouterParam(event, 'id')!
+  const projectId = getUuidParam(event)
   const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, projectId))
   if (!project) throw createError({ statusCode: 404, statusMessage: 'Project not found' })
   await assertOrgManager(event, project.orgId)

@@ -5,9 +5,10 @@ import { db, schema } from '~~/server/db'
 import { assertOrgManager } from '~~/server/utils/auth'
 import { generateLicenseKey, hashLicenseKey } from '~~/server/utils/license'
 import { logActivity } from '~~/server/utils/activity'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')!
+  const id = getUuidParam(event)
   const [lic] = await db.select().from(schema.licenses).where(eq(schema.licenses.id, id))
   if (!lic) throw createError({ statusCode: 404, statusMessage: 'License not found' })
   if (lic.status !== 'active')

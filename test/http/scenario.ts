@@ -292,6 +292,34 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
     return `D7 revoked → 401`
   })
 
+  await step('Robustness: a malformed :id is rejected at the boundary (400, not 500)', async () => {
+    // Feeding a non-uuid straight into eq(table.id, id) makes Postgres throw 22P02
+    // (string_to_uuid) → an unhandled 500. The route boundary must catch it first.
+    const bad = 'not-a-uuid'
+    const project = await hq.get(`/api/v1/projects/${bad}`)
+    const mission = await hq.get(`/api/v1/missions/${bad}`)
+    const projMissions = await hq.get(`/api/v1/projects/${bad}/missions`)
+    const dossier = await hq.post(
+      `/api/v1/dossiers/${bad}/cold-read`,
+      { verdict: 'pass' },
+      { bearer: qaKey },
+    )
+    for (const [name, r] of [
+      ['GET project', project],
+      ['GET mission', mission],
+      ['GET project missions', projMissions],
+      ['POST cold-read', dossier],
+    ] as const) {
+      assert(r.status !== 500, `${name}: malformed id surfaced as 500 (expected 400/404)`)
+      assert(r.status === 400 || r.status === 404, `${name}: expected 400/404, got ${r.status}`)
+    }
+    // A well-formed-but-unknown uuid still resolves cleanly to 404 (not 400).
+    const unknownUuid = '00000000-0000-4000-8000-000000000000'
+    const missing = await hq.get(`/api/v1/projects/${unknownUuid}`)
+    assert(missing.status === 404, `unknown uuid should 404, got ${missing.status}`)
+    return `malformed id → 400; unknown uuid → 404`
+  })
+
   await step('Tamper-evidence: The Wire hash chain is intact', async () => {
     const r = await hq.get(`/api/v1/projects/${webId}/audit-verify`)
     assert(r.data.intact === true, `chain not intact: ${JSON.stringify(r.data)}`)

@@ -7,12 +7,13 @@
 import { eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { isSuperAdmin, requireUser } from '~~/server/utils/auth'
+import { getUuidParam } from '~~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event)
   if (!isSuperAdmin(user)) throw createError({ statusCode: 403, statusMessage: 'SuperAdmin only' })
 
-  const orgId = getRouterParam(event, 'id')!
+  const orgId = getUuidParam(event)
   const [org] = await db
     .select()
     .from(schema.organizations)
