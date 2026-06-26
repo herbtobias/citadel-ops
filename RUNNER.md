@@ -18,7 +18,7 @@ A cloud runner is just an unattended host for the **same `citadel-agent` loop**:
 
 1. **Lease a License** per worker (issued from The M Desk, scoped to sector(s)).
 2. **Poll** `POST /api/v1/agent/claim-next`. On `claimed: null`, idle/scale-to-zero.
-3. **Spawn an ephemeral, sandboxed Claude Code session per mission** (fresh context = EGM):
+3. **Spawn an ephemeral, sandboxed Claude Code session per mission** (fresh context per mission):
    - one git **worktree** per mission (`mission/<KEY>`), isolated working copy;
    - **egress allowlist** (only the Citadel API + the repo host);
    - resource + wall-clock caps.

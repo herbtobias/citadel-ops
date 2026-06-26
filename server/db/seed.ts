@@ -205,7 +205,7 @@ async function seed() {
       key: 'ready-gate',
       name: 'Cold Read before Ready',
       appliesToStatus: 'ready',
-      rule: { requireGoldfish: true },
+      rule: { requireColdRead: true },
       blocking: true,
     },
     {
