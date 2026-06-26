@@ -182,9 +182,22 @@ is yours. [`examples/generic-agent.sh`](examples/generic-agent.sh) is a working 
 
 ### Demo agent licenses (Bearer keys, WEB project)
 
-`lic_007_demo` (007, BACKEND) · `lic_009_demo` (009, QA) · `lic_006_demo` (006, FRONTEND/DESIGN).
+`lic_007_demo` (007, BACKEND) · `lic_009_demo` (009, QA) · `lic_006_demo` (006, FRONTEND/DESIGN) ·
+`lic_008_demo` (008, BACKEND **+ `plan` scope** — a Planner).
 Agent loop endpoints: `POST /api/v1/agent/check-in` → `claim-next` → `…/missions/:id/heartbeat`
 → `…/hand-off` → `…/complete`; `GET /api/v1/agent/orders` for control.
+
+### Planning (where Operations & Missions come from)
+
+Work enters the Citadel two ways. **HQ** plans it: managers/contributors create Operations
+(Operations page) and Missions (the **New Mission** button on the board → lands in `backlog`,
+groom to `ready` to make it claimable). Or an **agent Planner** plans it: a License carrying the
+`plan` scope can turn an objective into work via four tools —
+`citadel_plan_operation`, `citadel_create_mission`, `citadel_update_mission`,
+`citadel_link_missions` (REST: `POST /api/v1/agent/{operations,missions,links}`,
+`PATCH /api/v1/agent/missions/:id`). Operations/parents/links are addressed by key (OP-1 / WEB-42).
+A License without the scope is 403'd. Issue a Planner from **The M Desk** (the _Planner_ checkbox)
+or seed one (008).
 
 ## Status
 

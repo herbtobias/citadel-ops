@@ -49,6 +49,14 @@ The `citadel` MCP server must be configured (see `.mcp.json`) with `CITADEL_URL`
    so attach artifacts first. If blocked, `citadel_report_blocker`.
 8. **Next mission** — clear your working context for the previous mission and go to step 3.
 
+## Planning (only if your License has the `plan` scope)
+
+If `citadel_acquire_license` shows the `plan` scope, you may also plan upstream of execution:
+`citadel_plan_operation` (a sprint), `citadel_create_mission` (into `backlog`, or `ready` for
+simple chores), `citadel_update_mission` (groom title/priority/estimate/operation), and
+`citadel_link_missions` (typed cross-references). Address Operations/parents/links by key
+(OP-1 / WEB-42). Without the scope these tools return `403` — that's expected; just run the loop.
+
 ## Rules
 
 - Respect your **sector** scope; hand off everything else.

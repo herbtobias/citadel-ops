@@ -11,6 +11,11 @@ import { logActivity } from '~~/server/utils/activity'
 const schema_ = z.object({
   agentAlias: z.string().min(1).max(40),
   sectors: z.array(sectorSchema).min(1),
+  // Capability scopes (currently just `plan` — the Planner capability).
+  scopes: z
+    .array(z.enum(['plan']))
+    .optional()
+    .default([]),
   expiresInDays: z.number().int().positive().max(365).optional(),
 })
 
@@ -20,7 +25,7 @@ export default defineEventHandler(async (event) => {
   if (!project) throw createError({ statusCode: 404, statusMessage: 'Project not found' })
   const manager = await assertOrgManager(event, project.orgId)
 
-  const { agentAlias, sectors, expiresInDays } = await parseBody(event, schema_)
+  const { agentAlias, sectors, scopes, expiresInDays } = await parseBody(event, schema_)
   const key = generateLicenseKey()
   const expiresAt = expiresInDays ? new Date(Date.now() + expiresInDays * 86400_000) : null
 
@@ -32,18 +37,20 @@ export default defineEventHandler(async (event) => {
       agentAlias,
       hashedKey: hashLicenseKey(key),
       sectors,
+      scopes,
       status: 'active',
       expiresAt,
     })
     .returning()
   if (!lic) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
+  const scopeNote = scopes.length ? ` +${scopes.join(',')}` : ''
   await logActivity({
     projectId,
     actorType: 'human',
     actorUserId: manager.id,
     event: 'license_issued',
-    message: `Issued license to ${agentAlias} [${sectors.join(', ')}]`,
+    message: `Issued license to ${agentAlias} [${sectors.join(', ')}]${scopeNote}`,
     metadata: { licenseId: lic.id },
   })
 
@@ -53,6 +60,7 @@ export default defineEventHandler(async (event) => {
     id: lic.id,
     agentAlias: lic.agentAlias,
     sectors: lic.sectors,
+    scopes: lic.scopes,
     expiresAt: lic.expiresAt,
     key,
   }

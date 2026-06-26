@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
     id: l.id,
     agentAlias: l.agentAlias,
     sectors: l.sectors,
+    scopes: l.scopes,
     status: l.status,
     issuedAt: l.issuedAt,
     expiresAt: l.expiresAt,
