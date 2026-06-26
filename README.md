@@ -231,6 +231,22 @@ CITADEL_LICENSE=lic_010_demo sh examples/scout-codebase.sh   # files README + se
 
 See [docs/AGENT_INTEGRATION.md → Brownfield onboarding](docs/AGENT_INTEGRATION.md#brownfield-onboarding-scout--interrogator--planner).
 
+### Deleting data (GDPR)
+
+Work product is deletable; the audit trail (The Wire) is append-only and tamper-evident, so it is
+never selectively edited — it goes only when its project/org is purged.
+
+- **Archive docs** — a Scout retracts its own by path (`DELETE /api/v1/agent/knowledge?path=…`,
+  `recon` scope); a manager purges one or a subtree (`DELETE /api/v1/projects/:id/knowledge?prefix=INTEL/`).
+  Both are logged to The Wire.
+- **Project purge** — `DELETE /api/v1/projects/:id?confirm=<KEY>` (manager) cascades all project data.
+- **Org purge (tenant offboarding / right-to-be-forgotten)** — `DELETE /api/v1/organizations/:id?confirm=<slug>`
+  (SuperAdmin) cascades everything; global users survive (only memberships go).
+
+Purges are irreversible and require the matching `confirm`. GDPR export is
+`GET /api/v1/organizations/:id/export`. See
+[docs/AGENT_INTEGRATION.md → Deleting data & retention](docs/AGENT_INTEGRATION.md#deleting-data--retention).
+
 ## Status
 
 **P0 — Scaffold** ✓ Nuxt 4 + Tailwind v4 frontend, multi-theme foundation, app-shell +
