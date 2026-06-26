@@ -26,6 +26,16 @@ export const useMissionsStore = defineStore('missions', () => {
       .sort((a, b) => a.orderIndex - b.orderIndex)
   }
 
+  // Create a mission (HQ planning). Server assigns the key + lands it in backlog.
+  async function createMission(projectId: string, body: Record<string, unknown>): Promise<Mission> {
+    const created = await $fetch<Mission>(`/api/v1/projects/${projectId}/missions`, {
+      method: 'POST',
+      body,
+    })
+    missions.value = [...missions.value, created]
+    return created
+  }
+
   // Optimistic move; the server enforces the state-machine and rolls back on 422.
   async function moveMission(id: string, newStatus: MissionStatus) {
     const m = missions.value.find((x) => x.id === id)
@@ -44,5 +54,5 @@ export const useMissionsStore = defineStore('missions', () => {
     }
   }
 
-  return { missions, fetchMissions, byProject, byKey, byStatus, moveMission }
+  return { missions, fetchMissions, createMission, byProject, byKey, byStatus, moveMission }
 })
