@@ -81,6 +81,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage/lcov.info
+          flags: unit
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -88,9 +89,11 @@ jobs:
       - name: Build
         run: npm run build
 
-  # End-to-end smoke tests: drive the real app in a headless browser over the
-  # critical human paths (auth + board). Separate job — it needs a browser and a
-  # running dev server, neither of which the unit/integration job has.
+  # End-to-end + black-box coverage: builds the app, boots the built server under
+  # V8 coverage, then drives it with BOTH the HTTP scenario and the Playwright UI
+  # smoke specs. c8 remaps the bundle coverage back to source — this is what makes
+  # the route handlers (which the unit suite can't see) count toward coverage.
+  # Separate job: it needs a browser + a running server the unit job doesn't have.
   e2e:
     runs-on: ubuntu-latest
 
@@ -128,13 +131,19 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      # Apply migrations so the dev server + globalSetup seed find their tables.
-      # (globalSetup re-seeds to the known demo state at the start of the run.)
-      - name: Migrate database
-        run: npm run db:migrate
+      # Builds, migrates, boots the instrumented server, runs the HTTP scenario +
+      # Playwright specs against it, then writes coverage/blackbox/lcov.info.
+      - name: Run E2E + black-box coverage
+        run: npm run test:coverage:e2e
 
-      - name: Run E2E smoke tests
-        run: npm run test:e2e
+      - name: Upload black-box coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/blackbox/lcov.info
+          flags: blackbox
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload Playwright report on failure
         if: failure()

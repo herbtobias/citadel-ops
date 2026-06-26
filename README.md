@@ -395,15 +395,34 @@ npx playwright install chromium   # once
 npm run test:e2e                  # seeds, starts the dev server, runs the smoke specs
 ```
 
-It runs as a separate **e2e** CI job (own Postgres service + browser). These specs are `.spec.ts`,
-so vitest (which only collects `*.test.ts`) never picks them up, and vice-versa.
+These specs are `.spec.ts`, so vitest (which only collects `*.test.ts`) never picks them up, and
+vice-versa. In CI they run as part of the **e2e** job under black-box coverage (below).
+
+### Black-box coverage (route handlers)
+
+The vitest coverage above is scoped to the pure core (`server/utils/**` + `mcp/**`) — it can't see
+the **route handlers**, because the HTTP scenario and the Playwright specs drive a *separate*
+server process. `npm run test:coverage:e2e` closes that gap: it builds the app, boots the built
+Nitro server under V8 coverage (`NODE_V8_COVERAGE`), runs **both** suites against it, then uses
+`c8` to remap the bundle coverage back to source via the build's per-chunk sourcemaps.
+
+```bash
+npm run test:coverage:e2e   # build → instrumented server → scenario + E2E → coverage/blackbox/
+```
+
+This lifts measured server coverage from ~24 % (unit, core only) to ~50 %+ **lines** over all of
+`server/**` + `mcp/**`. Lines/Statements are the trustworthy metric here — branch/function counts
+are understated because they're remapped through sourcemaps. CI runs this in the **e2e** job and
+uploads the result to Codecov under the `blackbox` flag (the unit run uploads under `unit`; Codecov
+merges them).
 
 ## Code quality & CI
 
 Every push to `main` and every pull request runs the [CI workflow](.github/workflows/ci.yml):
 lint → format check → typecheck → unit + integration tests (against a Postgres service
-container) with coverage → build, plus a parallel **e2e** job running the Playwright UI smoke
-suite. That gate is what the **CI** and **coverage** badges at the top report.
+container) with coverage → build, plus a parallel **e2e** job that runs the HTTP scenario + the
+Playwright UI smoke suite under black-box coverage. That gate is what the **CI** and **coverage**
+badges at the top report.
 
 ```bash
 npm run lint           # ESLint (flat config, @nuxt/eslint) — real bugs/bad patterns

@@ -13,6 +13,11 @@ import { defineConfig, devices } from '@playwright/test'
 const PORT = Number(process.env.E2E_PORT || 3100)
 const BASE_URL = process.env.E2E_BASE_URL || `http://localhost:${PORT}`
 
+// When the black-box coverage harness (scripts/coverage-blackbox.sh) has already
+// started an instrumented production server, drive that one instead of spawning
+// our own dev server — E2E_EXTERNAL=1 + E2E_BASE_URL point us at it.
+const EXTERNAL = process.env.E2E_EXTERNAL === '1'
+
 export default defineConfig({
   testDir: './test/e2e',
   testMatch: '**/*.spec.ts',
@@ -32,16 +37,19 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: `npm run dev -- --port ${PORT}`,
-    url: `${BASE_URL}/health`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    env: {
-      // Dev server needs a DB + a ≥32-char session secret (server/plugins/00.env-check).
-      DATABASE_URL: process.env.DATABASE_URL || 'postgres://citadel:citadel@localhost:5433/citadel',
-      NUXT_SESSION_PASSWORD:
-        process.env.NUXT_SESSION_PASSWORD || 'e2e-only-session-password-32-characters',
-    },
-  },
+  webServer: EXTERNAL
+    ? undefined
+    : {
+        command: `npm run dev -- --port ${PORT}`,
+        url: `${BASE_URL}/health`,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+        env: {
+          // Dev server needs a DB + a ≥32-char session secret (server/plugins/00.env-check).
+          DATABASE_URL:
+            process.env.DATABASE_URL || 'postgres://citadel:citadel@localhost:5433/citadel',
+          NUXT_SESSION_PASSWORD:
+            process.env.NUXT_SESSION_PASSWORD || 'e2e-only-session-password-32-characters',
+        },
+      },
 })
