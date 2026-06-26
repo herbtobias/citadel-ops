@@ -35,6 +35,16 @@ const DEV_PASSWORD = 'citadel123'
 const hashKey = (k: string) => createHash('sha256').update(k).digest('hex')
 
 async function seed() {
+  // Safety: the seed WIPES the demo org + demo users and installs publicly-known
+  // credentials (lic_*_demo, password "citadel123"). Refuse to run against a
+  // production database unless explicitly overridden.
+  if (process.env.NODE_ENV === 'production' && process.env.CITADEL_ALLOW_SEED !== 'true') {
+    throw new Error(
+      'Refusing to seed in production (would wipe data + install demo credentials). ' +
+        'Set CITADEL_ALLOW_SEED=true only if you truly intend this.',
+    )
+  }
+
   const ORG_SLUG = 'hq'
   console.log('› Seeding Citadel Ops demo data…')
 
