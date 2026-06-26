@@ -13,6 +13,7 @@ interface License {
   id: string
   agentAlias: string
   sectors: string[]
+  scopes: string[]
   status: string
   lastSeenAt: string | null
   expiresAt: string | null
@@ -27,6 +28,7 @@ const { data: licenses, refresh } = await useAsyncData(
 // Issue form
 const alias = ref('')
 const chosenSectors = ref<Sector[]>([])
+const planner = ref(false)
 const issueError = ref('')
 const issuedKey = ref<string | null>(null)
 
@@ -42,11 +44,16 @@ async function issue() {
   try {
     const res = await $fetch<{ key: string }>(`/api/v1/projects/${projectId.value}/licenses`, {
       method: 'POST',
-      body: { agentAlias: alias.value, sectors: chosenSectors.value },
+      body: {
+        agentAlias: alias.value,
+        sectors: chosenSectors.value,
+        scopes: planner.value ? ['plan'] : [],
+      },
     })
     issuedKey.value = res.key
     alias.value = ''
     chosenSectors.value = []
+    planner.value = false
     await refresh()
   } catch (e: any) {
     issueError.value = e?.data?.statusMessage || e?.statusMessage || 'Could not issue license'
@@ -120,6 +127,13 @@ function fmt(d: string | null) {
             </button>
           </div>
         </div>
+        <div>
+          <label class="ct-label flex items-center gap-2 text-muted-foreground">
+            <input v-model="planner" type="checkbox" />
+            Planner — grant the <span class="text-accent">plan</span> scope (create &amp; groom
+            Operations/Missions)
+          </label>
+        </div>
         <p v-if="issueError" class="ct-label text-destructive">{{ issueError }}</p>
       </form>
 
@@ -140,6 +154,7 @@ function fmt(d: string | null) {
           <tr class="ct-label border-b border-border text-left text-muted-foreground">
             <th class="py-2">Alias</th>
             <th>Sectors</th>
+            <th>Scopes</th>
             <th>Status</th>
             <th>Last seen</th>
             <th />
@@ -149,6 +164,12 @@ function fmt(d: string | null) {
           <tr v-for="l in licenses" :key="l.id" class="border-b border-border/50">
             <td class="py-2 font-bold">{{ l.agentAlias }}</td>
             <td class="text-muted-foreground">{{ l.sectors.join(', ') }}</td>
+            <td>
+              <span v-if="l.scopes?.includes('plan')" class="ct-label text-accent-tertiary"
+                >planner</span
+              >
+              <span v-else class="text-muted-foreground">—</span>
+            </td>
             <td>
               <span :class="l.status === 'active' ? 'text-accent' : 'text-destructive'">{{
                 l.status
@@ -167,7 +188,7 @@ function fmt(d: string | null) {
             </td>
           </tr>
           <tr v-if="!licenses?.length">
-            <td colspan="5" class="py-4 text-center text-muted-foreground">
+            <td colspan="6" class="py-4 text-center text-muted-foreground">
               No licenses issued yet.
             </td>
           </tr>

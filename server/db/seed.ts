@@ -283,6 +283,18 @@ async function seed() {
       lastSeenAt: new Date('2026-06-25T08:10:00Z'),
     })
     .returning()
+  // A Planner: the `plan` scope lets it create & groom Operations/Missions upstream
+  // of execution (plus BACKEND, so it can also work what it plans).
+  await db.insert(licenses).values({
+    orgId: org.id,
+    projectId: web.id,
+    agentAlias: '008',
+    hashedKey: hashKey('lic_008_demo'),
+    sectors: ['BACKEND'],
+    scopes: ['plan'],
+    status: 'active',
+    lastSeenAt: new Date('2026-06-25T08:05:00Z'),
+  })
 
   // ── Operation (= Sprint) ──
   const [op] = await db
@@ -496,7 +508,7 @@ async function seed() {
   })
 
   console.log(
-    `✓ Seeded org=${org.slug} projects=[WEB,APP] missions=${rows.length} licenses=3 users=4`,
+    `✓ Seeded org=${org.slug} projects=[WEB,APP] missions=${rows.length} licenses=4 (incl. 008 planner) users=4`,
   )
   console.log(`  logins (password "${DEV_PASSWORD}"):`)
   console.log(`    ${HQ_EMAIL}  → super_admin (all)`)

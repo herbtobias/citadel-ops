@@ -33,6 +33,9 @@ Authorization: Bearer lic_xxxxxxxx
 
 - A License is scoped to an org/project and to one or more **Sectors** (FRONTEND, BACKEND, QA,
   INFRA, SECURITY, DESIGN). You may only claim missions in your sectors.
+- A License may also carry capability **scopes**. Today there is one: `plan` — the **Planner**
+  capability, which unlocks the planning tools (create/groom Operations & Missions). A License
+  without it is `403`'d on those endpoints.
 - HQ can **revoke** a License at any time (kill-switch). After revocation every write returns
   `401 license_revoked` → the agent must **stop immediately** (stand down).
 - Licenses are short-lived and rotatable. Treat the token as a secret; never write it into a
@@ -62,6 +65,10 @@ citadel_claim_next_mission     citadel_get_mission             citadel_list_miss
 citadel_file_dossier           citadel_run_cold_read           citadel_log_work(add_comment)
 citadel_attach_artifact        citadel_hand_off_mission        citadel_submit_for_review
 citadel_report_blocker         citadel_complete_mission        citadel_heartbeat
+
+# Planning — require the `plan` scope:
+citadel_plan_operation         citadel_create_mission          citadel_update_mission
+citadel_link_missions
 ```
 
 ### 3.2 REST — `/api/v1/agent/**`
@@ -80,6 +87,15 @@ The same loop without MCP. All require the `Authorization: Bearer` header.
 | Submit for review (non-blocking)                            | `POST /api/v1/agent/missions/:id/submit`    |
 | Complete (Quality Gates enforced)                           | `POST /api/v1/agent/missions/:id/complete`  |
 | Report a blocker                                            | `POST /api/v1/agent/missions/:id/block`     |
+
+Planning — require the `plan` scope (keys, not UUIDs):
+
+| Step                        | Method + path                      |
+| --------------------------- | ---------------------------------- |
+| Plan an Operation           | `POST  /api/v1/agent/operations`   |
+| Create a Mission (backlog)  | `POST  /api/v1/agent/missions`     |
+| Groom a Mission (id or key) | `PATCH /api/v1/agent/missions/:id` |
+| Link two missions by key    | `POST  /api/v1/agent/links`        |
 
 Briefing / gates / harness / design-guidelines are read from the project endpoints, e.g.
 `GET /api/v1/projects/:id/briefing`, `…/quality-gates`, `…/harness`, `…/design-guidelines?theme=active`.
