@@ -33,6 +33,11 @@ async function plan() {
   }
 }
 
+async function activateOp(op: Operation) {
+  await $fetch(`/api/v1/operations/${op.id}/activate`, { method: 'POST' })
+  await refresh()
+}
+
 async function close(op: Operation) {
   await $fetch(`/api/v1/operations/${op.id}/close`, { method: 'POST' })
   await refresh()
@@ -99,6 +104,13 @@ const statusColor: Record<string, string> = {
             </div>
             <div class="flex items-center gap-3">
               <span class="ct-label" :class="statusColor[op.status]">{{ op.status }}</span>
+              <button
+                v-if="isManager && op.status === 'planned'"
+                class="ct-label text-accent hover:opacity-80"
+                @click="activateOp(op)"
+              >
+                activate
+              </button>
               <button
                 v-if="isManager && op.status !== 'completed' && op.status !== 'archived'"
                 class="ct-label text-muted-foreground hover:text-destructive"
