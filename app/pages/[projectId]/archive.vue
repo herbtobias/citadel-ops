@@ -63,11 +63,19 @@ function fmt(d: string | null) {
             >
           </button>
           <p class="mt-1 pl-6 text-sm leading-relaxed text-muted-foreground">{{ d.summary }}</p>
-          <pre
-            v-if="open[d.id]"
-            class="mt-2 ml-6 overflow-x-auto whitespace-pre-wrap rounded-[var(--radius-card)] border border-border bg-background p-3 text-sm leading-relaxed text-foreground"
-            >{{ d.bodyMarkdown || '(no body)' }}</pre
+          <!-- eslint-disable vue/no-v-html -- renderMarkdown() runs markdown-it with html:false, so raw HTML is escaped and the output is sanitized (see app/utils/markdown.ts) -->
+          <div
+            v-if="open[d.id] && d.bodyMarkdown"
+            class="ct-markdown mt-2 ml-6 overflow-x-auto rounded-[var(--radius-card)] border border-border bg-background p-3 text-sm leading-relaxed text-foreground"
+            v-html="renderMarkdown(d.bodyMarkdown)"
+          />
+          <!-- eslint-enable vue/no-v-html -->
+          <p
+            v-else-if="open[d.id]"
+            class="mt-2 ml-6 text-sm italic leading-relaxed text-muted-foreground"
           >
+            (no body)
+          </p>
           <p v-if="open[d.id]" class="mt-1 pl-6 ct-label text-muted-foreground">
             updated {{ fmt(d.updatedAt) }}
           </p>
