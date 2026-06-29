@@ -5,10 +5,15 @@ export default defineNitroPlugin(() => {
   const config = useRuntimeConfig()
   const isProd = process.env.NODE_ENV === 'production'
   const pw = config.session?.password ?? ''
+  // Read the same source the DB connection uses (server/db/index.ts) — the bare
+  // DATABASE_URL env var, set at runtime. runtimeConfig.databaseUrl is only the
+  // build-time default and is NOT overridden by DATABASE_URL at runtime (Nuxt maps
+  // only NUXT_-prefixed env vars), so checking it would false-fail in Docker.
+  const dbUrl = process.env.DATABASE_URL || config.databaseUrl || ''
 
   const problems: string[] = []
   if (pw.length < 32) problems.push('NUXT_SESSION_PASSWORD must be set to ≥32 chars')
-  if (!config.databaseUrl) problems.push('DATABASE_URL must be set')
+  if (!dbUrl) problems.push('DATABASE_URL must be set')
 
   if (problems.length === 0) return
 
