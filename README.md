@@ -453,6 +453,13 @@ docker compose --profile full up --build   # or: task stack
 # → HQ + API + MCP on http://localhost:3000
 ```
 
+### Dogfooding — develop Citadel with Citadel
+
+Run a self-hosted instance as a frozen "control plane" and use it to manage Citadel's own
+development (scout the codebase → plan vNext → work the Missions). See
+[docs/SELF_HOST.md](docs/SELF_HOST.md) and `docker-compose.selfhost.yml` — own ports + DB
+volume, running a pinned image so editing the working tree never disturbs the instance.
+
 ## License
 
 Citadel Ops is **source-available** under the [Business Source License 1.1](LICENSE) (BSL 1.1),
