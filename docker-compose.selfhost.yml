@@ -1,0 +1,68 @@
+# Citadel Ops — self-host "control plane" for dogfooding (develop Citadel WITH Citadel).
+#
+# Runs a FROZEN, pre-built image on its OWN ports and its OWN database volume, so the
+# instance that manages the work is never disturbed by the code the agents are changing.
+# It deliberately uses `image:` (a pinned build) instead of `build: .` — rebuilding only
+# happens when YOU re-tag, never as a side effect of editing the working tree.
+#
+# Distinct from the dev stack (docker-compose.yml): different container names, a separate
+# pgdata volume, Postgres on 5434 (dev uses 5433), HQ on 4000 (dev uses 3000).
+#
+# ── One-time build & pin (from a known-good commit/tag) ──
+#   git checkout <stable-tag-or-main>
+#   docker build -t citadel-ops:stable .
+#
+# ── Bring the control plane up (first boot seeds the demo super-admin + org) ──
+#   export NUXT_SESSION_PASSWORD=$(openssl rand -hex 32)   # 64 hex chars
+#   SEED_ON_START=1 CITADEL_ALLOW_SEED=true \
+#     docker compose -f docker-compose.selfhost.yml up -d
+#   # then log in at http://localhost:4000 as hq@citadel.test / citadel123, change the
+#   # password, and DROP the seed flags on every later start:
+#   docker compose -f docker-compose.selfhost.yml up -d
+#
+# ── Upgrade later (deliberately, after vNext is merged & green) ──
+#   git checkout <new-tag> && docker build -t citadel-ops:stable .
+#   docker compose -f docker-compose.selfhost.yml up -d   # picks up the new image + migrates
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: citadel-selfhost-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: citadel
+      POSTGRES_PASSWORD: citadel
+      POSTGRES_DB: citadel
+    ports:
+      - '5434:5432' # distinct from the dev DB on 5433
+    volumes:
+      - citadel-selfhost-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U citadel -d citadel']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    image: ${CITADEL_IMAGE:-citadel-ops:stable} # FROZEN build — not `build: .`
+    container_name: citadel-selfhost-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      # Talks to the postgres service over the compose network (internal 5432).
+      DATABASE_URL: postgres://citadel:citadel@postgres:5432/citadel
+      # REQUIRED, 32+ chars — the app refuses to boot in prod without it (00.env-check.ts).
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:?set a 32+ char secret}
+      NUXT_PUBLIC_APP_URL: ${NUXT_PUBLIC_APP_URL:-http://localhost:4000}
+      # First boot only: seed the demo super-admin + org. Both default OFF — set
+      # SEED_ON_START=1 CITADEL_ALLOW_SEED=true for the very first `up`, then drop them
+      # (re-seeding WIPES the demo org). The prod seed-guard requires CITADEL_ALLOW_SEED.
+      SEED_ON_START: ${SEED_ON_START:-0}
+      CITADEL_ALLOW_SEED: ${CITADEL_ALLOW_SEED:-}
+    ports:
+      - '4000:3000' # distinct from the dev app on 3000
+
+volumes:
+  citadel-selfhost-pgdata:
