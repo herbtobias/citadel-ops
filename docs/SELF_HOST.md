@@ -75,11 +75,13 @@ In HQ (http://localhost:4000), as the super-admin:
 
 1. Create (or reuse the demo) **Organization**.
 2. Create a **Project**, e.g. key `CTDL`, name "Citadel vNext".
-3. **M's Desk** → issue **one provisioning key** for the project (tick _Provisioning
-   key_; its sectors/scopes are the **ceiling** it may grant — include `recon` if you'll
-   scout). This single durable secret is shared by all your agents; each agent mints its
-   own short-lived, sector-scoped **session license** from it at startup via the acquire
-   handshake. (Seed ships a demo provisioning key `lic_key_demo` on the WEB project.)
+3. **M's Desk** → issue **your provisioning key** (tick _Provisioning key_; its
+   sectors/scopes are the **ceiling** it may grant — include `recon` if you'll scout). It's
+   bound to you — **one per project per manager**, so several Ms can each hold their own and
+   sessions stay attributable. All your agents share this one durable secret and mint their
+   own short-lived, sector-scoped **session licenses** from it via the acquire handshake.
+   Lost it? **Rotate** (refresh the secret; existing sessions survive). (Seed ships a demo
+   key `lic_key_demo` on WEB, owned by the manager.)
 
 Copy the provisioning key (`lic_...`) once — it's your `CITADEL_TOKEN`.
 

@@ -1,7 +1,7 @@
 // POST /api/v1/projects/:id/licenses — issue an agent license (The M Desk, manager).
 // The raw key is returned ONCE; only its hash is stored.
 import { z } from 'zod'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { getUuidParam, parseBody, sectorSchema } from '~~/server/utils/validation'
 import { assertOrgManager } from '~~/server/utils/auth'
@@ -30,6 +30,30 @@ export default defineEventHandler(async (event) => {
   const manager = await assertOrgManager(event, project.orgId)
 
   const { agentAlias, sectors, scopes, kind, expiresInDays } = await parseBody(event, schema_)
+
+  // A provisioning key is per (project, owner): one M = one active key on a project. If
+  // this manager already holds one here, rotate it (POST …/rotate) instead of issuing a
+  // second, or revoke it first. Keeps `acquire` attribution unambiguous across multiple Ms.
+  if (kind === 'provisioning') {
+    const [existing] = await db
+      .select({ id: schema.licenses.id })
+      .from(schema.licenses)
+      .where(
+        and(
+          eq(schema.licenses.projectId, projectId),
+          eq(schema.licenses.ownerUserId, manager.id),
+          eq(schema.licenses.kind, 'provisioning'),
+          eq(schema.licenses.status, 'active'),
+        ),
+      )
+    if (existing)
+      throw createError({
+        statusCode: 409,
+        statusMessage:
+          'You already have an active provisioning key on this project — rotate it (refresh the secret, sessions survive) or revoke it first.',
+      })
+  }
+
   const key = generateLicenseKey()
   const expiresAt = expiresInDays ? new Date(Date.now() + expiresInDays * 86400_000) : null
 
@@ -43,6 +67,7 @@ export default defineEventHandler(async (event) => {
       sectors,
       scopes,
       kind,
+      ownerUserId: manager.id,
       status: 'active',
       expiresAt,
     })

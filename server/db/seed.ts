@@ -358,9 +358,10 @@ async function seed() {
     status: 'active',
     lastSeenAt: new Date('2026-06-25T08:00:00Z'),
   })
-  // A Provisioning key (M's Desk): the durable operator secret. Agents mint short-lived,
-  // sector-scoped `session` licenses from it via the acquire handshake — one key, many
-  // agents, no per-agent secret juggling. Its sectors/scopes are the ceiling it can grant.
+  // A Provisioning key (M's Desk): the durable operator secret, owned by a specific M
+  // (here the manager). Agents mint short-lived, sector-scoped `session` licenses from it
+  // via the acquire handshake — one key per (project, owner), many agents, no per-agent
+  // secret juggling. Its sectors/scopes are the ceiling it can grant.
   await db.insert(licenses).values({
     orgId: org.id,
     projectId: web.id,
@@ -369,6 +370,7 @@ async function seed() {
     sectors: ['FRONTEND', 'BACKEND', 'QA', 'DESIGN'],
     scopes: ['plan', 'recon'],
     kind: 'provisioning',
+    ownerUserId: manager.id,
     status: 'active',
   })
 
