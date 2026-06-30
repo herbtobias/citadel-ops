@@ -192,6 +192,7 @@
       <a class="navlink hide-sm" href="#planning" data-i18n="nav.planning">Planning</a>
       <a class="navlink hide-sm" href="#onboarding" data-i18n="nav.onboarding">Onboarding</a>
       <a class="navlink hide-sm" href="#loop" data-i18n="nav.how">How it works</a>
+      <a class="navlink hide-sm" href="#fleet" data-i18n="nav.fleet">Fleet</a>
       <a class="navlink hide-sm" href="#start" data-i18n="nav.start">Get started</a>
       <div class="seg" id="langSeg" title="Language">
         <button data-lang="en">EN</button><button data-lang="de">DE</button>
@@ -426,6 +427,34 @@ citadel_read_archive    <span class="c">{ }  → README, server/, app/, INTEL/co
     </div>
   </section>
 
+  <!-- FLEET -->
+  <section id="fleet">
+    <div class="wrap">
+      <p class="label eyebrow reveal" data-i18n="fleet.eyebrow">Run a fleet</p>
+      <h2 class="reveal" data-i18n="fleet.h2">One key, many agents</h2>
+      <p class="reveal muted" style="max-width:680px;margin-top:-12px" data-i18n="fleet.intro">A <strong>provisioning key</strong> is your one durable secret — per project, per manager. Every agent mints its own short-lived, sector-scoped <strong>session license</strong> from it at startup, so a whole fleet runs from a single token with no per-agent config to juggle.</p>
+      <div class="two reveal" style="margin-top:30px">
+        <div>
+          <h3 data-i18n="fleet.keyh3">The provisioning key</h3>
+          <p class="muted" data-i18n="fleet.keyd">Issued once in the <strong>M Desk</strong> and bound to you — one per project per manager, so several Ms can each hold their own. Its Sectors and scopes are the <em>ceiling</em> it may grant. Lost it? <strong>Rotate</strong> for a fresh secret while running sessions keep going. <strong>Revoke</strong> it and every session it minted dies with it.</p>
+        </div>
+        <div>
+          <h3 data-i18n="fleet.sessh3">Session licenses</h3>
+          <p class="muted" data-i18n="fleet.sessd">At startup each agent calls <code>acquire_license</code> for the Sector it needs and gets its own ephemeral credential — its own row in the roster, its own heartbeat, its own kill-switch. Two agents in the same project never collide; they differ only by the (non-secret) Sector they pick.</p>
+        </div>
+      </div>
+      <h3 class="reveal" style="margin-top:36px" data-i18n="fleet.exh3">Example — one key, two Sectors</h3>
+      <pre class="reveal" data-i18n="fleet.expre"><span class="c"># One worktree (and terminal) per agent — same CITADEL_TOKEN, different Sector:</span>
+git worktree add ../be backend   <span class="c"># BACKEND agent</span>
+git worktree add ../qa qatests    <span class="c"># QA agent</span>
+
+<span class="c"># In each: the worker acquires its own scoped session from the shared key</span>
+citadel_acquire_license <span class="c">{ sectors:["BACKEND"] }  → lic_… (12h, BACKEND)</span>
+citadel_acquire_license <span class="c">{ sectors:["QA"] }       → lic_… (12h, QA)</span></pre>
+      <p class="muted reveal" style="font-size:.92rem" data-i18n="fleet.exnote">Each session shows up as its own agent in the roster, with its own kill-switch. A single static <code>CITADEL_LICENSE</code> still works for one agent (classic mode).</p>
+    </div>
+  </section>
+
   <!-- DECODER -->
   <section id="decoder">
     <div class="wrap reveal">
@@ -438,6 +467,8 @@ citadel_read_archive    <span class="c">{ }  → README, server/, app/, INTEL/co
           <tr><td class="code">Field-Agent · Recruit</td><td data-i18n="dec.r2">A worker AI agent · a zero-context agent that runs the Cold Read</td></tr>
           <tr><td class="code">Sector</td><td data-i18n="dec.r3">The discipline an agent is licensed for (BACKEND, QA, DESIGN, …)</td></tr>
           <tr><td class="code">The M Desk / License</td><td data-i18n="dec.r4">Auth authority / the agent's revocable bearer credential</td></tr>
+          <tr><td class="code">Provisioning key</td><td data-i18n="dec.r11">Your one durable secret (per project, per M) — agents mint session licenses from it</td></tr>
+          <tr><td class="code">Session license</td><td data-i18n="dec.r12">A short-lived, Sector-scoped credential an agent acquires for one run</td></tr>
           <tr><td class="code">The Archive</td><td data-i18n="dec.r5">Dossiers + knowledge docs — the project's institutional memory</td></tr>
           <tr><td class="code">Cold Read</td><td data-i18n="dec.r6">Zero-context comprehension gate on a Dossier before work may start</td></tr>
           <tr><td class="code">Q-Branch</td><td data-i18n="dec.r7">Quality Gates, Harness (build/test/lint) and Design Guidelines</td></tr>
@@ -468,12 +499,29 @@ npm run dev   <span class="c"># http://localhost:3000</span></pre>
           <h3 data-i18n="start.s2h3">2 · Put an agent to work</h3>
           <ol class="steps-list">
             <li data-i18n="start.li1">Launch <strong>Claude Code inside the repo</strong> — the <code>/citadel-work</code> skill auto-loads.</li>
-            <li data-i18n="start.li2">In HQ, <strong>M Desk → Issue License</strong>; pick the Sector(s), copy the <code>lic_…</code> key.</li>
-            <li data-i18n="start.li3"><strong>Configure MCP:</strong> copy <code>.mcp.json.example</code> → <code>.mcp.json</code>, paste the key into <code>CITADEL_LICENSE</code>.</li>
-            <li data-i18n="start.li4">Run <code>claude</code>, trust the <code>citadel</code> server, and invoke <strong><code>/citadel-work</code></strong>.</li>
+            <li data-i18n="start.li2">In HQ, <strong>M Desk → Issue a Provisioning key</strong> (tick <em>Provisioning key</em>); it's bound to you. Copy the <code>lic_…</code> once.</li>
+            <li data-i18n="start.li3"><strong>Configure MCP:</strong> copy <code>.mcp.json.example</code> → <code>.mcp.json</code>, paste the key into <code>CITADEL_TOKEN</code>.</li>
+            <li data-i18n="start.li4">Run <code>claude</code>, trust the <code>citadel</code> server, and invoke <strong><code>/citadel-work</code></strong> — it acquires a session license for your Sector and runs the loop.</li>
           </ol>
           <p class="muted" style="font-size:.92rem" data-i18n="start.s2note">No Claude handy? <code>npm run agent -- --license lic_… --dry-run</code> exercises the whole loop without an agent.</p>
         </div>
+      </div>
+      <div style="margin-top:36px" class="reveal">
+        <h3 data-i18n="start.mcph3">Connect the MCP server &amp; run a worker</h3>
+        <pre data-i18n="start.mcppre"><span class="c"># 1 · .mcp.json — point the citadel server at HQ; the key lives here (gitignored):</span>
+{
+  <span class="a">"mcpServers"</span>: { <span class="a">"citadel"</span>: {
+    <span class="a">"command"</span>: "npx", <span class="a">"args"</span>: ["tsx", "mcp/stdio.ts"],
+    <span class="a">"env"</span>: { <span class="a">"CITADEL_URL"</span>: "http://localhost:3000", <span class="a">"CITADEL_TOKEN"</span>: "lic_…" }
+  } }
+}
+
+<span class="c"># 2 · Start a worker — run claude in the repo, trust "citadel", then:</span>
+/citadel-work
+
+<span class="c"># The skill's first step mints a sector-scoped session from your provisioning key:</span>
+citadel_acquire_license <span class="c">{ sectors:["BACKEND"] }  → lic_… (12h, BACKEND)</span></pre>
+        <p class="muted" style="font-size:.92rem" data-i18n="start.mcpnote">The session key never leaves the MCP process. Run more workers by repeating in another worktree with a different Sector — see <strong>Fleet</strong> above.</p>
       </div>
       <div style="margin-top:36px" class="reveal">
         <h3 data-i18n="start.byoh3">Bring your own agent (agent-agnostic)</h3>
@@ -510,7 +558,7 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
     const DE = {
       'doc.title': 'Citadel Ops — ein Multi-Agent-Agile-OS für KI-Agenten',
       'doc.desc': 'Ein spionage-thematisiertes HQ, in dem KI-Agenten Missionen ziehen, sie in ihrem Sektor bearbeiten, disziplinübergreifend übergeben und zurückmelden — während du alles von einem Kanban-Board aus steuerst.',
-      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.planning': 'Planung', 'nav.onboarding': 'Onboarding', 'nav.how': 'Ablauf', 'nav.start': 'Loslegen',
+      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.planning': 'Planung', 'nav.onboarding': 'Onboarding', 'nav.how': 'Ablauf', 'nav.fleet': 'Flotte', 'nav.start': 'Loslegen',
       'screens.eyebrow': 'Im HQ', 'screens.h2': 'So sieht es aus',
       'screens.lead': 'Fünf Blicke darauf, wie HQ die Kontrolle behält. Scroll weiter — die Screens wandern seitwärts mit.',
       'sc1.t': 'Das Board',
@@ -571,6 +619,15 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       's6.n': '06 · HEARTBEAT', 's6.t': 'Lease halten', 's6.d': 'Lange Arbeit hält ihre Lease am Leben; Abstürze requeued ein Watchdog.',
       's7.n': '07 · FINISH', 's7.t': 'Review oder Abschluss', 's7.d': 'Gates beim Abschluss erzwungen. Anderer Sektor nötig? Stattdessen übergeben.',
       's8.n': '08 · NEXT', 's8.t': 'Leeren &amp; wiederholen', 's8.d': 'Letzte Mission vergessen, zurück zu Orders — bis zum Stand-Down.',
+      'fleet.eyebrow': 'Eine Flotte fahren', 'fleet.h2': 'Ein Schlüssel, viele Agenten',
+      'fleet.intro': 'Ein <strong>Provisioning-Key</strong> ist dein einziges dauerhaftes Geheimnis — pro Projekt, pro Manager. Jeder Agent mintet daraus beim Start seine eigene kurzlebige, sektor-scoped <strong>Session-License</strong> — so läuft eine ganze Flotte aus einem einzigen Token, ohne Config-Gefummel pro Agent.',
+      'fleet.keyh3': 'Der Provisioning-Key',
+      'fleet.keyd': 'Einmal im <strong>M Desk</strong> ausgestellt und an dich gebunden — einer pro Projekt pro Manager, sodass mehrere Ms je ihren eigenen halten. Seine Sektoren und Scopes sind die <em>Decke</em>, die er vergeben darf. Verloren? <strong>Rotieren</strong> liefert ein neues Geheimnis, während laufende Sessions weiterarbeiten. <strong>Widerrufen</strong>, und jede daraus geminteten Session stirbt mit ihm.',
+      'fleet.sessh3': 'Session-Licenses',
+      'fleet.sessd': 'Beim Start ruft jeder Agent <code>acquire_license</code> für den Sektor, den er braucht, und bekommt sein eigenes flüchtiges Credential — eigene Zeile im Roster, eigener Heartbeat, eigener Kill-Switch. Zwei Agenten im selben Projekt kollidieren nie; sie unterscheiden sich nur durch den (nicht geheimen) Sektor, den sie wählen.',
+      'fleet.exh3': 'Beispiel — ein Schlüssel, zwei Sektoren',
+      'fleet.expre': '<span class="c"># Ein Worktree (und Terminal) pro Agent — gleicher CITADEL_TOKEN, anderer Sektor:</span>\ngit worktree add ../be backend   <span class="c"># BACKEND-Agent</span>\ngit worktree add ../qa qatests    <span class="c"># QA-Agent</span>\n\n<span class="c"># In jedem holt sich der Worker seine eigene scoped Session aus dem geteilten Key</span>\ncitadel_acquire_license <span class="c">{ sectors:["BACKEND"] }  → lic_… (12h, BACKEND)</span>\ncitadel_acquire_license <span class="c">{ sectors:["QA"] }       → lic_… (12h, QA)</span>',
+      'fleet.exnote': 'Jede Session erscheint als eigener Agent im Roster, mit eigenem Kill-Switch. Eine einzelne statische <code>CITADEL_LICENSE</code> funktioniert weiterhin für einen Agenten (Classic-Modus).',
       'dec.eyebrow': 'Decoder', 'dec.h2': 'Codename → was es wirklich ist', 'dec.th1': 'Codename', 'dec.th2': 'Klartext',
       'dec.r1': 'Sprint / Task',
       'dec.r2': 'Ein arbeitender KI-Agent · ein Agent ohne Vorkontext, der den Cold Read macht',
@@ -582,16 +639,21 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       'dec.r8': 'Append-only, hash-verkettetes Aktivitätslog (manipulationssicheres Audit)',
       'dec.r9': 'Eine neue Mission in einem anderen Sektor mit geteiltem Kontext erzeugen',
       'dec.r10': 'Du — der Mensch, über das Board',
+      'dec.r11': 'Dein einziges dauerhaftes Geheimnis (pro Projekt, pro M) — Agenten minten daraus Session-Licenses',
+      'dec.r12': 'Ein kurzlebiges, sektor-scoped Credential, das ein Agent pro Lauf holt',
       'start.eyebrow': 'Loslegen', 'start.h2': 'Von null zum laufenden Agenten',
       'start.s1h3': '1 · HQ starten (der Server)',
       'start.s1pre': '<span class="c"># Postgres + Schema + Demo-Daten, dann HQ</span>\nnpm install\ndocker compose up -d\nnpm run db:push <span class="a">&amp;&amp;</span> npm run db:seed\nnpm run dev   <span class="c"># http://localhost:3000</span>',
       'start.s1note': 'Melde dich als SuperAdmin <code>hq@citadel.test</code> / <code>citadel123</code> an. Lieber ein Befehl? <code>docker compose --profile full up --build</code>.',
       'start.s2h3': '2 · Einen Agenten in Betrieb nehmen',
       'start.li1': 'Starte <strong>Claude Code im Repo</strong> — der <code>/citadel-work</code>-Skill lädt automatisch.',
-      'start.li2': 'In HQ: <strong>M Desk → License ausstellen</strong>; Sektor(en) wählen, den <code>lic_…</code>-Key kopieren.',
-      'start.li3': '<strong>MCP konfigurieren:</strong> <code>.mcp.json.example</code> → <code>.mcp.json</code> kopieren, Key in <code>CITADEL_LICENSE</code> einsetzen.',
-      'start.li4': 'Führe <code>claude</code> aus, vertraue dem <code>citadel</code>-Server und rufe <strong><code>/citadel-work</code></strong> auf.',
+      'start.li2': 'In HQ: <strong>M Desk → Provisioning-Key ausstellen</strong> (<em>Provisioning key</em> anhaken); er ist an dich gebunden. Den <code>lic_…</code> einmal kopieren.',
+      'start.li3': '<strong>MCP konfigurieren:</strong> <code>.mcp.json.example</code> → <code>.mcp.json</code> kopieren, Key in <code>CITADEL_TOKEN</code> einsetzen.',
+      'start.li4': 'Führe <code>claude</code> aus, vertraue dem <code>citadel</code>-Server und rufe <strong><code>/citadel-work</code></strong> auf — er holt sich eine Session-License für deinen Sektor und fährt den Loop.',
       'start.s2note': 'Kein Claude zur Hand? <code>npm run agent -- --license lic_… --dry-run</code> testet den ganzen Loop ohne Agent.',
+      'start.mcph3': 'MCP-Server verbinden &amp; einen Worker starten',
+      'start.mcppre': '<span class="c"># 1 · .mcp.json — den citadel-Server auf HQ zeigen; der Key liegt hier (gitignored):</span>\n{\n  <span class="a">"mcpServers"</span>: { <span class="a">"citadel"</span>: {\n    <span class="a">"command"</span>: "npx", <span class="a">"args"</span>: ["tsx", "mcp/stdio.ts"],\n    <span class="a">"env"</span>: { <span class="a">"CITADEL_URL"</span>: "http://localhost:3000", <span class="a">"CITADEL_TOKEN"</span>: "lic_…" }\n  } }\n}\n\n<span class="c"># 2 · Worker starten — claude im Repo ausführen, "citadel" vertrauen, dann:</span>\n/citadel-work\n\n<span class="c"># Der erste Schritt des Skills mintet aus deinem Provisioning-Key eine sektor-scoped Session:</span>\ncitadel_acquire_license <span class="c">{ sectors:["BACKEND"] }  → lic_… (12h, BACKEND)</span>',
+      'start.mcpnote': 'Der Session-Key verlässt nie den MCP-Prozess. Mehr Worker: in einem weiteren Worktree mit anderem Sektor wiederholen — siehe <strong>Flotte</strong> oben.',
       'start.byoh3': 'Bring deinen eigenen Agenten (agent-agnostisch)',
       'start.byopre': '<span class="c"># Beliebige MCP-Runtime (z. B. Antigravity): zeige sie auf</span>\n<span class="a">POST</span> http://localhost:3000/api/mcp   <span class="c"># Header: Authorization: Bearer lic_…</span>\n\n<span class="c"># Jede andere Runtime — Citadel fährt den Loop, dein Befehl ist das Gehirn:</span>\nnpm run agent -- --license lic_… --driver generic --exec <span class="a">"sh examples/generic-agent.sh"</span>',
       'foot.repo': 'Repository', 'foot.contract': 'Integrations-Contract',
