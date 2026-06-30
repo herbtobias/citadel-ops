@@ -6,6 +6,9 @@ dist
 coverage
 *.log
 .env
+.env.citadel
+.envrc
+.mcp.json
 .DS_Store
 .vscode
 

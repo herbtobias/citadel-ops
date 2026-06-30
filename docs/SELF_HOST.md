@@ -95,10 +95,11 @@ git worktree add ../citadel-vnext main
 cd ../citadel-vnext
 ```
 
-Point this working copy's MCP at the **control plane on :4000** (not 3000). The config
-carries the **provisioning key** (`CITADEL_TOKEN`) — the same for every agent, so it can
-even live in user scope (`~/.claude.json`), set once. Copy `.mcp.json.example` to
-`.mcp.json` here and set:
+Point this working copy's MCP at the **control plane on :4000** (not 3000). The fastest way
+is the **`/citadel-init`** skill — run `claude` in the worktree and invoke it; give it
+`http://localhost:4000` and your provisioning key, and it writes `.mcp.json` (with
+`${CITADEL_TOKEN}` env-expansion), wires the key into a gitignored env holder, and verifies
+the connection. By hand it's `.mcp.json` like:
 
 ```json
 {
@@ -108,12 +109,14 @@ even live in user scope (`~/.claude.json`), set once. Copy `.mcp.json.example` t
       "args": ["tsx", "mcp/stdio.ts"],
       "env": {
         "CITADEL_URL": "http://localhost:4000",
-        "CITADEL_TOKEN": "lic_...your_provisioning_key..."
+        "CITADEL_TOKEN": "${CITADEL_TOKEN}"
       }
     }
   }
 }
 ```
+
+…plus `export CITADEL_TOKEN=lic_...your_provisioning_key...` (gitignored `.envrc`/`.env.citadel`).
 
 **Multiple agents, same project, no collision.** Each agent calls
 `citadel_acquire_license({ sectors: ["BACKEND"] })` once at startup → its own ephemeral

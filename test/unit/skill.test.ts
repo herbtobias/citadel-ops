@@ -27,6 +27,25 @@ describe('Claude skill: /citadel-work', () => {
   })
 })
 
+describe('Claude skill: /citadel-init', () => {
+  const skill = read('.claude/skills/citadel-init/SKILL.md')
+
+  it('has valid frontmatter (name matches dir + a description)', () => {
+    const fm = skill.match(/^---\n([\s\S]*?)\n---/)
+    expect(fm, 'missing frontmatter').toBeTruthy()
+    const block = fm![1]
+    expect(block.match(/name:\s*(.+)/)?.[1].trim()).toBe('citadel-init')
+    expect(block.match(/description:\s*(.+)/)?.[1].trim().length ?? 0).toBeGreaterThan(20)
+  })
+
+  it('references only citadel_* tools the MCP server actually registers (no drift)', async () => {
+    const registered = new Set(await listCitadelToolNames())
+    const referenced = [...new Set(skill.match(/citadel_[a-z]+(?:_[a-z]+)*/g) ?? [])]
+    const unknown = referenced.filter((t) => !registered.has(t))
+    expect(unknown, `skill references tools the MCP server does not expose: ${unknown}`).toEqual([])
+  })
+})
+
 describe('.mcp.json.example', () => {
   it('is valid JSON and wires the citadel stdio server', () => {
     const cfg = JSON.parse(read('.mcp.json.example'))

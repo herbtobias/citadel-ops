@@ -110,12 +110,20 @@ to HQ; the License is its credential. Set up steps **a–d** once, then just inv
 
 **c. Configure the MCP server**
 
+The fast path is the **`/citadel-init`** skill — launch `claude` in the project and invoke it; it
+asks for the HQ URL and your provisioning key, writes `.mcp.json` (with `${CITADEL_TOKEN}`
+env-expansion so no secret is stored in the file), wires the key into a gitignored env holder, and
+verifies the connection against HQ.
+
+Or do it by hand:
+
 ```bash
 cp .mcp.json.example .mcp.json        # .mcp.json is gitignored — your key stays local
+export CITADEL_TOKEN=lic_…            # the provisioning key, expanded at launch
 ```
 
-Edit `.mcp.json` and paste a **provisioning key** into `CITADEL_TOKEN` (set `CITADEL_URL`,
-default `http://localhost:3000`):
+`.mcp.json` references the token via env-expansion (set `CITADEL_URL`, default
+`http://localhost:3000`):
 
 ```json
 {
@@ -123,7 +131,7 @@ default `http://localhost:3000`):
     "citadel": {
       "command": "npx",
       "args": ["tsx", "mcp/stdio.ts"],
-      "env": { "CITADEL_URL": "http://localhost:3000", "CITADEL_TOKEN": "lic_…" }
+      "env": { "CITADEL_URL": "http://localhost:3000", "CITADEL_TOKEN": "${CITADEL_TOKEN}" }
     }
   }
 }
