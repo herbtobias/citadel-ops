@@ -2,6 +2,17 @@
 import { z } from 'zod'
 
 export const sectorSchema = z.enum(['FRONTEND', 'BACKEND', 'QA', 'INFRA', 'SECURITY', 'DESIGN'])
+export type Sector = z.infer<typeof sectorSchema>
+export const scopeSchema = z.enum(['plan', 'recon'])
+
+// Body for POST /api/v1/agent/acquire — a provisioning key mints a session license.
+// All optional: sectors/scopes default to (a subset of) the provisioning key's ceiling.
+export const acquireLicenseSchema = z.object({
+  sectors: z.array(sectorSchema).optional(),
+  scopes: z.array(scopeSchema).optional(),
+  alias: z.string().min(1).max(40).optional(),
+  ttlMinutes: z.number().int().positive().max(1440).optional(),
+})
 export const missionTypeSchema = z.enum([
   'design',
   'feature',

@@ -114,8 +114,8 @@ to HQ; the License is its credential. Set up steps **a–d** once, then just inv
 cp .mcp.json.example .mcp.json        # .mcp.json is gitignored — your key stays local
 ```
 
-Edit `.mcp.json` and paste the key into `CITADEL_LICENSE` (set `CITADEL_URL`, default
-`http://localhost:3000`):
+Edit `.mcp.json` and paste a **provisioning key** into `CITADEL_TOKEN` (set `CITADEL_URL`,
+default `http://localhost:3000`):
 
 ```json
 {
@@ -123,11 +123,17 @@ Edit `.mcp.json` and paste the key into `CITADEL_LICENSE` (set `CITADEL_URL`, de
     "citadel": {
       "command": "npx",
       "args": ["tsx", "mcp/stdio.ts"],
-      "env": { "CITADEL_URL": "http://localhost:3000", "CITADEL_LICENSE": "lic_…" }
+      "env": { "CITADEL_URL": "http://localhost:3000", "CITADEL_TOKEN": "lic_…" }
     }
   }
 }
 ```
+
+The agent calls `citadel_acquire_license({ sectors: [...] })` once at startup to mint a
+short-lived, sector-scoped **session license** from the provisioning key — so one durable
+secret serves many agents (run several, one per worktree, no config collision; each gets
+its own roster entry and kill-switch). A static `CITADEL_LICENSE=lic_…` agent key still
+works for a single agent (classic mode).
 
 **d. Run it**
 
@@ -184,9 +190,12 @@ is yours. [`examples/generic-agent.sh`](examples/generic-agent.sh) is a working 
 
 `lic_007_demo` (007, BACKEND) · `lic_009_demo` (009, QA) · `lic_006_demo` (006, FRONTEND/DESIGN) ·
 `lic_008_demo` (008, BACKEND **+ `plan` scope** — a Planner) ·
-`lic_010_demo` (010, BACKEND **+ `recon` scope** — a Scout/Interrogator).
-Agent loop endpoints: `POST /api/v1/agent/check-in` → `claim-next` → `…/missions/:id/heartbeat`
-→ `…/hand-off` → `…/complete`; `GET /api/v1/agent/orders` for control.
+`lic_010_demo` (010, BACKEND **+ `recon` scope** — a Scout/Interrogator) ·
+`lic_key_demo` (**provisioning key**, BACKEND/QA/FRONTEND/DESIGN + `plan`/`recon` ceiling —
+use as `CITADEL_TOKEN`; agents acquire session licenses from it).
+Agent loop endpoints: `POST /api/v1/agent/acquire` (mint a session license from a provisioning
+key) → `check-in` → `claim-next` → `…/missions/:id/heartbeat` → `…/hand-off` → `…/complete`;
+`GET /api/v1/agent/orders` for control.
 
 ### Planning (where Operations & Missions come from)
 

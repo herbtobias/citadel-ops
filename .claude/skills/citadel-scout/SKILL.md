@@ -24,7 +24,10 @@ repo being onboarded.
 
 ## The loop
 
-1. **Check in** — `citadel_acquire_license`. Confirm the license is bound to the right project.
+1. **Check in** — `citadel_acquire_license({ scopes: ["recon"] })`. This mints your session
+   license (with a provisioning key) or checks in a static one. You **must** request the `recon`
+   scope here — session licenses default to no scopes — or Archive writes will be 403'd. Confirm
+   it's bound to the right project.
 2. **See what's known** — `citadel_read_archive`. If docs already exist, you're refreshing, not
    starting fresh; update what changed rather than duplicating.
 3. **Recon the repo** — read, don't guess. Cover at least:

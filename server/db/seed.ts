@@ -358,6 +358,19 @@ async function seed() {
     status: 'active',
     lastSeenAt: new Date('2026-06-25T08:00:00Z'),
   })
+  // A Provisioning key (M's Desk): the durable operator secret. Agents mint short-lived,
+  // sector-scoped `session` licenses from it via the acquire handshake — one key, many
+  // agents, no per-agent secret juggling. Its sectors/scopes are the ceiling it can grant.
+  await db.insert(licenses).values({
+    orgId: org.id,
+    projectId: web.id,
+    agentAlias: 'KEY',
+    hashedKey: hashKey('lic_key_demo'),
+    sectors: ['FRONTEND', 'BACKEND', 'QA', 'DESIGN'],
+    scopes: ['plan', 'recon'],
+    kind: 'provisioning',
+    status: 'active',
+  })
 
   // ── Operation (= Sprint) ──
   const [op] = await db
@@ -571,7 +584,7 @@ async function seed() {
   })
 
   console.log(
-    `✓ Seeded org=${org.slug} projects=[WEB,APP] missions=${rows.length} licenses=5 (incl. 008 planner, 010 scout) users=4`,
+    `✓ Seeded org=${org.slug} projects=[WEB,APP] missions=${rows.length} licenses=6 (incl. 008 planner, 010 scout, KEY provisioning) users=4`,
   )
   console.log(`  logins (password "${DEV_PASSWORD}"):`)
   console.log(`    ${HQ_EMAIL}  → super_admin (all)`)

@@ -17,6 +17,9 @@ const schema_ = z.object({
     .array(z.enum(['plan', 'recon']))
     .optional()
     .default([]),
+  // `standing` = a classic agent key; `provisioning` = a key that only mints short-lived
+  // session licenses via the acquire handshake (its sectors/scopes are the ceiling). §C.
+  kind: z.enum(['standing', 'provisioning']).optional().default('standing'),
   expiresInDays: z.number().int().positive().max(365).optional(),
 })
 
@@ -26,7 +29,7 @@ export default defineEventHandler(async (event) => {
   if (!project) throw createError({ statusCode: 404, statusMessage: 'Project not found' })
   const manager = await assertOrgManager(event, project.orgId)
 
-  const { agentAlias, sectors, scopes, expiresInDays } = await parseBody(event, schema_)
+  const { agentAlias, sectors, scopes, kind, expiresInDays } = await parseBody(event, schema_)
   const key = generateLicenseKey()
   const expiresAt = expiresInDays ? new Date(Date.now() + expiresInDays * 86400_000) : null
 
@@ -39,6 +42,7 @@ export default defineEventHandler(async (event) => {
       hashedKey: hashLicenseKey(key),
       sectors,
       scopes,
+      kind,
       status: 'active',
       expiresAt,
     })
@@ -46,13 +50,14 @@ export default defineEventHandler(async (event) => {
   if (!lic) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
 
   const scopeNote = scopes.length ? ` +${scopes.join(',')}` : ''
+  const kindNote = kind === 'provisioning' ? ' (provisioning key)' : ''
   await logActivity({
     projectId,
     actorType: 'human',
     actorUserId: manager.id,
     event: 'license_issued',
-    message: `Issued license to ${agentAlias} [${sectors.join(', ')}]${scopeNote}`,
-    metadata: { licenseId: lic.id },
+    message: `Issued ${kind} license to ${agentAlias} [${sectors.join(', ')}]${scopeNote}${kindNote}`,
+    metadata: { licenseId: lic.id, kind },
   })
 
   setResponseStatus(event, 201)
@@ -62,6 +67,7 @@ export default defineEventHandler(async (event) => {
     agentAlias: lic.agentAlias,
     sectors: lic.sectors,
     scopes: lic.scopes,
+    kind: lic.kind,
     expiresAt: lic.expiresAt,
     key,
   }

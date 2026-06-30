@@ -54,8 +54,10 @@ Two distributions, both License-authenticated, exposing the same `citadel_*` too
 
 - **Streamable-HTTP**: `POST {CITADEL_URL}/api/mcp` with the `Authorization: Bearer` header.
   Stateless JSON mode — any MCP-compliant client works (e.g. Antigravity, Claude Code).
-- **stdio**: run `mcp/stdio.ts` (env `CITADEL_URL`, `CITADEL_LICENSE`). Good for local agents
-  that launch a subprocess per session.
+- **stdio**: run `mcp/stdio.ts` (env `CITADEL_URL` + a credential). Good for local agents that
+  launch a subprocess per session. Credential is either `CITADEL_TOKEN` (a **provisioning key** —
+  the agent mints a short-lived session license via `citadel_acquire_license`; one durable secret
+  serves many agents) or `CITADEL_LICENSE` (a static agent key, classic single-agent mode).
 
 Tools:
 
@@ -82,6 +84,7 @@ The same loop without MCP. All require the `Authorization: Bearer` header.
 
 | Step                                                        | Method + path                               |
 | ----------------------------------------------------------- | ------------------------------------------- |
+| Acquire a session license from a provisioning key           | `POST /api/v1/agent/acquire`                |
 | Check in (identity + sectors + active project)              | `POST /api/v1/agent/check-in`               |
 | Read control orders (pause / stand-down / redirect)         | `GET  /api/v1/agent/orders`                 |
 | Claim the next mission in your sector (atomic)              | `POST /api/v1/agent/claim-next`             |

@@ -12,6 +12,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
@@ -26,6 +27,11 @@ export const invitationStatus = pgEnum('invitation_status', [
   'revoked',
 ])
 export const licenseStatus = pgEnum('license_status', ['active', 'revoked', 'expired'])
+// What a License *is*: a `standing` license is the classic statically-issued agent key;
+// a `provisioning` key only mints `session` licenses (the acquire handshake) and never
+// does work itself; a `session` license is the short-lived, sector-scoped child an agent
+// acquires at startup — a real License row, so leases/kill-switch/roster apply unchanged.
+export const licenseKind = pgEnum('license_kind', ['standing', 'provisioning', 'session'])
 export const sectorEnum = pgEnum('sector', [
   'FRONTEND',
   'BACKEND',
@@ -224,8 +230,14 @@ export const licenses = pgTable(
     projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
     agentAlias: text('agent_alias').notNull(),
     hashedKey: text('hashed_key').notNull(),
+    // For a provisioning key, `sectors`/`scopes` are the *ceiling* a child may request.
     sectors: sectorEnum('sectors').array().notNull().default([]),
     scopes: text('scopes').array().notNull().default([]),
+    kind: licenseKind('kind').notNull().default('standing'),
+    // A `session` license points at the provisioning key that minted it (cascade-revoke).
+    parentLicenseId: uuid('parent_license_id').references((): AnyPgColumn => licenses.id, {
+      onDelete: 'cascade',
+    }),
     status: licenseStatus('status').notNull().default('active'),
     issuedAt: timestamp('issued_at', { withTimezone: true }).defaultNow().notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }),

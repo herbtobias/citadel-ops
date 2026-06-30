@@ -14,6 +14,8 @@ interface License {
   agentAlias: string
   sectors: string[]
   scopes: string[]
+  kind: 'standing' | 'provisioning' | 'session'
+  parentLicenseId: string | null
   status: string
   lastSeenAt: string | null
   expiresAt: string | null
@@ -30,8 +32,10 @@ const alias = ref('')
 const chosenSectors = ref<Sector[]>([])
 const planner = ref(false)
 const scout = ref(false)
+const provisioning = ref(false)
 const issueError = ref('')
 const issuedKey = ref<string | null>(null)
+const issuedKind = ref<'standing' | 'provisioning'>('standing')
 
 function toggleSector(s: Sector) {
   const i = chosenSectors.value.indexOf(s)
@@ -49,13 +53,16 @@ async function issue() {
         agentAlias: alias.value,
         sectors: chosenSectors.value,
         scopes: [...(planner.value ? ['plan'] : []), ...(scout.value ? ['recon'] : [])],
+        kind: provisioning.value ? 'provisioning' : 'standing',
       },
     })
     issuedKey.value = res.key
+    issuedKind.value = provisioning.value ? 'provisioning' : 'standing'
     alias.value = ''
     chosenSectors.value = []
     planner.value = false
     scout.value = false
+    provisioning.value = false
     await refresh()
   } catch (e: any) {
     issueError.value = e?.data?.statusMessage || e?.statusMessage || 'Could not issue license'
@@ -141,6 +148,14 @@ function fmt(d: string | null) {
             brownfield onboarding)
           </label>
         </div>
+        <div class="border-t border-border/50 pt-3">
+          <label class="ct-label flex items-center gap-2 text-muted-foreground">
+            <input v-model="provisioning" type="checkbox" />
+            Provisioning key — agents mint short-lived
+            <span class="text-accent">session</span> licenses from it (one durable secret, many
+            agents). The sectors/scopes above are the ceiling it may grant.
+          </label>
+        </div>
         <p v-if="issueError" class="ct-label text-destructive">{{ issueError }}</p>
       </form>
 
@@ -148,8 +163,14 @@ function fmt(d: string | null) {
         v-if="issuedKey"
         class="mt-4 rounded-[var(--radius-card)] border border-accent bg-background p-3"
       >
-        <p class="ct-label mb-1 text-accent">License key — shown once, copy it now</p>
+        <p class="ct-label mb-1 text-accent">
+          {{ issuedKind === 'provisioning' ? 'Provisioning key' : 'License key' }} — shown once,
+          copy it now
+        </p>
         <code class="block break-all text-sm text-foreground">{{ issuedKey }}</code>
+        <p v-if="issuedKind === 'provisioning'" class="ct-label mt-2 text-muted-foreground">
+          Set it as <span class="text-accent">CITADEL_TOKEN</span> for your agents.
+        </p>
       </div>
     </section>
 
@@ -169,7 +190,21 @@ function fmt(d: string | null) {
         </thead>
         <tbody>
           <tr v-for="l in licenses" :key="l.id" class="border-b border-border/50">
-            <td class="py-2 font-bold">{{ l.agentAlias }}</td>
+            <td class="py-2 font-bold">
+              {{ l.agentAlias }}
+              <span
+                v-if="l.kind === 'provisioning'"
+                class="ct-label ml-1 align-middle text-accent"
+                title="Provisioning key — mints session licenses"
+                >· key</span
+              >
+              <span
+                v-else-if="l.kind === 'session'"
+                class="ct-label ml-1 align-middle text-muted-foreground"
+                title="Short-lived session license"
+                >· session</span
+              >
+            </td>
             <td class="text-muted-foreground">{{ l.sectors.join(', ') }}</td>
             <td>
               <span class="flex flex-wrap gap-1.5">
