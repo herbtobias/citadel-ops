@@ -59,6 +59,9 @@ Two distributions, both License-authenticated, exposing the same `citadel_*` too
   the agent mints a short-lived session license via `citadel_acquire_license`; one durable secret
   serves many agents) or `CITADEL_LICENSE` (a static agent key, classic single-agent mode).
 
+In Claude Code, the **`/citadel-init`** skill wires this up for you (writes/merges `.mcp.json` with
+`${CITADEL_TOKEN}` env-expansion, gitignores the secret holder, and verifies the connection).
+
 Tools:
 
 ```

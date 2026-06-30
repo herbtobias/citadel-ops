@@ -5,7 +5,7 @@
       "args": ["tsx", "mcp/stdio.ts"],
       "env": {
         "CITADEL_URL": "http://localhost:3000",
-        "CITADEL_TOKEN": "lic_paste_your_provisioning_key_here"
+        "CITADEL_TOKEN": "${CITADEL_TOKEN}"
       }
     }
   }
