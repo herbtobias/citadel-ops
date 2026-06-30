@@ -16,6 +16,9 @@ interface License {
   scopes: string[]
   kind: 'standing' | 'provisioning' | 'session'
   parentLicenseId: string | null
+  ownerUserId: string | null
+  ownerName: string | null
+  ownerEmail: string | null
   status: string
   lastSeenAt: string | null
   expiresAt: string | null
@@ -153,7 +156,8 @@ function fmt(d: string | null) {
             <input v-model="provisioning" type="checkbox" />
             Provisioning key — agents mint short-lived
             <span class="text-accent">session</span> licenses from it (one durable secret, many
-            agents). The sectors/scopes above are the ceiling it may grant.
+            agents). Bound to you; one per project per manager (rotate to refresh). The
+            sectors/scopes above are the ceiling it may grant.
           </label>
         </div>
         <p v-if="issueError" class="ct-label text-destructive">{{ issueError }}</p>
@@ -181,6 +185,7 @@ function fmt(d: string | null) {
         <thead>
           <tr class="ct-label border-b border-border text-left text-muted-foreground">
             <th class="py-2">Alias</th>
+            <th>Owner</th>
             <th>Sectors</th>
             <th>Scopes</th>
             <th>Status</th>
@@ -204,6 +209,9 @@ function fmt(d: string | null) {
                 title="Short-lived session license"
                 >· session</span
               >
+            </td>
+            <td class="text-muted-foreground" :title="l.ownerEmail ?? ''">
+              {{ l.ownerName ?? '—' }}
             </td>
             <td class="text-muted-foreground">{{ l.sectors.join(', ') }}</td>
             <td>
@@ -235,7 +243,7 @@ function fmt(d: string | null) {
             </td>
           </tr>
           <tr v-if="!licenses?.length">
-            <td colspan="6" class="py-4 text-center text-muted-foreground">
+            <td colspan="7" class="py-4 text-center text-muted-foreground">
               No licenses issued yet.
             </td>
           </tr>

@@ -117,6 +117,7 @@ export async function mintSessionLicense(
       scopes,
       kind: 'session',
       parentLicenseId: parent.id,
+      ownerUserId: parent.ownerUserId, // sessions are attributed to the key's owner (the M)
       status: 'active',
       expiresAt: new Date(Date.now() + ttlMin * 60_000),
     })

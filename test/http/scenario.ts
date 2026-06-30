@@ -81,6 +81,14 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
     assert(key.status === 201 && key.data.kind === 'provisioning', 'provisioning issue failed')
     const provKey = key.data.key
 
+    // Per (project, owner): this manager already has one here → a second is 409 (rotate instead).
+    const dup = await hq.post(`/api/v1/projects/${webId}/licenses`, {
+      agentAlias: 'KEYX2',
+      sectors: ['BACKEND'],
+      kind: 'provisioning',
+    })
+    assert(dup.status === 409, `second provisioning key for same M should 409, got ${dup.status}`)
+
     // A provisioning key cannot do work directly — it may only mint.
     const work = await hq.post('/api/v1/agent/check-in', undefined, { bearer: provKey })
     assert(work.status === 403, `provisioning key should 403 on work, got ${work.status}`)

@@ -238,6 +238,9 @@ export const licenses = pgTable(
     parentLicenseId: uuid('parent_license_id').references((): AnyPgColumn => licenses.id, {
       onDelete: 'cascade',
     }),
+    // The human who owns this credential. A provisioning key is per (project, owner) — many
+    // managers ("M") on a project each hold their own; sessions inherit their key's owner.
+    ownerUserId: uuid('owner_user_id').references(() => users.id, { onDelete: 'set null' }),
     status: licenseStatus('status').notNull().default('active'),
     issuedAt: timestamp('issued_at', { withTimezone: true }).defaultNow().notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }),
