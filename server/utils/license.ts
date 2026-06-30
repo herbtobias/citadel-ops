@@ -27,9 +27,19 @@ export function getBearerToken(event: H3Event): string | null {
 
 export type License = typeof licenses.$inferSelect
 
+// Which License kinds an endpoint accepts. Work endpoints take `standing`/`session`
+// (a provisioning key may only mint, never work); the acquire endpoint takes only
+// `provisioning`.
+export type LicenseKind = (typeof licenses.$inferSelect)['kind']
+const WORK_KINDS: LicenseKind[] = ['standing', 'session']
+
 // Authenticates an agent by its license key. Enforces the kill-switch (revoked →
-// 401), expiry, and updates lastSeenAt (heartbeat). §9.
-export async function requireLicense(event: H3Event): Promise<License> {
+// 401), expiry, the kind gate, and updates lastSeenAt (heartbeat). §9.
+export async function requireLicense(
+  event: H3Event,
+  opts: { allow?: LicenseKind[] } = {},
+): Promise<License> {
+  const allow = opts.allow ?? WORK_KINDS
   const token = getBearerToken(event)
   if (!token)
     throw createError({ statusCode: 401, statusMessage: 'Missing license (Bearer token)' })
@@ -49,11 +59,70 @@ export async function requireLicense(event: H3Event): Promise<License> {
     throw createError({ statusCode: 401, statusMessage: 'license_expired' })
   }
 
+  if (!allow.includes(lic.kind)) {
+    const msg =
+      lic.kind === 'provisioning'
+        ? 'Provisioning keys cannot do work — acquire a session license first (citadel_acquire_license)'
+        : 'This endpoint requires a provisioning key'
+    throw createError({ statusCode: 403, statusMessage: msg })
+  }
+
   // Per-license rate limit (§21).
   enforceRateLimit(lic.id, await getProjectRateLimit(lic.projectId))
 
   await db.update(licenses).set({ lastSeenAt: new Date() }).where(eq(licenses.id, lic.id))
   return lic
+}
+
+export const SESSION_TTL_MIN_DEFAULT = 12 * 60 // 12h
+export const SESSION_TTL_MIN_MAX = 24 * 60 // 24h
+
+// The acquire handshake (§C): a provisioning key mints a short-lived `session` license
+// scoped to a subset of its own sectors/scopes. A real License row, so claim/lease/
+// kill-switch/roster all apply. The raw key is returned ONCE (held only by the caller's
+// MCP process); only its hash is stored.
+export async function mintSessionLicense(
+  parent: License,
+  opts: { sectors?: string[]; scopes?: string[]; alias?: string; ttlMinutes?: number },
+): Promise<{ license: License; key: string }> {
+  const parentSectors = parent.sectors as string[]
+  const parentScopes = parent.scopes as string[]
+  const sectors = opts.sectors?.length ? opts.sectors : parentSectors
+  const scopes = opts.scopes ?? []
+
+  if (!sectors.length) throw createError({ statusCode: 400, statusMessage: 'No sectors to grant' })
+  const badSector = sectors.find((s) => !parentSectors.includes(s))
+  if (badSector)
+    throw createError({
+      statusCode: 403,
+      statusMessage: `Provisioning key cannot grant sector ${badSector} (outside its ceiling)`,
+    })
+  const badScope = scopes.find((s) => !parentScopes.includes(s))
+  if (badScope)
+    throw createError({
+      statusCode: 403,
+      statusMessage: `Provisioning key cannot grant scope ${badScope} (outside its ceiling)`,
+    })
+
+  const ttlMin = Math.min(opts.ttlMinutes ?? SESSION_TTL_MIN_DEFAULT, SESSION_TTL_MIN_MAX)
+  const key = generateLicenseKey()
+  const [license] = await db
+    .insert(licenses)
+    .values({
+      orgId: parent.orgId,
+      projectId: parent.projectId,
+      agentAlias: opts.alias?.trim() || `${parent.agentAlias}/${sectors.join('+')}`,
+      hashedKey: hashLicenseKey(key),
+      sectors: sectors as License['sectors'],
+      scopes,
+      kind: 'session',
+      parentLicenseId: parent.id,
+      status: 'active',
+      expiresAt: new Date(Date.now() + ttlMin * 60_000),
+    })
+    .returning()
+  if (!license) throw createError({ statusCode: 500, statusMessage: 'Mint failed' })
+  return { license, key }
 }
 
 export function licenseHasSector(lic: License, sector: string): boolean {

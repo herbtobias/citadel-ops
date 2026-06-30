@@ -23,7 +23,9 @@ they answer, you record.
 
 ## The loop
 
-1. **Check in** — `citadel_acquire_license`.
+1. **Check in** — `citadel_acquire_license({ scopes: ["recon"] })`. This mints your session
+   license (with a provisioning key) or checks in a static one. Request the `recon` scope —
+   session licenses default to no scopes — or the Archive writes below will be 403'd.
 2. **Read what the Scout filed** — `citadel_read_archive`. Skip questions the Archive already
    answers; let it sharpen the questions you do ask.
 3. **Interview the operator** — ask **a few focused questions at a time** (not a wall), then

@@ -22,8 +22,11 @@ The `citadel` MCP server must be configured (see `.mcp.json`) with `CITADEL_URL`
 
 ## The loop
 
-1. **Check in** — `citadel_acquire_license`. Note your alias and **sectors**. You may only
-   work missions in your sectors.
+1. **Check in** — `citadel_acquire_license`. With a provisioning key this mints your session
+   license; pass `{ sectors: ["BACKEND"] }` (and `{ scopes: ["plan"] }` if you'll also plan) to
+   scope this agent — session licenses default to all the key's sectors and no scopes. With a
+   static key it just checks in. Note your alias and **sectors**; you may only work missions in
+   them.
 2. **Briefing** — `citadel_get_briefing` once at the start for project vision, the active
    operation, and Q-equipment. Also `citadel_get_quality_gates`, `citadel_get_harness`, and
    `citadel_get_design_guidelines` so you build in-style and know how to pass the gates.

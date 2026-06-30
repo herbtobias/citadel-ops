@@ -70,6 +70,54 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
     return `issued D7,D8 [BACKEND], Q9 [QA]`
   })
 
+  await step('Acquire handshake: provisioning key mints a scoped session license', async () => {
+    // Issue a provisioning key (BACKEND+QA ceiling, recon scope ceiling).
+    const key = await hq.post(`/api/v1/projects/${webId}/licenses`, {
+      agentAlias: 'KEYX',
+      sectors: ['BACKEND', 'QA'],
+      scopes: ['recon'],
+      kind: 'provisioning',
+    })
+    assert(key.status === 201 && key.data.kind === 'provisioning', 'provisioning issue failed')
+    const provKey = key.data.key
+
+    // A provisioning key cannot do work directly — it may only mint.
+    const work = await hq.post('/api/v1/agent/check-in', undefined, { bearer: provKey })
+    assert(work.status === 403, `provisioning key should 403 on work, got ${work.status}`)
+
+    // Acquire a BACKEND session license from it.
+    const acq = await hq.post(
+      '/api/v1/agent/acquire',
+      { sectors: ['BACKEND'] },
+      { bearer: provKey },
+    )
+    assert(
+      acq.status === 201 &&
+        /^lic_/.test(acq.data.key) &&
+        JSON.stringify(acq.data.sectors) === JSON.stringify(['BACKEND']),
+      `acquire → ${JSON.stringify(acq.data)}`,
+    )
+    const sessionKey = acq.data.key
+
+    // The session license works (check-in → 200).
+    const ci = await hq.post('/api/v1/agent/check-in', undefined, { bearer: sessionKey })
+    assert(ci.status === 200, `session check-in → ${ci.status}`)
+
+    // It cannot exceed the provisioning ceiling (INFRA is outside BACKEND+QA).
+    const over = await hq.post('/api/v1/agent/acquire', { sectors: ['INFRA'] }, { bearer: provKey })
+    assert(over.status === 403, `acquire beyond ceiling should 403, got ${over.status}`)
+
+    // Cascade kill-switch: revoking the provisioning key revokes its session children.
+    const rev = await hq.del(`/api/v1/licenses/${key.data.id}`)
+    assert(
+      rev.status === 200 && rev.data.sessionsRevoked >= 1,
+      `revoke cascade → ${JSON.stringify(rev.data)}`,
+    )
+    const dead = await hq.post('/api/v1/agent/check-in', undefined, { bearer: sessionKey })
+    assert(dead.status === 401, `session should be dead after parent revoke, got ${dead.status}`)
+    return 'provisioning mints scoped session; ceiling enforced; revoke cascades'
+  })
+
   await step('Brownfield onboarding: recon scope gates Archive writes', async () => {
     // A plain BACKEND license (no recon scope) is 403'd on the Archive write.
     const denied = await hq.post(

@@ -34,7 +34,12 @@ describe('.mcp.json.example', () => {
     expect(citadel, 'missing mcpServers.citadel').toBeTruthy()
     expect(citadel.command).toBeTruthy()
     expect(citadel.args).toEqual(expect.arrayContaining(['mcp/stdio.ts']))
-    expect(citadel.env).toHaveProperty('CITADEL_LICENSE')
+    // Either credential wires the server: CITADEL_TOKEN (provisioning, recommended) or
+    // CITADEL_LICENSE (static agent key, classic mode).
+    expect(
+      'CITADEL_TOKEN' in citadel.env || 'CITADEL_LICENSE' in citadel.env,
+      'needs CITADEL_TOKEN or CITADEL_LICENSE',
+    ).toBe(true)
     expect(citadel.env).toHaveProperty('CITADEL_URL')
   })
 })

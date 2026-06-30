@@ -1,6 +1,6 @@
 // DELETE /api/v1/licenses/:id — revoke a license (Kill-Switch, manager). Immediate:
 // the agent's next call gets 401 license_revoked. Re-queues its active missions.
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '~~/server/db'
 import { assertOrgManager } from '~~/server/utils/auth'
 import { logActivity } from '~~/server/utils/activity'
@@ -12,17 +12,28 @@ export default defineEventHandler(async (event) => {
   if (!lic) throw createError({ statusCode: 404, statusMessage: 'License not found' })
   const manager = await assertOrgManager(event, lic.orgId)
 
+  // Revoke this license and — if it's a provisioning key — all the session licenses it
+  // minted (cascade kill-switch, §C). Missions held by any of them get re-queued.
+  const children = await db
+    .select()
+    .from(schema.licenses)
+    .where(eq(schema.licenses.parentLicenseId, id))
+  const targetIds = [id, ...children.map((c) => c.id)]
+
   await db
     .update(schema.licenses)
     .set({ status: 'revoked', revokedAt: new Date(), revokedBy: manager.id })
-    .where(eq(schema.licenses.id, id))
+    .where(inArray(schema.licenses.id, targetIds))
 
-  // Re-queue any in-progress missions this agent held.
+  // Re-queue any in-progress missions these agents held.
   const held = await db
     .select()
     .from(schema.missions)
     .where(
-      and(eq(schema.missions.claimedByLicenseId, id), eq(schema.missions.status, 'in_progress')),
+      and(
+        inArray(schema.missions.claimedByLicenseId, targetIds),
+        eq(schema.missions.status, 'in_progress'),
+      ),
     )
   for (const m of held) {
     await db
@@ -46,14 +57,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const childNote = children.length ? ` (+${children.length} session license(s))` : ''
   await logActivity({
     projectId: lic.projectId,
     actorType: 'human',
     actorUserId: manager.id,
     event: 'license_revoked',
-    message: `Revoked license for ${lic.agentAlias}`,
-    metadata: { licenseId: id, requeued: held.length },
+    message: `Revoked license for ${lic.agentAlias}${childNote}`,
+    metadata: { licenseId: id, requeued: held.length, sessionsRevoked: children.length },
   })
 
-  return { ok: true, requeued: held.length }
+  return { ok: true, requeued: held.length, sessionsRevoked: children.length }
 })

@@ -4,25 +4,56 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
+const sectorEnum = z.enum(['FRONTEND', 'BACKEND', 'QA', 'INFRA', 'SECURITY', 'DESIGN'])
+
 export interface CitadelClientOpts {
   baseUrl: string
-  license: string
+  // A static standing/session key (classic mode), the provisioning key for the acquire
+  // handshake (§C), or both. At least one is required.
+  license?: string
+  provisioningKey?: string
 }
 
-// REST client bound to one License. Caches the license's projectId (from check-in).
-export function makeCitadelClient({ baseUrl, license }: CitadelClientOpts) {
+// REST client for one agent session. In classic mode it's bound to a static `license`.
+// With a `provisioningKey` it holds no work credential until `acquire()` mints a session
+// license (held in memory, never surfaced to the model). Caches the projectId.
+export function makeCitadelClient({ baseUrl, license, provisioningKey }: CitadelClientOpts) {
   let projectId: string | null = null
+  let sessionKey: string | null = license ?? null
 
-  async function api(path: string, opts: { method?: string; body?: unknown } = {}) {
+  async function call(token: string, path: string, opts: { method?: string; body?: unknown } = {}) {
     const res = await fetch(baseUrl + path, {
       method: opts.method ?? 'GET',
-      headers: { Authorization: `Bearer ${license}`, 'content-type': 'application/json' },
+      headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' },
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
     })
     const text = await res.text()
     const data = text ? JSON.parse(text) : null
     if (!res.ok) throw new Error(`${res.status} ${data?.statusMessage || data?.message || text}`)
     return data
+  }
+
+  // Authenticated with the session license. Every work tool goes through here.
+  async function api(path: string, opts: { method?: string; body?: unknown } = {}) {
+    if (!sessionKey) {
+      throw new Error(
+        provisioningKey
+          ? 'No active session license — call citadel_acquire_license first.'
+          : 'No license configured (set CITADEL_TOKEN or CITADEL_LICENSE).',
+      )
+    }
+    return call(sessionKey, path, opts)
+  }
+
+  // The acquire handshake. With a provisioning key, mints a session license and adopts
+  // it. In classic mode there's nothing to mint — just check in the static license.
+  async function acquire(body: Record<string, unknown>) {
+    if (!provisioningKey) return api('/api/v1/agent/check-in', { method: 'POST' })
+    const res = await call(provisioningKey, '/api/v1/agent/acquire', { method: 'POST', body })
+    sessionKey = res.key
+    projectId = res?.project?.id ?? null
+    const { key: _key, ...context } = res // never surface the raw key to the model
+    return context
   }
 
   async function pid(): Promise<string> {
@@ -34,7 +65,7 @@ export function makeCitadelClient({ baseUrl, license }: CitadelClientOpts) {
     return projectId
   }
 
-  return { api, pid }
+  return { api, pid, acquire }
 }
 
 type Client = ReturnType<typeof makeCitadelClient>
@@ -65,9 +96,18 @@ export function registerCitadelTools(server: McpServer, client: Client) {
   // ── Onboarding & intel ──
   t(
     'citadel_acquire_license',
-    'Check in the License and get the agent context (alias, sectors, project).',
-    {},
-    () => client.api('/api/v1/agent/check-in', { method: 'POST' }),
+    'Start the session: acquire a short-lived, sector-scoped session license (the acquire ' +
+      'handshake) and get the agent context (alias, sectors, scopes, project). With a ' +
+      'provisioning key configured this mints a fresh session license; with a static license ' +
+      'it just checks in. Call this ONCE before any other tool. Pass `sectors`/`scopes` to ' +
+      'scope this agent (defaults to the provisioning key’s ceiling).',
+    {
+      sectors: z.array(sectorEnum).optional(),
+      scopes: z.array(z.enum(['plan', 'recon'])).optional(),
+      alias: z.string().optional(),
+      ttlMinutes: z.number().int().positive().optional(),
+    },
+    (args) => client.acquire(args),
   )
 
   t(

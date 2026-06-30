@@ -75,12 +75,13 @@ In HQ (http://localhost:4000), as the super-admin:
 
 1. Create (or reuse the demo) **Organization**.
 2. Create a **Project**, e.g. key `CTDL`, name "Citadel vNext".
-3. **M's Desk** → issue licenses for the sectors you'll work, and grant the **`recon`**
-   scope to at least one license so the Scout can write The Archive. (Seed already ships a
-   Scout license `lic_010_demo` with `recon` on the WEB demo project — for your real
-   project, issue a fresh one with the recon checkbox ticked.)
+3. **M's Desk** → issue **one provisioning key** for the project (tick _Provisioning
+   key_; its sectors/scopes are the **ceiling** it may grant — include `recon` if you'll
+   scout). This single durable secret is shared by all your agents; each agent mints its
+   own short-lived, sector-scoped **session license** from it at startup via the acquire
+   handshake. (Seed ships a demo provisioning key `lic_key_demo` on the WEB project.)
 
-Copy each license key (`lic_...`) — agents authenticate with it.
+Copy the provisioning key (`lic_...`) once — it's your `CITADEL_TOKEN`.
 
 ## 5. Prepare an isolated working copy
 
@@ -92,8 +93,10 @@ git worktree add ../citadel-vnext main
 cd ../citadel-vnext
 ```
 
-Point this working copy's MCP at the **control plane on :4000** (not 3000). Copy
-`.mcp.json.example` to `.mcp.json` here and set:
+Point this working copy's MCP at the **control plane on :4000** (not 3000). The config
+carries the **provisioning key** (`CITADEL_TOKEN`) — the same for every agent, so it can
+even live in user scope (`~/.claude.json`), set once. Copy `.mcp.json.example` to
+`.mcp.json` here and set:
 
 ```json
 {
@@ -103,12 +106,19 @@ Point this working copy's MCP at the **control plane on :4000** (not 3000). Copy
       "args": ["tsx", "mcp/stdio.ts"],
       "env": {
         "CITADEL_URL": "http://localhost:4000",
-        "CITADEL_LICENSE": "lic_...your_recon_or_sector_key..."
+        "CITADEL_TOKEN": "lic_...your_provisioning_key..."
       }
     }
   }
 }
 ```
+
+**Multiple agents, same project, no collision.** Each agent calls
+`citadel_acquire_license({ sectors: ["BACKEND"] })` once at startup → its own ephemeral
+session license, its own row in the M's Desk roster, its own kill-switch. The skills do
+this for you. Two agents differ only by the (non-secret) sector they acquire — run one per
+worktree/terminal. The raw session key never leaves the MCP process; revoking the
+provisioning key in M's Desk cascades to every session it minted.
 
 ## 6. The flow: Scout → (Debrief) → Plan → Work
 
