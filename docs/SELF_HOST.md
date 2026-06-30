@@ -125,6 +125,10 @@ this for you. Two agents differ only by the (non-secret) sector they acquire —
 worktree/terminal. The raw session key never leaves the MCP process; revoking the
 provisioning key in M's Desk cascades to every session it minted.
 
+To scaffold a whole fleet at once, run **`/citadel-fleet BACKEND QA`**: it creates a
+worktree per Sector, wires each (shared `CITADEL_TOKEN` + a `CITADEL_SECTOR` marker that
+`/citadel-work` auto-acquires), and hands you the per-terminal launch commands.
+
 ## 6. The flow: Scout → (Debrief) → Plan → Work
 
 Run these from Claude Code **inside the working copy** (`../citadel-vnext`):

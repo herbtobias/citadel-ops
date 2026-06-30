@@ -154,6 +154,11 @@ Invoke **`/citadel-work`**. The agent loops `acquire_license → get_briefing �
 work → complete → next` — sector-scoped, gate-compliant, fresh context per mission. Watch it
 live in HQ on the **Board**, **Situation Room**, and **Admin → Trace Log**.
 
+**Run a fleet.** To staff several Sectors at once, invoke **`/citadel-fleet BACKEND QA`**: it
+creates one git worktree per Sector, wires each with the shared provisioning key plus its own
+`CITADEL_SECTOR` marker (which `/citadel-work` auto-acquires), and prints the launch command for
+each — you open a terminal per worktree. File isolation via worktrees, one key for the whole fleet.
+
 > No Claude run handy? The CLI driver runs the same loop, and `--dry-run` exercises it without
 > invoking Claude:
 >
