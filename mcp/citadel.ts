@@ -307,6 +307,37 @@ export function registerCitadelTools(server: McpServer, client: Client) {
     (body) => client.api('/api/v1/agent/links', { method: 'POST', body }),
   )
 
+  t(
+    'citadel_propose_quality_gate',
+    'Propose a Quality Gate derived from the requirements (Planner). It lands PENDING and does ' +
+      'NOT enforce until a manager activates it in HQ (M’s Desk / Q-Branch). Requires the `plan` scope.',
+    {
+      key: z.string().describe('lowercase-dashed id, unique per project (e.g. review-gate)'),
+      name: z.string(),
+      appliesToStatus: z.enum([
+        'backlog',
+        'designing',
+        'cold_read',
+        'ready',
+        'in_progress',
+        'in_review',
+        'blocked',
+        'done',
+        'cancelled',
+      ]),
+      rule: z
+        .object({
+          requireArtifacts: z.boolean().optional(),
+          requireColdRead: z.boolean().optional(),
+          requireAcceptanceChecked: z.boolean().optional(),
+          requireHarnessPass: z.boolean().optional(),
+        })
+        .optional(),
+      blocking: z.boolean().optional(),
+    },
+    (body) => client.api('/api/v1/agent/quality-gates', { method: 'POST', body }),
+  )
+
   // ── The Archive & Cold Read ──
   t(
     'citadel_file_dossier',

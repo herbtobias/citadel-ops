@@ -215,12 +215,19 @@ key) → `check-in` → `claim-next` → `…/missions/:id/heartbeat` → `…/h
 Work enters the Citadel two ways. **HQ** plans it: managers/contributors create Operations
 (Operations page) and Missions (the **New Mission** button on the board → lands in `backlog`,
 groom to `ready` to make it claimable). Or an **agent Planner** plans it: a License carrying the
-`plan` scope can turn an objective into work via four tools —
+`plan` scope can turn an objective into work via five tools —
 `citadel_plan_operation`, `citadel_create_mission`, `citadel_update_mission`,
-`citadel_link_missions` (REST: `POST /api/v1/agent/{operations,missions,links}`,
+`citadel_link_missions`, `citadel_propose_quality_gate` (REST:
+`POST /api/v1/agent/{operations,missions,links,quality-gates}`,
 `PATCH /api/v1/agent/missions/:id`). Operations/parents/links are addressed by key (OP-1 / WEB-42).
 A License without the scope is 403'd. Issue a Planner from **The M Desk** (the _Planner_ checkbox)
 or seed one (008).
+
+**Q-Branch equipment has a lifecycle.** A Planner may _propose_ a Quality Gate — it lands
+**`pending`** and does not enforce until **M activates** it in the Q-Branch page; M authors gates,
+harness defs and design guidelines directly (created **`active`**), and can flip any entry
+**`active`↔`inactive`** (deactivation asks for confirmation). Only `active` equipment is enforced
+and shown to agents; `pending`/`inactive` is HQ-only.
 
 **Kick off an Operation with your agent.** Give a Planner an objective — e.g. via `/citadel-work`,
 _"Plan Operation 'Daybreak' — add OAuth login; break it into missions"_ — and it calls

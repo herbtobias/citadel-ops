@@ -71,6 +71,13 @@
       "when": 1782935120989,
       "tag": "0009_parley_waiting_human",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782942066992,
+      "tag": "0010_aspiring_omega_sentinel",
+      "breakpoints": true
     }
   ]
 }

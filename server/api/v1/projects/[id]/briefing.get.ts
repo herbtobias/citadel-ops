@@ -24,15 +24,20 @@ export default defineEventHandler(async (event) => {
       ? (ops.find((o) => o.status === 'active') ?? null)
       : (ops.find((o) => o.key === opQuery) ?? null)
 
-  // Q-equipment.
+  // Q-equipment — only ACTIVE gates/harness/guidelines are in force, so a Briefing carries
+  // only those. Pending (Planner-proposed) and inactive (M-retired) equipment is hidden. §Q.
   const gates = await db
     .select()
     .from(schema.qualityGates)
-    .where(eq(schema.qualityGates.projectId, projectId))
+    .where(
+      and(eq(schema.qualityGates.projectId, projectId), eq(schema.qualityGates.status, 'active')),
+    )
   const harness = await db
     .select()
     .from(schema.harnessDefs)
-    .where(eq(schema.harnessDefs.projectId, projectId))
+    .where(
+      and(eq(schema.harnessDefs.projectId, projectId), eq(schema.harnessDefs.status, 'active')),
+    )
   const [guideline] = await db
     .select()
     .from(schema.designGuidelines)
@@ -40,6 +45,7 @@ export default defineEventHandler(async (event) => {
       and(
         eq(schema.designGuidelines.projectId, projectId),
         eq(schema.designGuidelines.themeKey, project.settings.activeThemeKey),
+        eq(schema.designGuidelines.status, 'active'),
       ),
     )
 
