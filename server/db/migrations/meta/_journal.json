@@ -43,6 +43,13 @@
       "when": 1782843483762,
       "tag": "0005_provisioning_key_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782933133140,
+      "tag": "0006_wire_seq_serialization",
+      "breakpoints": true
     }
   ]
 }

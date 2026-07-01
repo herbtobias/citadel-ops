@@ -1,7 +1,7 @@
 // Citadel Ops — The Wire. Append-only, hash-chained activity log (§8/§24).
 // Each entry's hash chains the previous entry's hash → tamper-evident.
 import { createHash } from 'node:crypto'
-import { asc, desc, eq } from 'drizzle-orm'
+import { asc, desc, eq, sql } from 'drizzle-orm'
 import { db, schema } from '../db'
 import { publishEvent } from './events'
 import { getTraceId } from './tracing'
@@ -39,31 +39,42 @@ function computeHash(prevHash: string | null, entry: LogInput): string {
 }
 
 // Appends one entry to The Wire, chaining off the most recent project entry.
+//
+// The read-prevHash → insert window MUST be serialized per project, or two concurrent
+// appends chain off the same prevHash and fork the hash chain (breaking verifyProjectChain).
+// This races even on a single instance — postgres.js runs a pool of connections. So we take
+// a per-project transaction-scoped advisory lock (auto-released at COMMIT) and do the read
+// + insert in one transaction, ordering the chain tail by the monotonic `seq`. §HORIZON M3.
 export async function logActivity(input: LogInput) {
-  const [prev] = input.projectId
-    ? await db
-        .select({ hash: activityLog.hash })
-        .from(activityLog)
-        .where(eq(activityLog.projectId, input.projectId))
-        .orderBy(desc(activityLog.createdAt))
-        .limit(1)
-    : []
-
-  const prevHash = prev?.hash ?? null
-  const hash = computeHash(prevHash, input)
   const traceId = input.traceId ?? getTraceId()
 
-  const [row] = await db
-    .insert(activityLog)
-    .values({
-      ...input,
-      traceId,
-      prevHash,
-      hash,
-    })
-    .returning()
+  const row = await db.transaction(async (tx) => {
+    if (input.projectId) {
+      // Lock domain = the project. hashtext() maps the uuid string to the bigint the
+      // advisory-lock API needs; different projects never contend.
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${input.projectId}))`)
+    }
 
-  // Fan out to the live event bus (SSE/webhooks).
+    const [prev] = input.projectId
+      ? await tx
+          .select({ hash: activityLog.hash })
+          .from(activityLog)
+          .where(eq(activityLog.projectId, input.projectId))
+          .orderBy(desc(activityLog.seq))
+          .limit(1)
+      : []
+
+    const prevHash = prev?.hash ?? null
+    const hash = computeHash(prevHash, input)
+
+    const [inserted] = await tx
+      .insert(activityLog)
+      .values({ ...input, traceId, prevHash, hash })
+      .returning()
+    return inserted
+  })
+
+  // Fan out to the live event bus (SSE/webhooks) after the append is durably committed.
   publishEvent({
     projectId: input.projectId ?? null,
     type: input.event,
@@ -81,7 +92,7 @@ export async function verifyProjectChain(projectId: string) {
     .select()
     .from(activityLog)
     .where(eq(activityLog.projectId, projectId))
-    .orderBy(asc(activityLog.createdAt))
+    .orderBy(asc(activityLog.seq))
 
   let prevHash: string | null = null
   for (const r of rows) {

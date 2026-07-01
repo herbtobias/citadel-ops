@@ -15,3 +15,6 @@ pnpm-lock.yaml
 package-lock.json
 *.min.js
 *.min.css
+
+# Operator-provided spec/input files — not project source.
+files/
