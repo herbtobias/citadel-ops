@@ -1,7 +1,11 @@
-// Citadel Ops — per-License rate limiting (§21). In-memory fixed-window; Redis
-// backplane replaces this at multi-instance scale (§24, deferred).
+// Citadel Ops — per-License rate limiting + login throttle (§21/§22). Fixed-window. With a
+// Redis backplane (§HORIZON M4) the counters are shared, so the limit is correct in aggregate
+// across instances (in-memory would be N× too generous / the login throttle N× weaker). Without
+// REDIS_URL it falls back to in-memory (single-instance dev). The functions are async because
+// Redis is; callers await them.
 import { eq } from 'drizzle-orm'
 import { db, schema } from '../db'
+import { redisEnabled, getRedis } from './redis'
 
 const windows = new Map<string, { count: number; resetAt: number }>()
 
@@ -25,7 +29,20 @@ export async function getProjectRateLimit(projectId: string | null): Promise<num
   return limit
 }
 
-export function enforceRateLimit(key: string, limitPerMin: number): void {
+export async function enforceRateLimit(key: string, limitPerMin: number): Promise<void> {
+  const tooMany = () =>
+    createError({ statusCode: 429, statusMessage: `Rate limit exceeded (${limitPerMin}/min)` })
+
+  if (redisEnabled()) {
+    const minute = Math.floor(Date.now() / 60_000)
+    const rk = `rl:${key}:${minute}`
+    const r = getRedis()
+    const count = await r.incr(rk)
+    if (count === 1) await r.expire(rk, 120)
+    if (count > limitPerMin) throw tooMany()
+    return
+  }
+
   const now = Date.now()
   let w = windows.get(key)
   if (!w || now >= w.resetAt) {
@@ -33,12 +50,7 @@ export function enforceRateLimit(key: string, limitPerMin: number): void {
     windows.set(key, w)
   }
   w.count++
-  if (w.count > limitPerMin) {
-    throw createError({
-      statusCode: 429,
-      statusMessage: `Rate limit exceeded (${limitPerMin}/min)`,
-    })
-  }
+  if (w.count > limitPerMin) throw tooMany()
 }
 
 // Failed-login throttle (§22). Counts failures per key (ip+email); too many within
@@ -48,17 +60,29 @@ const loginAttempts = new Map<string, { count: number; resetAt: number }>()
 const LOGIN_MAX = Number.parseInt(process.env.LOGIN_MAX_ATTEMPTS || '10', 10)
 const LOGIN_WINDOW_MS = 15 * 60_000
 
-export function assertLoginAllowed(key: string): void {
-  const w = loginAttempts.get(key)
-  if (w && Date.now() < w.resetAt && w.count >= LOGIN_MAX) {
-    throw createError({
+export async function assertLoginAllowed(key: string): Promise<void> {
+  const blocked = () =>
+    createError({
       statusCode: 429,
       statusMessage: 'Too many failed login attempts. Try again later.',
     })
+  if (redisEnabled()) {
+    const n = await getRedis().get(`login:${key}`)
+    if (n && Number(n) >= LOGIN_MAX) throw blocked()
+    return
   }
+  const w = loginAttempts.get(key)
+  if (w && Date.now() < w.resetAt && w.count >= LOGIN_MAX) throw blocked()
 }
 
-export function recordLoginFailure(key: string): void {
+export async function recordLoginFailure(key: string): Promise<void> {
+  if (redisEnabled()) {
+    const rk = `login:${key}`
+    const r = getRedis()
+    const count = await r.incr(rk)
+    if (count === 1) await r.expire(rk, Math.floor(LOGIN_WINDOW_MS / 1000))
+    return
+  }
   const now = Date.now()
   let w = loginAttempts.get(key)
   if (!w || now >= w.resetAt) {
@@ -68,6 +92,10 @@ export function recordLoginFailure(key: string): void {
   w.count++
 }
 
-export function clearLoginThrottle(key: string): void {
+export async function clearLoginThrottle(key: string): Promise<void> {
+  if (redisEnabled()) {
+    await getRedis().del(`login:${key}`)
+    return
+  }
   loginAttempts.delete(key)
 }

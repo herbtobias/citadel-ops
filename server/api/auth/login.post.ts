@@ -20,14 +20,14 @@ export default defineEventHandler(async (event) => {
   const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
   const key = `${ip}:${email.toLowerCase()}`
 
-  assertLoginAllowed(key) // 429 once too many recent failures
+  await assertLoginAllowed(key) // 429 once too many recent failures
 
   const user = await lookupUserByEmail(email)
   if (!user || !verifyPassword(user.passwordHash, password)) {
-    recordLoginFailure(key)
+    await recordLoginFailure(key)
     throw createError({ statusCode: 401, statusMessage: 'Invalid email or password' })
   }
-  clearLoginThrottle(key)
+  await clearLoginThrottle(key)
 
   await setUserSession(event, {
     user: { id: user.id, email: user.email, name: user.name, systemRole: user.systemRole },

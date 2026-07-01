@@ -48,6 +48,17 @@ services:
       timeout: 5s
       retries: 10
 
+  # Redis backplane (§HORIZON M1) — mandatory in production (00.env-check.ts).
+  redis:
+    image: redis:7-alpine
+    container_name: citadel-selfhost-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   app:
     image: ${CITADEL_IMAGE:-citadel-ops:stable} # FROZEN build — not `build: .`
     container_name: citadel-selfhost-app
@@ -55,10 +66,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       NODE_ENV: production
-      # Talks to the postgres service over the compose network (internal 5432).
+      # Talks to the postgres/redis services over the compose network (internal ports).
       DATABASE_URL: postgres://citadel:citadel@postgres:5432/citadel
+      REDIS_URL: redis://redis:6379
       # REQUIRED, 32+ chars — the app refuses to boot in prod without it (00.env-check.ts).
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:?set a 32+ char secret}
       NUXT_PUBLIC_APP_URL: ${NUXT_PUBLIC_APP_URL:-http://localhost:4000}

@@ -14,6 +14,9 @@ export default defineNitroPlugin(() => {
   const problems: string[] = []
   if (pw.length < 32) problems.push('NUXT_SESSION_PASSWORD must be set to ≥32 chars')
   if (!dbUrl) problems.push('DATABASE_URL must be set')
+  // §HORIZON M1 — the Redis backplane is mandatory in production (event fan-out + distributed
+  // rate limits are wrong across instances without it). No silent in-process fallback in prod.
+  if (!process.env.REDIS_URL) problems.push('REDIS_URL must be set (Redis backplane)')
 
   if (problems.length === 0) return
 

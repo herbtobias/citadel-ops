@@ -19,8 +19,22 @@ services:
       timeout: 5s
       retries: 10
 
+  # Redis backplane (§HORIZON) — event fan-out + distributed rate limits across instances.
+  # On 6380 to avoid clashing with a local Redis on 6379.
+  redis:
+    image: redis:7-alpine
+    container_name: citadel-redis
+    restart: unless-stopped
+    ports:
+      - '6380:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   # Full-stack app (HQ + API + MCP). Opt-in via the "full" profile so plain
-  # `docker compose up` stays Postgres-only for local `npm run dev`.
+  # `docker compose up` stays deps-only for local `npm run dev`.
   #   docker compose --profile full up --build
   app:
     profiles: ['full']
@@ -30,9 +44,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
-      # The app talks to the postgres service inside the compose network.
+      # The app talks to the postgres/redis services inside the compose network.
       DATABASE_URL: postgres://citadel:citadel@postgres:5432/citadel
+      REDIS_URL: redis://redis:6379
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:-dev-session-password-change-me-min-32-chars}
       SEED_ON_START: '1' # run migrations + seed on first boot
     ports:
