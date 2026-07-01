@@ -71,18 +71,41 @@
     .brand{display:flex; align-items:center; gap:9px; font-family:var(--font-heading); font-weight:800; letter-spacing:.18em; font-size:.86rem; text-transform:uppercase}
     .brand svg{color:var(--accent); filter:drop-shadow(var(--glow))}
     .spacer{flex:1}
-    .navlink{font-family:var(--font-mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.14em; color:var(--muted-fg); text-decoration:none}
+    .navlink{font-family:var(--font-mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.14em; color:var(--muted-fg); text-decoration:none; white-space:nowrap}
     .navlink:hover{color:var(--accent)}
-    @media(max-width:860px){ .navlink.hide-sm{display:none} }
+    /* desktop: links + controls in one inline row; burger hidden */
+    .nav{display:flex; align-items:center; gap:8px}
+    .nav .navlink{font-size:.66rem; letter-spacing:.08em}
+    .tail{display:flex; align-items:center; gap:8px}
+    .brand,.tail{flex-shrink:0}
+    .burger{display:none; align-items:center; justify-content:center; cursor:pointer;
+      padding:7px; color:var(--fg); background:transparent; border:1px solid var(--border); border-radius:var(--radius)}
+    .burger:hover{border-color:var(--accent); color:var(--accent)}
     .btn{
       display:inline-flex; align-items:center; gap:8px; cursor:pointer;
       font-family:var(--font-mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.14em;
       padding:9px 15px; border:1px solid var(--border); background:transparent; color:var(--fg);
-      border-radius:var(--radius); text-decoration:none; transition:.15s;
+      border-radius:var(--radius); text-decoration:none; transition:.15s; white-space:nowrap;
     }
     .btn:hover{border-color:var(--accent); color:var(--accent)}
+    .btn.iconbtn{padding:9px 11px; font-size:.9rem; line-height:1}
     .btn-primary{background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:700; box-shadow:var(--glow)}
     .btn-primary:hover{color:var(--bg); opacity:.9}
+    /* mobile: collapse the nav into a burger dropdown */
+    @media(max-width:1080px){
+      .burger{display:inline-flex}
+      .nav{
+        position:absolute; top:62px; left:0; right:0; z-index:49;
+        flex-direction:column; align-items:stretch; gap:0;
+        background:var(--bg); border-bottom:1px solid var(--border);
+        box-shadow:0 18px 40px -12px rgba(0,0,0,.7);
+        padding:6px 24px 16px; display:none; max-height:calc(100vh - 62px); overflow-y:auto;
+      }
+      .nav.open{display:flex}
+      .nav .navlink{padding:13px 2px; border-bottom:1px solid var(--border); font-size:.82rem; letter-spacing:.14em}
+      .tail{margin-top:14px; gap:10px; flex-wrap:wrap}
+      .tail .btn-primary{margin-left:auto}
+    }
     /* segmented language control */
     .seg{display:flex; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden}
     .seg button{cursor:pointer; background:transparent; border:0; color:var(--muted-fg);
@@ -186,19 +209,27 @@
     <div class="wrap bar">
       <span class="brand"><svg width="20" height="20"><use href="#shield"/></svg> Citadel Ops</span>
       <span class="spacer"></span>
-      <a class="navlink hide-sm" href="#story" data-i18n="nav.story">Story</a>
-      <a class="navlink hide-sm" href="#screens" data-i18n="nav.screens">Screens</a>
-      <a class="navlink hide-sm" href="#features" data-i18n="nav.features">Features</a>
-      <a class="navlink hide-sm" href="#planning" data-i18n="nav.planning">Planning</a>
-      <a class="navlink hide-sm" href="#onboarding" data-i18n="nav.onboarding">Onboarding</a>
-      <a class="navlink hide-sm" href="#loop" data-i18n="nav.how">How it works</a>
-      <a class="navlink hide-sm" href="#fleet" data-i18n="nav.fleet">Fleet</a>
-      <a class="navlink hide-sm" href="#start" data-i18n="nav.start">Get started</a>
-      <div class="seg" id="langSeg" title="Language">
-        <button data-lang="en">EN</button><button data-lang="de">DE</button>
-      </div>
-      <button class="btn" id="themeBtn" title="Switch theme">◐ <span id="themeName">Cyberwar</span></button>
-      <a class="btn btn-primary" href="https://github.com/herbtobias/citadel-ops" target="_blank" rel="noopener">GitHub →</a>
+      <nav class="nav" id="nav">
+        <a class="navlink" href="#story" data-i18n="nav.story">Story</a>
+        <a class="navlink" href="#screens" data-i18n="nav.screens">Screens</a>
+        <a class="navlink" href="#features" data-i18n="nav.features">Features</a>
+        <a class="navlink" href="#planning" data-i18n="nav.planning">Planning</a>
+        <a class="navlink" href="#onboarding" data-i18n="nav.onboarding">Onboarding</a>
+        <a class="navlink" href="#loop" data-i18n="nav.how">How it works</a>
+        <a class="navlink" href="#fleet" data-i18n="nav.fleet">Fleet</a>
+        <a class="navlink" href="#stack" data-i18n="nav.stack">Tech &amp; infra</a>
+        <a class="navlink" href="#start" data-i18n="nav.start">Get started</a>
+        <div class="tail">
+          <div class="seg" id="langSeg" title="Language">
+            <button data-lang="en">EN</button><button data-lang="de">DE</button>
+          </div>
+          <button class="btn iconbtn" id="themeBtn" title="Switch theme" aria-label="Switch theme">◐</button>
+          <a class="btn btn-primary" href="https://github.com/herbtobias/citadel-ops" target="_blank" rel="noopener">GitHub →</a>
+        </div>
+      </nav>
+      <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="nav">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
     </div>
   </header>
 
@@ -602,16 +633,23 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
 
   <script>
     // ── Theme toggle (persisted) ──
-    const root = document.documentElement, tBtn = document.getElementById('themeBtn'), tName = document.getElementById('themeName');
-    const applyTheme = (t) => { root.setAttribute('data-theme', t); tName.textContent = t === 'defcon-5' ? 'Cyberwar' : 'DEFCON 5'; try { localStorage.setItem('ct-theme', t); } catch (e) {} };
-    try { const s = localStorage.getItem('ct-theme'); if (s) applyTheme(s); } catch (e) {}
+    const root = document.documentElement, tBtn = document.getElementById('themeBtn');
+    const applyTheme = (t) => { root.setAttribute('data-theme', t); tBtn.title = 'Switch to ' + (t === 'defcon-5' ? 'Cyberwar' : 'DEFCON 5'); try { localStorage.setItem('ct-theme', t); } catch (e) {} };
+    try { const s = localStorage.getItem('ct-theme'); if (s) applyTheme(s); else applyTheme(root.getAttribute('data-theme')); } catch (e) {}
     tBtn.addEventListener('click', () => applyTheme(root.getAttribute('data-theme') === 'defcon-5' ? 'cyberwar' : 'defcon-5'));
+
+    // ── Mobile menu (burger) ──
+    const burger = document.getElementById('burger'), navEl = document.getElementById('nav');
+    const setMenu = (open) => { navEl.classList.toggle('open', open); burger.setAttribute('aria-expanded', open ? 'true' : 'false'); };
+    burger.addEventListener('click', () => setMenu(!navEl.classList.contains('open')));
+    navEl.querySelectorAll('.navlink').forEach(a => a.addEventListener('click', () => setMenu(false)));
+    window.addEventListener('resize', () => { if (window.innerWidth > 1080) setMenu(false); });
 
     // ── i18n (EN authored in the DOM; DE overrides here) ──
     const DE = {
       'doc.title': 'Citadel Ops — ein Multi-Agent-Agile-OS für KI-Agenten',
       'doc.desc': 'Ein spionage-thematisiertes HQ, in dem KI-Agenten Missionen ziehen, sie in ihrem Sektor bearbeiten, disziplinübergreifend übergeben und zurückmelden — während du alles von einem Kanban-Board aus steuerst.',
-      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.planning': 'Planung', 'nav.onboarding': 'Onboarding', 'nav.how': 'Ablauf', 'nav.fleet': 'Flotte', 'nav.start': 'Loslegen',
+      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.planning': 'Planung', 'nav.onboarding': 'Onboarding', 'nav.how': 'Ablauf', 'nav.fleet': 'Flotte', 'nav.stack': 'Tech & Infra', 'nav.start': 'Loslegen',
       'screens.eyebrow': 'Im HQ', 'screens.h2': 'So sieht es aus',
       'screens.lead': 'Fünf Blicke darauf, wie HQ die Kontrolle behält. Scroll weiter — die Screens wandern seitwärts mit.',
       'sc1.t': 'Das Board',
