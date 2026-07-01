@@ -159,6 +159,87 @@ export const transitionSchema = z.object({
   result: z.enum(['success', 'failed']).optional(),
 })
 
+// ── Q-Branch equipment (§Q): Gates, Harness, Design Guidelines ──
+// M authors these in HQ (created `active`); a Planner may PROPOSE a Gate (lands `pending`
+// until M activates). M can flip any entry `active`↔`inactive`.
+const keySchema = z
+  .string()
+  .min(1)
+  .max(60)
+  .regex(/^[a-z0-9][a-z0-9-]*$/, 'lowercase letters, digits and dashes only')
+
+export const qBranchStatusSchema = z.enum(['active', 'inactive'])
+
+const qBranchRuleSchema = z
+  .object({
+    requireArtifacts: z.boolean().optional(),
+    requireColdRead: z.boolean().optional(),
+    requireAcceptanceChecked: z.boolean().optional(),
+    requireHarnessPass: z.boolean().optional(),
+  })
+  .strict()
+
+// Create a Gate (M → active; Planner → pending). appliesToStatus is the transition it guards.
+export const qualityGateSchema = z.object({
+  key: keySchema,
+  name: z.string().min(1).max(120),
+  appliesToStatus: missionStatusSchema,
+  rule: qBranchRuleSchema.optional().default({}),
+  blocking: z.boolean().optional().default(true),
+})
+
+export const updateQualityGateSchema = z
+  .object({
+    name: z.string().min(1).max(120).optional(),
+    appliesToStatus: missionStatusSchema.optional(),
+    rule: qBranchRuleSchema.optional(),
+    blocking: z.boolean().optional(),
+    status: qBranchStatusSchema.optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, { message: 'Nothing to update' })
+
+const harnessCommandsSchema = z
+  .object({
+    build: z.string().max(500).optional(),
+    test: z.string().max(500).optional(),
+    lint: z.string().max(500).optional(),
+    run: z.string().max(500).optional(),
+  })
+  .strict()
+
+export const harnessSchema = z.object({
+  key: keySchema,
+  name: z.string().min(1).max(120),
+  commands: harnessCommandsSchema.optional().default({}),
+  env: z.record(z.string(), z.string()).optional(),
+  notes: z.string().max(2000).optional(),
+})
+
+export const updateHarnessSchema = z
+  .object({
+    name: z.string().min(1).max(120).optional(),
+    commands: harnessCommandsSchema.optional(),
+    env: z.record(z.string(), z.string()).optional(),
+    notes: z.string().max(2000).optional(),
+    status: qBranchStatusSchema.optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, { message: 'Nothing to update' })
+
+export const designGuidelineSchema = z.object({
+  themeKey: z.string().min(1).max(60),
+  title: z.string().min(1).max(160),
+  bodyMarkdown: z.string().max(50000).optional().default(''),
+})
+
+export const updateDesignGuidelineSchema = z
+  .object({
+    themeKey: z.string().min(1).max(60).optional(),
+    title: z.string().min(1).max(160).optional(),
+    bodyMarkdown: z.string().max(50000).optional(),
+    status: qBranchStatusSchema.optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, { message: 'Nothing to update' })
+
 // Route ids in this codebase are Postgres `uuid` columns. Feeding a malformed id
 // straight into `eq(table.id, id)` makes Postgres throw 22P02 (string_to_uuid),
 // which surfaces as an unhandled 500. Validate at the route boundary instead.

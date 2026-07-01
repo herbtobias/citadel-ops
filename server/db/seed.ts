@@ -342,17 +342,21 @@ async function seed() {
     })
     .returning()
   // A Planner: the `plan` scope lets it create & groom Operations/Missions upstream
-  // of execution (plus BACKEND, so it can also work what it plans).
-  await db.insert(licenses).values({
-    orgId: org.id,
-    projectId: web.id,
-    agentAlias: '008',
-    hashedKey: hashKey('lic_008_demo'),
-    sectors: ['BACKEND'],
-    scopes: ['plan'],
-    status: 'active',
-    lastSeenAt: new Date('2026-06-25T08:05:00Z'),
-  })
+  // of execution (plus BACKEND, so it can also work what it plans). It may also PROPOSE
+  // Quality Gates — they land `pending` until M activates them (see the demo gate below).
+  const [planner008] = await db
+    .insert(licenses)
+    .values({
+      orgId: org.id,
+      projectId: web.id,
+      agentAlias: '008',
+      hashedKey: hashKey('lic_008_demo'),
+      sectors: ['BACKEND'],
+      scopes: ['plan'],
+      status: 'active',
+      lastSeenAt: new Date('2026-06-25T08:05:00Z'),
+    })
+    .returning()
   // A Scout/Interrogator: the `recon` scope lets it write The Archive when onboarding
   // a brownfield project (analyze the repo, debrief the operator) upstream of planning.
   await db.insert(licenses).values({
@@ -379,6 +383,19 @@ async function seed() {
     kind: 'provisioning',
     ownerUserId: manager.id,
     status: 'active',
+  })
+
+  // A Planner-proposed Gate awaiting M's approval — demonstrates the pending → active flow
+  // in the Q-Branch UI. It does NOT enforce until a manager activates it. §Q.
+  await db.insert(qualityGates).values({
+    projectId: web.id,
+    key: 'review-gate',
+    name: 'Artifacts before Review',
+    appliesToStatus: 'in_review',
+    rule: { requireArtifacts: true },
+    blocking: true,
+    status: 'pending',
+    createdByLicenseId: planner008?.id ?? null,
   })
 
   // ── Operation (= Sprint) ──
@@ -593,7 +610,7 @@ async function seed() {
   })
 
   console.log(
-    `✓ Seeded org=${org.slug} projects=[WEB,APP] missions=${rows.length} licenses=6 (incl. 008 planner, 010 scout, KEY provisioning) users=4`,
+    `✓ Seeded org=${org.slug} projects=[WEB,APP] missions=${rows.length} licenses=6 (incl. 008 planner, 010 scout, KEY provisioning) users=4 q-branch=[2 active gates, 1 pending gate, harness, guidelines]`,
   )
   console.log(`  logins (password "${DEV_PASSWORD}"):`)
   console.log(`    ${HQ_EMAIL}  → super_admin (all)`)

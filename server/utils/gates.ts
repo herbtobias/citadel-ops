@@ -21,6 +21,9 @@ export async function checkGates(
         eq(qualityGates.projectId, projectId),
         eq(qualityGates.appliesToStatus, toStatus as any),
         eq(qualityGates.blocking, true),
+        // Only ACTIVE gates enforce. `pending` (Planner-proposed, awaiting M) and `inactive`
+        // (M-retired) gates never block a transition. §Q.
+        eq(qualityGates.status, 'active'),
       ),
     )
   if (gates.length === 0) return

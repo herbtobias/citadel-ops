@@ -120,6 +120,11 @@ export const notificationType = pgEnum('notification_type', [
 // (foreign actor) or HQ moves them to `certified`|`rejected`. The Briefing reads only
 // `certified`, so an unverified "fact" can never poison downstream agents. §SENTINEL S1.
 export const knowledgeStatus = pgEnum('knowledge_status', ['quarantined', 'certified', 'rejected'])
+// Q-Branch equipment lifecycle (§Q). A Planner (`plan` scope) may propose Gates — they land
+// `pending` and are NOT enforced until M activates them. M-authored equipment is `active` at
+// once. M can toggle any entry `active`↔`inactive`; only `active` gates block transitions and
+// only `active` equipment reaches a Briefing.
+export const qBranchStatus = pgEnum('q_branch_status', ['pending', 'active', 'inactive'])
 export const errorLevel = pgEnum('error_level', ['error', 'fatal'])
 export const errorSource = pgEnum('error_source', ['frontend', 'api', 'mcp', 'runner'])
 export const runnerStatus = pgEnum('runner_status', [
@@ -487,6 +492,11 @@ export const qualityGates = pgTable('quality_gates', {
     .notNull()
     .default({}),
   blocking: boolean('blocking').notNull().default(true),
+  // Lifecycle: `pending` (Planner-proposed, not enforced) → `active` (M-approved, enforced) →
+  // `inactive` (M-retired). `createdByLicenseId` is set when a Planner proposed it. §Q.
+  status: qBranchStatus('status').notNull().default('active'),
+  createdByLicenseId: uuid('created_by_license_id'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 export const harnessDefs = pgTable('harness_defs', {
@@ -502,6 +512,9 @@ export const harnessDefs = pgTable('harness_defs', {
     .default({}),
   env: jsonb('env').$type<Record<string, string>>(),
   notes: text('notes'),
+  status: qBranchStatus('status').notNull().default('active'),
+  createdByLicenseId: uuid('created_by_license_id'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 export const themes = pgTable('themes', {
@@ -524,6 +537,9 @@ export const designGuidelines = pgTable('design_guidelines', {
   title: text('title').notNull(),
   bodyMarkdown: text('body_markdown').notNull().default(''),
   version: integer('version').notNull().default(1),
+  status: qBranchStatus('status').notNull().default('active'),
+  createdByLicenseId: uuid('created_by_license_id'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 // ─── The Wire: Activity Log (append-only, hash-chained) ───────────────────
