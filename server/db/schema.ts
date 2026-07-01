@@ -2,6 +2,7 @@
 // Casing is configured to snake_case in drizzle.config.ts, so camelCase fields
 // map to snake_case columns automatically.
 import {
+  bigserial,
   boolean,
   index,
   integer,
@@ -499,6 +500,9 @@ export const activityLog = pgTable(
   'activity_log',
   {
     id: uuid('id').defaultRandom().primaryKey(),
+    // Monotonic append order — the tamper-evident chain is walked by `seq`, not the
+    // wall-clock `createdAt` (two serialized appends can share a millisecond). §HORIZON M3.
+    seq: bigserial('seq', { mode: 'number' }).notNull(),
     projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
     missionId: uuid('mission_id').references(() => missions.id, { onDelete: 'set null' }),
     operationId: uuid('operation_id').references(() => operations.id, { onDelete: 'set null' }),
@@ -516,7 +520,12 @@ export const activityLog = pgTable(
     hash: text('hash'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('activity_mission_idx').on(t.missionId), index('activity_trace_idx').on(t.traceId)],
+  (t) => [
+    index('activity_mission_idx').on(t.missionId),
+    index('activity_trace_idx').on(t.traceId),
+    // Fast chain-tail lookup + ordered walk per project.
+    index('activity_project_seq_idx').on(t.projectId, t.seq),
+  ],
 )
 
 // ─── Comments & Artifacts ─────────────────────────────────────────────────

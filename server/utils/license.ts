@@ -166,10 +166,21 @@ export function assertReconScope(lic: License): void {
 
 // Watchdog: re-queue missions whose lease expired (crashed/stuck agents). Returns
 // the count re-queued. Called opportunistically before each claim. §21.
+//
+// The flip is a SINGLE atomic UPDATE that returns only the rows THIS call changed, so two
+// instances sweeping the same project concurrently never double-requeue or double-log a
+// mission — the `status='in_progress'` guard means each row is won by exactly one UPDATE.
+// Only `in_progress` leases are swept, so `waiting_human` (PARLEY) is never disturbed. §HORIZON M6.
 export async function sweepExpiredLeases(projectId: string): Promise<number> {
-  const expired = await db
-    .select()
-    .from(missions)
+  const requeued = await db
+    .update(missions)
+    .set({
+      status: 'ready',
+      claimedByLicenseId: null,
+      claimedAt: null,
+      leaseExpiresAt: null,
+      heartbeatAt: null,
+    })
     .where(
       and(
         eq(missions.projectId, projectId),
@@ -177,17 +188,9 @@ export async function sweepExpiredLeases(projectId: string): Promise<number> {
         lt(missions.leaseExpiresAt, new Date()),
       ),
     )
-  for (const m of expired) {
-    await db
-      .update(missions)
-      .set({
-        status: 'ready',
-        claimedByLicenseId: null,
-        claimedAt: null,
-        leaseExpiresAt: null,
-        heartbeatAt: null,
-      })
-      .where(eq(missions.id, m.id))
+    .returning({ id: missions.id, key: missions.key })
+
+  for (const m of requeued) {
     await logActivity({
       projectId,
       missionId: m.id,
@@ -198,7 +201,7 @@ export async function sweepExpiredLeases(projectId: string): Promise<number> {
       message: `Lease expired; re-queued ${m.key}`,
     })
   }
-  return expired.length
+  return requeued.length
 }
 
 // Exactly-once guard for writing agent calls (§21). If the key was already used in
