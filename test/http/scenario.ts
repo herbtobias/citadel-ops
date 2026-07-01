@@ -153,20 +153,69 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
       `write → ${JSON.stringify(wrote.data)}`,
     )
 
-    // The full Archive read carries the bodyMarkdown the Planner needs.
-    const archive = await hq.get('/api/v1/agent/knowledge', { bearer: scout.data.key })
-    const doc = archive.data.find((d: any) => d.path === 'server/api')
+    // §SENTINEL: the write lands QUARANTINED — an agent read (certified-only) does NOT see it.
+    const agentRead = await hq.get('/api/v1/agent/knowledge', { bearer: scout.data.key })
     assert(
-      doc?.bodyMarkdown?.includes('endpoints.'),
-      `archive read missing body: ${JSON.stringify(archive.data)}`,
+      !agentRead.data.some((d: any) => d.path === 'server/api'),
+      'quarantined doc leaked into the agent read (poisoning risk)',
     )
 
-    // HQ (session) sees the same Archive via the human-facing endpoint (The Archive view).
+    // HQ sees it in the quarantine queue (all statuses) as `quarantined`.
     const hqArchive = await hq.get(`/api/v1/projects/${webId}/knowledge`)
     const hqDoc = hqArchive.data.find((d: any) => d.path === 'server/api')
     assert(
-      hqArchive.status === 200 && hqDoc?.bodyMarkdown?.includes('endpoints.'),
-      `HQ archive read missing body: ${JSON.stringify(hqArchive.data)}`,
+      hqArchive.status === 200 &&
+        hqDoc?.status === 'quarantined' &&
+        hqDoc?.bodyMarkdown?.includes('endpoints.'),
+      `HQ quarantine view wrong: ${JSON.stringify(hqDoc)}`,
+    )
+
+    // Zero-context: the AUTHOR License cannot certify its own doc (403).
+    const selfCert = await hq.post(
+      `/api/v1/knowledge/${hqDoc.id}/verify`,
+      { verdict: 'certify' },
+      { bearer: scout.data.key },
+    )
+    assert(selfCert.status === 403, `author self-certify should 403, got ${selfCert.status}`)
+
+    // HQ (foreign actor) certifies → the doc now reaches the agent read/Briefing.
+    const cert = await hq.post(`/api/v1/knowledge/${hqDoc.id}/verify`, {
+      verdict: 'certify',
+      notes: 'verified against the repo',
+    })
+    assert(
+      cert.status === 200 && cert.data.status === 'certified',
+      `certify → ${JSON.stringify(cert.data)}`,
+    )
+    const agentRead2 = await hq.get('/api/v1/agent/knowledge', { bearer: scout.data.key })
+    assert(
+      agentRead2.data.some(
+        (d: any) => d.path === 'server/api' && d.bodyMarkdown?.includes('endpoints.'),
+      ),
+      'certified doc missing from the agent read',
+    )
+
+    // Poisoning defense: a rejected fact never reaches an agent. Write → reject → still hidden.
+    await hq.post(
+      '/api/v1/agent/knowledge',
+      { path: 'INTEL/poison', summary: 'a false claim', bodyMarkdown: 'wrong.' },
+      { bearer: scout.data.key },
+    )
+    const poison = (
+      await hq.get(`/api/v1/projects/${webId}/knowledge?status=quarantined`)
+    ).data.find((d: any) => d.path === 'INTEL/poison')
+    const rej = await hq.post(`/api/v1/knowledge/${poison.id}/verify`, {
+      verdict: 'reject',
+      reason: 'unverifiable',
+    })
+    assert(
+      rej.status === 200 && rej.data.status === 'rejected',
+      `reject → ${JSON.stringify(rej.data)}`,
+    )
+    const agentRead3 = await hq.get('/api/v1/agent/knowledge', { bearer: scout.data.key })
+    assert(
+      !agentRead3.data.some((d: any) => d.path === 'INTEL/poison'),
+      'rejected poison leaked into the agent read',
     )
 
     // Finishing the recon run raises exactly ONE archive_updated notification for HQ

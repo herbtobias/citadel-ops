@@ -109,7 +109,12 @@ export const notificationType = pgEnum('notification_type', [
   'handed_off',
   'cold_read_failed',
   'archive_updated',
+  'knowledge_quarantined',
 ])
+// Trust state of an Archive KnowledgeDoc. Agent writes land `quarantined`; a Fakten-Cold-Read
+// (foreign actor) or HQ moves them to `certified`|`rejected`. The Briefing reads only
+// `certified`, so an unverified "fact" can never poison downstream agents. §SENTINEL S1.
+export const knowledgeStatus = pgEnum('knowledge_status', ['quarantined', 'certified', 'rejected'])
 export const errorLevel = pgEnum('error_level', ['error', 'fatal'])
 export const errorSource = pgEnum('error_source', ['frontend', 'api', 'mcp', 'runner'])
 export const runnerStatus = pgEnum('runner_status', [
@@ -422,6 +427,15 @@ export const knowledgeDocs = pgTable('knowledge_docs', {
   summary: text('summary').notNull().default(''),
   bodyMarkdown: text('body_markdown').notNull().default(''),
   parentId: uuid('parent_id'),
+  // §SENTINEL — quarantine by default; only certified docs reach the Briefing.
+  status: knowledgeStatus('status').notNull().default('quarantined'),
+  // The License that wrote the current content — the Fakten-Cold-Read verifier must be a
+  // DIFFERENT actor (zero-context rule).
+  createdByLicenseId: uuid('created_by_license_id'),
+  verifiedByLicenseId: uuid('verified_by_license_id'),
+  verifiedByUserId: uuid('verified_by_user_id').references(() => users.id),
+  verifiedAt: timestamp('verified_at', { withTimezone: true }),
+  rejectionReason: text('rejection_reason'),
   ...timestamps,
 })
 

@@ -5,6 +5,18 @@ export const sectorSchema = z.enum(['FRONTEND', 'BACKEND', 'QA', 'INFRA', 'SECUR
 export type Sector = z.infer<typeof sectorSchema>
 export const scopeSchema = z.enum(['plan', 'recon'])
 
+// Body for POST /api/v1/knowledge/:id/verify — the Fakten-Cold-Read verdict (§SENTINEL S3).
+export const verifyKnowledgeSchema = z
+  .object({
+    verdict: z.enum(['certify', 'reject']),
+    notes: z.string().max(2000).optional(),
+    reason: z.string().max(2000).optional(),
+  })
+  .refine((v) => v.verdict === 'certify' || (v.reason?.trim().length ?? 0) > 0, {
+    message: 'reject requires a reason',
+    path: ['reason'],
+  })
+
 // Body for POST /api/v1/agent/acquire — a provisioning key mints a session license.
 // All optional: sectors/scopes default to (a subset of) the provisioning key's ceiling.
 export const acquireLicenseSchema = z.object({

@@ -50,6 +50,20 @@
       "when": 1782933133140,
       "tag": "0006_wire_seq_serialization",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782934189712,
+      "tag": "0007_knowledge_quarantine",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782934727482,
+      "tag": "0008_knowledge_author",
+      "breakpoints": true
     }
   ]
 }

@@ -132,7 +132,8 @@ export function registerCitadelTools(server: McpServer, client: Client) {
   t(
     'citadel_write_knowledge',
     'Write a KnowledgeDoc into The Archive (Scout repo-recon / Interrogator debrief). ' +
-      'Upserted per path; nest with parentPath. Requires the `recon` scope.',
+      'Upserted per path; nest with parentPath. Requires the `recon` scope. Writes land ' +
+      'QUARANTINED — a fact only reaches Briefings after a foreign actor or HQ certifies it.',
     {
       path: z.string(),
       summary: z.string(),
@@ -141,6 +142,22 @@ export function registerCitadelTools(server: McpServer, client: Client) {
       parentPath: z.string().optional(),
     },
     (body) => client.api('/api/v1/agent/knowledge', { method: 'POST', body }),
+  )
+
+  t(
+    'citadel_verify_knowledge',
+    'Fakten-Cold-Read: certify or reject a quarantined KnowledgeDoc so it can (or can never) ' +
+      'reach a Briefing. Zero-context rule — you may NOT verify a doc your own License wrote. ' +
+      'reject requires a `reason`. Needs the doc id (from citadel_read_archive is certified-only; ' +
+      'a validator gets ids from HQ).',
+    {
+      docId: z.string(),
+      verdict: z.enum(['certify', 'reject']),
+      notes: z.string().optional(),
+      reason: z.string().optional(),
+    },
+    ({ docId, ...body }) =>
+      client.api(`/api/v1/knowledge/${docId}/verify`, { method: 'POST', body }),
   )
 
   t(
