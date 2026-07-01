@@ -71,6 +71,8 @@ const TOAST_FOR: Record<string, { tone: 'info' | 'accent' | 'destructive'; title
   handed_off: { tone: 'info', title: 'Mission handed off' },
   archive_updated: { tone: 'info', title: 'Archive updated' },
   knowledge_quarantined: { tone: 'accent', title: 'Knowledge needs certification' },
+  human_input_requested: { tone: 'accent', title: 'An agent is waiting on you' },
+  human_input_answered: { tone: 'info', title: 'Human input answered' },
 }
 let notifTimer: any = null
 useProjectEvents(pid, (e) => {

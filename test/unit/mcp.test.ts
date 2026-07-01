@@ -27,6 +27,7 @@ const EXPECTED_TOOLS = [
   'citadel_attach_artifact',
   'citadel_add_comment',
   'citadel_report_blocker',
+  'citadel_request_human_input',
   'citadel_submit_for_review',
   'citadel_heartbeat',
   'citadel_complete_mission',

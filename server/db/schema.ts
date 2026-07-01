@@ -58,6 +58,9 @@ export const missionStatus = pgEnum('mission_status', [
   'in_progress',
   'in_review',
   'blocked',
+  // §PARLEY — parked waiting on a human decision (distinct from `blocked` = an obstacle);
+  // durably suspended and exempt from the lease watchdog until HQ answers.
+  'waiting_human',
   'done',
   'cancelled',
 ])
@@ -110,6 +113,8 @@ export const notificationType = pgEnum('notification_type', [
   'cold_read_failed',
   'archive_updated',
   'knowledge_quarantined',
+  'human_input_requested',
+  'human_input_answered',
 ])
 // Trust state of an Archive KnowledgeDoc. Agent writes land `quarantined`; a Fakten-Cold-Read
 // (foreign actor) or HQ moves them to `certified`|`rejected`. The Briefing reads only
@@ -384,6 +389,17 @@ export const references = pgTable(
 )
 
 // ─── The Archive: Dossiers & Knowledge ────────────────────────────────────
+// A structured entry appended to a dossier over time — e.g. a human-input question and its
+// answer (§PARLEY X0). Resume happens over this shared state, not a thread replay: the entry
+// lands in sections.addenda and thus in the resuming mission's context.
+export type DossierAddendum = {
+  kind: 'human_question' | 'human_answer'
+  at: string
+  by?: string
+  body: string
+  meta?: Record<string, unknown>
+}
+
 export type DossierSections = {
   problem?: string
   background?: string
@@ -395,6 +411,7 @@ export type DossierSections = {
   risks?: string
   handoffNotes?: string
   references?: string
+  addenda?: DossierAddendum[]
 }
 
 export const dossiers = pgTable('dossiers', {

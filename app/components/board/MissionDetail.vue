@@ -2,7 +2,10 @@
 import type { Mission } from '~/types'
 
 const props = defineProps<{ mission: Mission | null }>()
-defineEmits<{ close: []; 'open-key': [key: string] }>()
+const emit = defineEmits<{ close: []; 'open-key': [key: string]; answered: [] }>()
+
+const orgs = useOrgStore()
+const isManager = computed(() => orgs.activeRole === 'manager')
 
 interface Dossier {
   id: string
@@ -38,9 +41,38 @@ watch(
     ])
     dossier.value = d
     activity.value = a
+    answerText.value = ''
   },
   { immediate: true },
 )
+
+// §PARLEY P5 — the open human-input question (latest) and the answer affordance.
+const humanQuestion = computed(() => {
+  const addenda = (dossier.value?.sections?.addenda ?? []) as {
+    kind: string
+    body: string
+    meta?: any
+  }[]
+  const answered = addenda.some((a) => a.kind === 'human_answer')
+  if (answered) return null
+  return [...addenda].reverse().find((a) => a.kind === 'human_question') ?? null
+})
+const answerText = ref('')
+const answering = ref(false)
+async function submitAnswer() {
+  if (!props.mission || !answerText.value.trim()) return
+  answering.value = true
+  try {
+    await $fetch(`/api/v1/missions/${props.mission.id}/answer-human-input`, {
+      method: 'POST',
+      body: { answer: answerText.value.trim() },
+    })
+    emit('answered')
+    emit('close')
+  } finally {
+    answering.value = false
+  }
+}
 
 const sectionLabels: Record<string, string> = {
   problem: 'Problem',
@@ -84,6 +116,32 @@ function fmt(d: string) {
           <section class="mb-5">
             <p class="ct-label mb-1 text-muted-foreground">Briefing</p>
             <p class="text-sm leading-relaxed">{{ mission.briefing }}</p>
+          </section>
+
+          <section
+            v-if="mission.status === 'waiting_human'"
+            class="mb-5 ct-card border border-accent-secondary/50 bg-card p-4"
+          >
+            <p class="ct-label mb-2 text-accent-secondary">Waiting on you</p>
+            <p v-if="humanQuestion" class="mb-3 text-sm leading-relaxed">
+              {{ humanQuestion.body }}
+            </p>
+            <template v-if="isManager">
+              <textarea
+                v-model="answerText"
+                rows="3"
+                placeholder="Your answer — lands in the dossier and resumes the mission"
+                class="w-full rounded-[var(--radius-card)] border border-border bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none"
+              />
+              <button
+                class="ct-glow-sm mt-2 rounded-[var(--radius-card)] bg-accent px-4 py-2 text-sm font-bold text-background hover:opacity-90 disabled:opacity-40"
+                :disabled="!answerText.trim() || answering"
+                @click="submitAnswer"
+              >
+                Answer &amp; resume
+              </button>
+            </template>
+            <p v-else class="ct-label text-muted-foreground">Only managers can answer.</p>
           </section>
 
           <section v-if="mission.acceptanceCriteria.length" class="mb-5">

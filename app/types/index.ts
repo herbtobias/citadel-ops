@@ -12,6 +12,7 @@ export type MissionStatus =
   | 'in_progress'
   | 'in_review'
   | 'blocked'
+  | 'waiting_human'
   | 'done'
   | 'cancelled'
 

@@ -388,6 +388,27 @@ export function registerCitadelTools(server: McpServer, client: Client) {
   )
 
   t(
+    'citadel_request_human_input',
+    'Ask HQ a decision and DURABLY suspend the mission (→ waiting_human). Use for genuine ' +
+      'ambiguity a human must resolve — not for obstacles (use report_blocker). The lease clock ' +
+      'stops (no watchdog re-queue). HQ answers; the mission returns to the backlog and a fresh ' +
+      'agent resumes with the answer in the dossier. End your run after calling this.',
+    {
+      missionId: z.string(),
+      question: z.string(),
+      context: z.string().optional(),
+      urgency: z.enum(['low', 'medium', 'high']).optional(),
+      format: z.enum(['free_text', 'yes_no', 'multiple_choice']).optional(),
+      choices: z.array(z.string()).optional(),
+    },
+    ({ missionId, question, context, urgency, format, choices }) =>
+      client.api(`/api/v1/agent/missions/${missionId}/request-human-input`, {
+        method: 'POST',
+        body: { question, context, options: { urgency, format, choices } },
+      }),
+  )
+
+  t(
     'citadel_submit_for_review',
     'Submit a claimed mission for review (→ in_review, non-blocking).',
     { missionId: z.string() },

@@ -159,7 +159,12 @@ function path(l: Line) {
         @move="onMove"
       />
 
-      <MissionDetail :mission="selected" @close="selected = null" @open-key="openByKey" />
+      <MissionDetail
+        :mission="selected"
+        @close="selected = null"
+        @open-key="openByKey"
+        @answered="missionsStore.fetchMissions(props.projectId)"
+      />
     </div>
   </div>
 </template>

@@ -127,6 +127,7 @@ async function seed() {
       'cold_read',
       'ready',
       'in_progress',
+      'waiting_human',
       'in_review',
       'done',
     ],

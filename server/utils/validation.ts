@@ -5,6 +5,25 @@ export const sectorSchema = z.enum(['FRONTEND', 'BACKEND', 'QA', 'INFRA', 'SECUR
 export type Sector = z.infer<typeof sectorSchema>
 export const scopeSchema = z.enum(['plan', 'recon'])
 
+// Body for POST /api/v1/agent/missions/:id/request-human-input (§PARLEY P3).
+export const requestHumanInputSchema = z.object({
+  question: z.string().min(1).max(4000),
+  context: z.string().max(8000).optional(),
+  options: z
+    .object({
+      urgency: z.enum(['low', 'medium', 'high']).optional().default('medium'),
+      format: z.enum(['free_text', 'yes_no', 'multiple_choice']).optional().default('free_text'),
+      choices: z.array(z.string()).max(12).optional(),
+    })
+    .optional()
+    .default({}),
+})
+
+// Body for POST /api/v1/missions/:id/answer-human-input (HQ, §PARLEY P4).
+export const answerHumanInputSchema = z.object({
+  answer: z.string().min(1).max(8000),
+})
+
 // Body for POST /api/v1/knowledge/:id/verify — the Fakten-Cold-Read verdict (§SENTINEL S3).
 export const verifyKnowledgeSchema = z
   .object({
