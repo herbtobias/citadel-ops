@@ -70,6 +70,7 @@ const TOAST_FOR: Record<string, { tone: 'info' | 'accent' | 'destructive'; title
   lease_expired: { tone: 'destructive', title: 'Lease expired — mission re-queued' },
   handed_off: { tone: 'info', title: 'Mission handed off' },
   archive_updated: { tone: 'info', title: 'Archive updated' },
+  knowledge_quarantined: { tone: 'accent', title: 'Knowledge needs certification' },
 }
 let notifTimer: any = null
 useProjectEvents(pid, (e) => {

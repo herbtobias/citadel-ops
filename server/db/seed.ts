@@ -296,6 +296,12 @@ async function seed() {
       ].join('\n'),
     },
   ])
+  // Demo Archive is trusted — HQ-curated, not agent-quarantined (§SENTINEL: agent writes
+  // land quarantined, but the seeded demo docs are certified so briefings aren't empty).
+  await db
+    .update(knowledgeDocs)
+    .set({ status: 'certified' })
+    .where(eq(knowledgeDocs.projectId, web.id))
 
   // ── Licenses (agents) ──
   const [lic007] = await db

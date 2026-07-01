@@ -43,11 +43,17 @@ export default defineEventHandler(async (event) => {
       ),
     )
 
-  // The Archive: knowledge doc summaries ("peanuts & hay"), shallow → deep.
+  // The Archive: knowledge doc summaries ("peanuts & hay"), shallow → deep. Only certified
+  // knowledge reaches a Briefing — quarantined/rejected facts never poison agents. §SENTINEL S4.
   const knowledge = await db
     .select()
     .from(schema.knowledgeDocs)
-    .where(eq(schema.knowledgeDocs.projectId, projectId))
+    .where(
+      and(
+        eq(schema.knowledgeDocs.projectId, projectId),
+        eq(schema.knowledgeDocs.status, 'certified'),
+      ),
+    )
     .orderBy(asc(schema.knowledgeDocs.level))
 
   // Open work snapshot.

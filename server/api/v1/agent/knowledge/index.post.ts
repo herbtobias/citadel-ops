@@ -54,6 +54,7 @@ export default defineEventHandler(async (event) => {
     let docId: string
     let created: boolean
     if (existing) {
+      // A rewrite introduces new unverified content → re-quarantine (clear any prior verdict).
       await db
         .update(schema.knowledgeDocs)
         .set({
@@ -61,6 +62,12 @@ export default defineEventHandler(async (event) => {
           bodyMarkdown: body.bodyMarkdown,
           level: body.level,
           parentId,
+          status: 'quarantined',
+          createdByLicenseId: lic.id,
+          verifiedByLicenseId: null,
+          verifiedByUserId: null,
+          verifiedAt: null,
+          rejectionReason: null,
           updatedAt: new Date(),
         })
         .where(eq(schema.knowledgeDocs.id, existing.id))
@@ -76,6 +83,8 @@ export default defineEventHandler(async (event) => {
           summary: body.summary,
           bodyMarkdown: body.bodyMarkdown,
           parentId,
+          status: 'quarantined',
+          createdByLicenseId: lic.id,
         })
         .returning()
       if (!row) throw createError({ statusCode: 500, statusMessage: 'Insert failed' })
@@ -83,17 +92,19 @@ export default defineEventHandler(async (event) => {
       created = true
     }
 
+    // Agent writes land in quarantine and never reach a Briefing until certified (§SENTINEL).
+    // The Wire event drives a single HQ notification via the Leiter.
     await logActivity({
       projectId,
       actorType: 'agent',
       actorLicenseId: lic.id,
-      event: 'knowledge_written',
-      message: `${created ? 'Filed' : 'Updated'} Archive doc ${body.path}`,
+      event: 'knowledge_quarantined',
+      message: `${created ? 'Filed' : 'Updated'} Archive doc ${body.path} — quarantined, awaiting certification`,
       metadata: { path: body.path, level: body.level },
     })
 
     return {
-      result: { id: docId, path: body.path, level: body.level, created },
+      result: { id: docId, path: body.path, level: body.level, created, status: 'quarantined' },
       resultRef: docId,
     }
   }

@@ -14,6 +14,7 @@ const EVENT_TO_NOTIFICATION: Record<
   lease_expired: 'lease_expired',
   handed_off: 'handed_off',
   recon_completed: 'archive_updated',
+  knowledge_quarantined: 'knowledge_quarantined',
 }
 
 export default defineNitroPlugin(() => {

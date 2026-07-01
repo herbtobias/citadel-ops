@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const route = useRoute()
+const orgs = useOrgStore()
 const projectId = computed(() => route.params.projectId as string)
+const isManager = computed(() => orgs.activeRole === 'manager')
 
 interface KnowledgeDoc {
   id: string
@@ -9,19 +11,45 @@ interface KnowledgeDoc {
   summary: string
   bodyMarkdown: string
   parentId: string | null
+  status: 'quarantined' | 'certified' | 'rejected'
+  rejectionReason: string | null
   updatedAt: string | null
 }
 
-const { data: docs } = await useAsyncData(
+const { data: docs, refresh } = await useAsyncData(
   'archive',
   () => useRequestFetch()<KnowledgeDoc[]>(`/api/v1/projects/${projectId.value}/knowledge`),
   { watch: [projectId] },
+)
+
+const quarantinedCount = computed(
+  () => docs.value?.filter((d) => d.status === 'quarantined').length ?? 0,
 )
 
 // Which docs have their full body expanded (summaries show by default).
 const open = ref<Record<string, boolean>>({})
 function toggle(id: string) {
   open.value[id] = !open.value[id]
+}
+
+const busy = ref<Record<string, boolean>>({})
+async function verify(d: KnowledgeDoc, verdict: 'certify' | 'reject') {
+  const reason =
+    verdict === 'reject' ? (globalThis.prompt('Reason for rejecting this doc?') ?? '') : undefined
+  if (verdict === 'reject' && !reason?.trim()) return
+  busy.value[d.id] = true
+  try {
+    await $fetch(`/api/v1/knowledge/${d.id}/verify`, { method: 'POST', body: { verdict, reason } })
+    await refresh()
+  } finally {
+    busy.value[d.id] = false
+  }
+}
+
+const statusClass: Record<string, string> = {
+  quarantined: 'text-accent-secondary',
+  certified: 'text-accent',
+  rejected: 'text-destructive',
 }
 
 function fmt(d: string | null) {
@@ -38,6 +66,16 @@ function fmt(d: string | null) {
     </div>
     <p class="ct-label text-muted-foreground">
       Institutional memory — what the Scout, Interrogator, and Archivist filed for this project.
+    </p>
+    <p
+      v-if="quarantinedCount"
+      class="ct-card border border-accent-secondary/40 bg-card p-3 text-sm text-muted-foreground"
+    >
+      <span class="text-accent-secondary">{{ quarantinedCount }}</span> doc{{
+        quarantinedCount === 1 ? '' : 's'
+      }}
+      in <strong>quarantine</strong> — not in any Briefing until certified.
+      <span v-if="!isManager">Only managers can certify.</span>
     </p>
 
     <section class="ct-card border border-border bg-card p-5">
@@ -61,7 +99,30 @@ function fmt(d: string | null) {
             <span class="ct-label rounded bg-muted px-1.5 py-0.5 text-muted-foreground"
               >L{{ d.level }}</span
             >
+            <span class="ct-label" :class="statusClass[d.status]">{{ d.status }}</span>
           </button>
+          <div v-if="isManager && d.status === 'quarantined'" class="mt-1 flex gap-3 pl-6">
+            <button
+              class="ct-label text-accent hover:opacity-80 disabled:opacity-40"
+              :disabled="busy[d.id]"
+              @click="verify(d, 'certify')"
+            >
+              certify
+            </button>
+            <button
+              class="ct-label text-destructive hover:opacity-80 disabled:opacity-40"
+              :disabled="busy[d.id]"
+              @click="verify(d, 'reject')"
+            >
+              reject
+            </button>
+          </div>
+          <p
+            v-if="d.status === 'rejected' && d.rejectionReason"
+            class="mt-1 pl-6 ct-label text-destructive"
+          >
+            rejected: {{ d.rejectionReason }}
+          </p>
           <p class="mt-1 pl-6 text-sm leading-relaxed text-muted-foreground">{{ d.summary }}</p>
           <!-- eslint-disable vue/no-v-html -- renderMarkdown() runs markdown-it with html:false, so raw HTML is escaped and the output is sanitized (see app/utils/markdown.ts) -->
           <div
