@@ -159,6 +159,132 @@ body {
   background-size: 48px 48px;
 }
 
+/* ── Rendered Markdown (Archive doc bodies) ───────────────────────────────
+   Tailwind's preflight resets headings/lists/etc., and v-html content can't be
+   reached by Tailwind utilities, so style the rendered tree here with semantic
+   tokens only (theme-aware). */
+.ct-markdown > *:first-child {
+  margin-top: 0;
+}
+.ct-markdown > *:last-child {
+  margin-bottom: 0;
+}
+.ct-markdown h1,
+.ct-markdown h2,
+.ct-markdown h3,
+.ct-markdown h4,
+.ct-markdown h5,
+.ct-markdown h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-foreground);
+  margin: 1.25em 0 0.5em;
+  letter-spacing: var(--ct-tracking);
+}
+.ct-markdown h1 {
+  font-size: 1.4em;
+}
+.ct-markdown h2 {
+  font-size: 1.2em;
+}
+.ct-markdown h3 {
+  font-size: 1.05em;
+}
+.ct-markdown h4,
+.ct-markdown h5,
+.ct-markdown h6 {
+  font-size: 1em;
+}
+.ct-markdown p,
+.ct-markdown ul,
+.ct-markdown ol,
+.ct-markdown blockquote,
+.ct-markdown pre,
+.ct-markdown table {
+  margin: 0.6em 0;
+}
+.ct-markdown ul,
+.ct-markdown ol {
+  padding-left: 1.5em;
+}
+.ct-markdown ul {
+  list-style: disc;
+}
+.ct-markdown ol {
+  list-style: decimal;
+}
+.ct-markdown li {
+  margin: 0.2em 0;
+}
+.ct-markdown li > ul,
+.ct-markdown li > ol {
+  margin: 0.2em 0;
+}
+.ct-markdown a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ct-markdown strong {
+  font-weight: 700;
+  color: var(--color-foreground);
+}
+.ct-markdown em {
+  font-style: italic;
+}
+.ct-markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background-color: var(--color-muted);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+.ct-markdown pre {
+  font-family: var(--font-mono);
+  background-color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 0.75em 1em;
+  overflow-x: auto;
+}
+.ct-markdown pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85em;
+}
+.ct-markdown blockquote {
+  border-left: 3px solid var(--color-border);
+  padding-left: 1em;
+  color: var(--color-muted-foreground);
+  font-style: italic;
+}
+.ct-markdown hr {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin: 1.2em 0;
+}
+.ct-markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  display: block;
+  overflow-x: auto;
+}
+.ct-markdown th,
+.ct-markdown td {
+  border: 1px solid var(--color-border);
+  padding: 0.4em 0.6em;
+  text-align: left;
+}
+.ct-markdown th {
+  background-color: var(--color-muted);
+  font-weight: 700;
+}
+.ct-markdown img {
+  max-width: 100%;
+  height: auto;
+}
+
 /* Mission drag ghost. */
 .task-dragging {
   transform: rotate(1deg);
