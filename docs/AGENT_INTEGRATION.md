@@ -74,7 +74,7 @@ citadel_report_blocker         citadel_complete_mission        citadel_heartbeat
 
 # Planning — require the `plan` scope:
 citadel_plan_operation         citadel_create_mission          citadel_update_mission
-citadel_link_missions
+citadel_link_missions          citadel_propose_quality_gate
 
 # Brownfield onboarding — read for any license, write/delete/finish require the `recon` scope:
 citadel_read_archive           citadel_write_knowledge         citadel_delete_knowledge
@@ -139,6 +139,24 @@ The same flow over plain REST is a runnable script:
 
 Briefing / gates / harness / design-guidelines are read from the project endpoints, e.g.
 `GET /api/v1/projects/:id/briefing`, `…/quality-gates`, `…/harness`, `…/design-guidelines?theme=active`.
+
+#### Proposing Quality Gates (Planner)
+
+A Planner can also turn the requirements into **Quality Gates**. `citadel_propose_quality_gate`
+(→ `POST /api/v1/agent/quality-gates`) files a gate that lands **`pending`** — it is recorded and
+visible in HQ but does **not** enforce until a manager activates it in the Q-Branch (M's Desk
+authority). This mirrors the SENTINEL model for knowledge: agents may write, but a human gates what
+takes effect.
+
+```
+citadel_propose_quality_gate { key:"review-gate", name:"Artifacts before Review",
+                               appliesToStatus:"in_review", rule:{ requireArtifacts:true } }
+                             → pending (awaiting M)
+```
+
+Agent reads (`citadel_get_quality_gates`, the Briefing) only ever return **active** gates/harness/
+guidelines — pending and manager-retired (`inactive`) equipment is hidden from field agents and
+never enforced. M authors, activates, deactivates and deletes equipment from the HQ Q-Branch page.
 
 #### Brownfield onboarding (Scout · Interrogator · Planner)
 
