@@ -273,6 +273,140 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
     return `created TMP, blocked w/o confirm, purged with ?confirm=TMP`
   })
 
+  await step(
+    'Q-Branch: planner proposes a gate → pending; M activates, retires, deletes',
+    async () => {
+      // A Planner (plan scope) proposes a gate from the requirements — it lands PENDING.
+      const pl = await hq.post(`/api/v1/projects/${webId}/licenses`, {
+        agentAlias: 'P1',
+        sectors: ['BACKEND'],
+        scopes: ['plan'],
+      })
+      assert(pl.status === 201 && pl.data.scopes.includes('plan'), 'planner license failed')
+      const plannerKey = pl.data.key
+
+      const proposed = await hq.post(
+        '/api/v1/agent/quality-gates',
+        {
+          key: 'scenario-gate',
+          name: 'Scenario gate',
+          appliesToStatus: 'in_review',
+          rule: { requireArtifacts: true },
+        },
+        { bearer: plannerKey },
+      )
+      assert(
+        proposed.status === 201 && proposed.data.status === 'pending',
+        `propose → ${JSON.stringify(proposed.data)}`,
+      )
+      const gateId = proposed.data.id
+
+      // A plain BACKEND license (no plan scope) cannot propose → 403.
+      const noPlan = await hq.post(
+        '/api/v1/agent/quality-gates',
+        { key: 'nope', name: 'x', appliesToStatus: 'done' },
+        { bearer: devKey },
+      )
+      assert(noPlan.status === 403, `expected 403 without plan scope, got ${noPlan.status}`)
+
+      // HQ sees the pending gate; an AGENT read hides it (not in force yet).
+      const hqGates = await hq.get(`/api/v1/projects/${webId}/quality-gates`)
+      const hqGate = hqGates.data.find((g: any) => g.key === 'scenario-gate')
+      assert(
+        hqGate?.status === 'pending' && hqGate?.proposed === true,
+        `HQ view wrong: ${JSON.stringify(hqGate)}`,
+      )
+      const agentGates = await hq.get(`/api/v1/projects/${webId}/quality-gates`, { bearer: devKey })
+      assert(
+        !agentGates.data.some((g: any) => g.key === 'scenario-gate'),
+        'pending gate leaked to agent',
+      )
+
+      // A non-manager (contributor) cannot activate → 403.
+      const contrib = makeClient(baseUrl)
+      await contrib.post('/api/auth/login', { email: CONTRIB, password: PW })
+      const denied = await contrib.api('PATCH', `/api/v1/quality-gates/${gateId}`, {
+        body: { status: 'active' },
+      })
+      assert(denied.status === 403, `contributor activate should 403, got ${denied.status}`)
+
+      // M activates → now in force and visible to agents.
+      const act = await hq.api('PATCH', `/api/v1/quality-gates/${gateId}`, {
+        body: { status: 'active' },
+      })
+      assert(
+        act.status === 200 && act.data.status === 'active',
+        `activate → ${JSON.stringify(act.data)}`,
+      )
+      const agentGates2 = await hq.get(`/api/v1/projects/${webId}/quality-gates`, {
+        bearer: devKey,
+      })
+      assert(
+        agentGates2.data.some((g: any) => g.key === 'scenario-gate'),
+        'active gate missing from agent read',
+      )
+
+      // M deactivates → hidden from agents again.
+      const deact = await hq.api('PATCH', `/api/v1/quality-gates/${gateId}`, {
+        body: { status: 'inactive' },
+      })
+      assert(
+        deact.status === 200 && deact.data.status === 'inactive',
+        `deactivate → ${JSON.stringify(deact.data)}`,
+      )
+
+      // M authors a gate directly → active at once (no approval step). Duplicate key → 409.
+      const authored = await hq.post(`/api/v1/projects/${webId}/quality-gates`, {
+        key: 'scenario-manual',
+        name: 'M-authored gate',
+        appliesToStatus: 'blocked',
+        rule: { requireArtifacts: true },
+      })
+      assert(
+        authored.status === 201 && authored.data.status === 'active',
+        `author → ${JSON.stringify(authored.data)}`,
+      )
+      const dup = await hq.post(
+        '/api/v1/agent/quality-gates',
+        { key: 'scenario-manual', name: 'dupe', appliesToStatus: 'done' },
+        { bearer: plannerKey },
+      )
+      assert(dup.status === 409, `duplicate key should 409, got ${dup.status}`)
+
+      // Harness + Design Guideline: M authors, deactivates, deletes.
+      const harn = await hq.post(`/api/v1/projects/${webId}/harness`, {
+        key: 'scenario-harness',
+        name: 'Scenario harness',
+        commands: { test: 'npm test' },
+      })
+      assert(
+        harn.status === 201 && harn.data.status === 'active',
+        `harness create → ${JSON.stringify(harn.data)}`,
+      )
+      const dg = await hq.post(`/api/v1/projects/${webId}/design-guidelines`, {
+        themeKey: 'scenario-theme',
+        title: 'Scenario guideline',
+        bodyMarkdown: 'Use tokens only.',
+      })
+      assert(
+        dg.status === 201 && dg.data.status === 'active',
+        `guideline create → ${JSON.stringify(dg.data)}`,
+      )
+
+      // Cleanup so later steps see only the seeded gates/harness/guidelines.
+      await hq.del(`/api/v1/quality-gates/${gateId}`)
+      await hq.del(`/api/v1/quality-gates/${authored.data.id}`)
+      await hq.del(`/api/v1/harness/${harn.data.id}`)
+      await hq.del(`/api/v1/design-guidelines/${dg.data.id}`)
+      const finalGates = await hq.get(`/api/v1/projects/${webId}/quality-gates`)
+      assert(
+        !finalGates.data.some((g: any) => g.key === 'scenario-gate' || g.key === 'scenario-manual'),
+        'scenario gates not cleaned up',
+      )
+      return 'propose→pending, activate/deactivate, author(409 dup), harness+guideline, cleanup'
+    },
+  )
+
   await step('Create a feature mission (backlog)', async () => {
     const r = await hq.post(`/api/v1/projects/${webId}/missions`, {
       title: 'Implement coupon codes',

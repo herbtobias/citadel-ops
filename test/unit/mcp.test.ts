@@ -21,6 +21,7 @@ const EXPECTED_TOOLS = [
   'citadel_create_mission',
   'citadel_update_mission',
   'citadel_link_missions',
+  'citadel_propose_quality_gate',
   'citadel_file_dossier',
   'citadel_run_cold_read',
   'citadel_hand_off_mission',
