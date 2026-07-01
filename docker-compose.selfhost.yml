@@ -5,9 +5,15 @@
 # It deliberately uses `image:` (a pinned build) instead of `build: .` — rebuilding only
 # happens when YOU re-tag, never as a side effect of editing the working tree.
 #
-# Distinct from the dev stack (docker-compose.yml): different container names, a separate
-# pgdata volume, Postgres on 5434 (dev uses 5433), HQ on 4000 (dev uses 3000).
+# Distinct from the dev stack (docker-compose.yml): its OWN compose project (`name` below),
+# different container names, an external pgdata volume, Postgres on 5434 (dev uses 5433),
+# HQ on 4000 (dev uses 3000). The separate project name is what stops `docker compose up` on
+# the dev stack from reconciling (and evicting) this stack's `postgres` service.
 #
+
+# Own compose project so the dev stack (project `citadel-ops`) can never touch these containers.
+name: citadel-selfhost
+
 # ── One-time build & pin (from a known-good commit/tag) ──
 #   git checkout <stable-tag-or-main>
 #   docker build -t citadel-ops:stable .
@@ -65,4 +71,8 @@ services:
       - '4000:3000' # distinct from the dev app on 3000
 
 volumes:
+  # External so this stack is decoupled from the dev compose project and keeps its data
+  # across restructures. Points at the volume created under the original project name.
   citadel-selfhost-pgdata:
+    external: true
+    name: citadel-ops_citadel-selfhost-pgdata
