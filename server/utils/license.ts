@@ -68,7 +68,7 @@ export async function requireLicense(
   }
 
   // Per-license rate limit (§21).
-  enforceRateLimit(lic.id, await getProjectRateLimit(lic.projectId))
+  await enforceRateLimit(lic.id, await getProjectRateLimit(lic.projectId))
 
   await db.update(licenses).set({ lastSeenAt: new Date() }).where(eq(licenses.id, lic.id))
   return lic

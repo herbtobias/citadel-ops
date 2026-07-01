@@ -13,7 +13,7 @@ const schema_ = z.object({ email: z.string().email() })
 
 export default defineEventHandler(async (event) => {
   const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
-  enforceRateLimit(`forgot:${ip}`, 5) // 5/min per IP
+  await enforceRateLimit(`forgot:${ip}`, 5) // 5/min per IP
 
   const { email } = await parseBody(event, schema_)
   const lower = email.toLowerCase()

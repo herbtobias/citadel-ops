@@ -49,3 +49,46 @@ A cloud runner is just an unattended host for the **same `citadel-agent` loop**:
 Per §19 the heavy infra (runner orchestration, CI/CD, IaC, job queue, DB-ops, HA) is intentionally
 out of scope for the MVP. The contract above means adopting a runner later is additive — no API
 changes required.
+
+---
+
+## Multi-instance / horizontal scaling (Operation HORIZON)
+
+Citadel is single-instance-safe by default and multi-instance-ready once a **Redis backplane** is
+configured. The correctness pieces are in the app; the rest is deploy config.
+
+### Required for >1 instance
+
+- **`REDIS_URL`** (§M1) — mandatory in production (`00.env-check.ts` fails the boot without it).
+  It carries the SSE/webhook **event fan-out** (§M2, channel `citadel:events`, loop-safe via a
+  per-instance origin tag) and the **distributed rate-limit / login-throttle** counters (§M4).
+  Locally: `docker compose up -d redis` (port 6380). In prod: **Memorystore for Redis**
+  (`europe-west3`). `/health` reports `redis: ok|error`.
+- **`DB_POOL_MAX`** (§M7) — per-instance pool size (default 10). Keep
+  `max_instances × DB_POOL_MAX ≤ Cloud SQL max_connections − reserve`; front with PgBouncer / the
+  Cloud SQL connector (pooling mode) for higher instance counts.
+
+### Cloud Run config (§M9)
+
+- `min-instances=1` (a warm instance for SSE), `max-instances>1`, `--timeout=3600`.
+- **SSE caveat:** every `/api/v1/events` client holds a request slot for its whole lifetime — at
+  `concurrency=80` that's ≤80 long-lived connections/instance before Cloud Run scales out on
+  _connections_, not CPU. With many dashboards, split the SSE route into its own high-concurrency
+  service.
+- Secrets via Secret Manager (`NUXT_SESSION_PASSWORD`, `DATABASE_URL`, `REDIS_URL`, SMTP, Sentry).
+- **Not AlloyDB yet** — move off Cloud SQL only once `claim-next` contention or Wire appends are the
+  measured bottleneck.
+
+### Migrations as a job (§M8)
+
+Running `drizzle-kit migrate` from every app-container start races across instances and delays
+readiness. Set **`RUN_MIGRATIONS=0`** on the app service and run migrations once out-of-band —
+a **Cloud Run Job** with the same image and command `npx drizzle-kit migrate`, as a pre-deploy
+step. The entrypoint honours the flag; default `1` keeps single-instance/dev one-command-simple.
+
+### Durable webhooks (§M5, deploy-time)
+
+Inline dispatch (Leiter → `fetch` + retry) is fine single-instance. For durability across restarts,
+enqueue deliveries to **Cloud Tasks** and let it call an internal delivery endpoint with backoff/
+retry (HMAC + idempotency preserved). This is deploy-plumbing, not an API change — adopt it when a
+lost webhook on restart actually matters.
