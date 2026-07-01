@@ -409,6 +409,80 @@ export async function runScenario(baseUrl: string): Promise<StepResult[]> {
     return `one agent got ${claimed[0].key}, the other got nothing (SKIP LOCKED)`
   })
 
+  await step(
+    'PARLEY: agent asks HQ → waiting_human → answer → resume (over the dossier)',
+    async () => {
+      // Fresh agent so it doesn't collide with the concurrency winners.
+      const p8 = await hq.post(`/api/v1/projects/${webId}/licenses`, {
+        agentAlias: 'P8',
+        sectors: ['BACKEND'],
+      })
+      const p8Key = p8.data.key
+      // Urgent mission groomed to ready via the Cold Read, so claim-next picks it first.
+      const mk = await hq.post(`/api/v1/projects/${webId}/missions`, {
+        title: 'Ambiguous requirement — needs a human call',
+        sector: 'BACKEND',
+        type: 'feature',
+        priority: 'urgent',
+      })
+      const pmId = mk.data.id
+      await hq.post(`/api/v1/missions/${pmId}/transition`, { to: 'designing' })
+      await hq.post(`/api/v1/missions/${pmId}/dossier`, {
+        title: 'plan',
+        sections: { problem: 'discount kind unclear', technicalPlan: 'ask HQ' },
+      })
+      const dz = await hq.get(`/api/v1/missions/${pmId}/dossier`)
+      await hq.post(
+        `/api/v1/dossiers/${dz.data.id}/cold-read`,
+        { verdict: 'pass', comprehensionNotes: 'ok' },
+        { bearer: qaKey },
+      )
+      const claim = await hq.post('/api/v1/agent/claim-next', undefined, { bearer: p8Key })
+      assert(
+        claim.data.claimed?.id === pmId,
+        `P8 claimed ${claim.data.claimed?.key} (expected PARLEY)`,
+      )
+
+      // Agent asks HQ → durable suspension.
+      const ask = await hq.post(
+        `/api/v1/agent/missions/${pmId}/request-human-input`,
+        { question: 'Percent or fixed discount?', options: { format: 'yes_no' } },
+        { bearer: p8Key },
+      )
+      assert(
+        ask.status === 200 && ask.data.status === 'waiting_human',
+        `ask → ${JSON.stringify(ask.data)}`,
+      )
+      const parked = await hq.get(`/api/v1/missions/${pmId}`)
+      assert(parked.data.status === 'waiting_human', `not parked: ${parked.data.status}`)
+
+      // A parked mission is NOT claimable (no lease/requeue) — a fresh claim finds nothing new.
+      const noClaim = await hq.post('/api/v1/agent/claim-next', undefined, { bearer: p8Key })
+      assert(
+        noClaim.data.claimed == null,
+        `waiting_human leaked into claim-next: ${JSON.stringify(noClaim.data.claimed)}`,
+      )
+
+      // HQ answers → re-queued to ready; the answer is in the dossier for the resuming agent.
+      const ans = await hq.post(`/api/v1/missions/${pmId}/answer-human-input`, {
+        answer: 'Percent discount.',
+      })
+      assert(
+        ans.status === 200 && ans.data.status === 'ready',
+        `answer → ${JSON.stringify(ans.data)}`,
+      )
+      const dz2 = await hq.get(`/api/v1/missions/${pmId}/dossier`)
+      const addenda = dz2.data.sections?.addenda ?? []
+      assert(
+        (await hq.get(`/api/v1/missions/${pmId}`)).data.status === 'ready' &&
+          addenda.some((a: any) => a.kind === 'human_question') &&
+          addenda.some((a: any) => a.kind === 'human_answer' && a.body.includes('Percent')),
+        `resume/answer not in dossier: ${JSON.stringify(addenda)}`,
+      )
+      return 'ask → waiting_human (unclaimable) → HQ answer → ready, Q+A in the dossier'
+    },
+  )
+
   await step('Kill-switch: revoke D7 → its next call 401 + work requeued', async () => {
     const rev = await hq.del(`/api/v1/licenses/${devLicenseId}`)
     assert(rev.status === 200, `revoke failed: ${rev.status}`)

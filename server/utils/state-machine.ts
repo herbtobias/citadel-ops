@@ -10,9 +10,11 @@ const TRANSITIONS: Record<MissionStatusValue, MissionStatusValue[]> = {
   designing: ['cold_read', 'ready', 'backlog', 'cancelled'],
   cold_read: ['ready', 'designing', 'cancelled'], // pass → ready, fail → designing
   ready: ['in_progress', 'backlog', 'cancelled'],
-  in_progress: ['in_review', 'blocked', 'ready', 'done', 'cancelled'],
+  in_progress: ['in_review', 'blocked', 'waiting_human', 'ready', 'done', 'cancelled'],
   in_review: ['done', 'in_progress', 'blocked', 'cancelled'],
   blocked: ['in_progress', 'ready', 'cancelled'],
+  // §PARLEY — HQ answered → resume (in_progress if the same agent still holds it, else ready).
+  waiting_human: ['in_progress', 'ready', 'cancelled'],
   done: ['in_progress'], // reopen
   cancelled: [],
 }

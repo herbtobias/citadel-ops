@@ -64,6 +64,13 @@
       "when": 1782934727482,
       "tag": "0008_knowledge_author",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782935120989,
+      "tag": "0009_parley_waiting_human",
+      "breakpoints": true
     }
   ]
 }

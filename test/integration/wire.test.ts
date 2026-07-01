@@ -54,6 +54,39 @@ describe.skipIf(!RUN)('integration: The Wire + data (requires TEST_DATABASE_URL)
     expect(new Set(prevHashes).size, 'duplicate prevHash → chain forked').toBe(prevHashes.length)
   })
 
+  it('the watchdog never re-queues a waiting_human mission (§PARLEY P2)', async () => {
+    const { eq } = await import('drizzle-orm')
+    const { db, schema } = await import('../../server/db')
+    const { sweepExpiredLeases } = await import('../../server/utils/license')
+
+    const [web] = await db.select().from(schema.projects).where(eq(schema.projects.key, 'WEB'))
+    // A parked mission with a long-expired lease — a naive sweep would requeue it.
+    const [m] = await db
+      .insert(schema.missions)
+      .values({
+        projectId: web!.id,
+        key: 'WEB-PARLEY-P2',
+        title: 'parked',
+        sector: 'BACKEND',
+        type: 'feature',
+        status: 'waiting_human',
+        leaseExpiresAt: new Date(Date.now() - 60 * 60 * 1000),
+      })
+      .returning()
+    try {
+      await sweepExpiredLeases(web!.id)
+      const [after] = await db
+        .select({ status: schema.missions.status })
+        .from(schema.missions)
+        .where(eq(schema.missions.id, m!.id))
+      expect(after!.status, 'waiting_human mission was re-queued by the watchdog').toBe(
+        'waiting_human',
+      )
+    } finally {
+      await db.delete(schema.missions).where(eq(schema.missions.id, m!.id))
+    }
+  })
+
   it('every seeded reference has a matching inverse edge (bidirectional integrity)', async () => {
     const { eq } = await import('drizzle-orm')
     const { db, schema } = await import('../../server/db')
