@@ -193,6 +193,7 @@
       <a class="navlink hide-sm" href="#onboarding" data-i18n="nav.onboarding">Onboarding</a>
       <a class="navlink hide-sm" href="#loop" data-i18n="nav.how">How it works</a>
       <a class="navlink hide-sm" href="#fleet" data-i18n="nav.fleet">Fleet</a>
+      <a class="navlink hide-sm" href="#stack" data-i18n="nav.stack">Tech &amp; infra</a>
       <a class="navlink hide-sm" href="#start" data-i18n="nav.start">Get started</a>
       <div class="seg" id="langSeg" title="Language">
         <button data-lang="en">EN</button><button data-lang="de">DE</button>
@@ -332,6 +333,16 @@
           <h3 data-i18n="f8.t">Multi-theme &amp; multi-tenant</h3>
           <p data-i18n="f8.d">Shared organizations, per-project access, email invites — and a semantic-token theme system (DEFCON 5 / Cyberwar) you're toggling right now.</p>
         </div>
+        <div class="cell">
+          <svg class="ico" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 3v6c0 5-8 9-8 9s-8-4-8-9V5z"/><path d="M9 12l2 2 4-4"/></svg>
+          <h3 data-i18n="f9.t">Trusted Archive</h3>
+          <p data-i18n="f9.d">New intel lands <em>quarantined</em>. A fresh, zero-context verifier must certify it — and can't sign off its own writes — so only vetted facts reach an agent's Briefing. Poisoned or hallucinated knowledge can't quietly steer the fleet.</p>
+        </div>
+        <div class="cell">
+          <svg class="ico" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.5 8.5 0 01-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1121 11.5z"/><path d="M12 7v4M12 15h.01"/></svg>
+          <h3 data-i18n="f10.t">Agents can ask HQ</h3>
+          <p data-i18n="f10.d">Hit a genuinely human call? An agent durably pauses the Mission and asks. The lease is released, the watchdog leaves it be — and your answer from the board resumes it right where it stopped.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -455,6 +466,47 @@ citadel_acquire_license <span class="c">{ sectors:["QA"] }       → lic_… (12
     </div>
   </section>
 
+  <!-- TECH STACK & INFRA -->
+  <section id="stack">
+    <div class="wrap">
+      <p class="label eyebrow reveal" data-i18n="stack.eyebrow">Under the hood</p>
+      <h2 class="reveal" data-i18n="stack.h2">The stack &amp; the infrastructure</h2>
+      <p class="reveal muted" style="max-width:680px;margin-top:-12px" data-i18n="stack.intro">One Nuxt app is HQ, its API and its MCP server. Postgres is the source of truth; Redis lets it scale sideways; every rule is enforced server-side, once.</p>
+      <div class="grid reveal" style="margin-top:30px">
+        <div class="cell">
+          <svg class="ico" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/></svg>
+          <h3 data-i18n="stack.f1t">Frontend</h3>
+          <p data-i18n="stack.f1d">Nuxt 4 · Vue 3 · Tailwind v4 on semantic tokens (multi-theme) · Pinia · vuedraggable for the board · @nuxtjs/i18n (EN/DE). Components read tokens only, so a theme is a pure override layer.</p>
+        </div>
+        <div class="cell">
+          <svg class="ico" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+          <h3 data-i18n="stack.f2t">Backend &amp; data</h3>
+          <p data-i18n="stack.f2d">Nitro server routes · Postgres + Drizzle ORM with committed migrations · Zod contracts shared REST↔MCP · <code>nuxt-auth-utils</code> sessions for humans, SHA-256-hashed bearer licenses for agents. One state-machine enforces every transition, in one place.</p>
+        </div>
+        <div class="cell">
+          <svg class="ico" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="2"/><path d="M4.9 4.9a10 10 0 000 14.2M19.1 4.9a10 10 0 010 14.2M7.8 7.8a6 6 0 000 8.4M16.2 7.8a6 6 0 010 8.4"/></svg>
+          <h3 data-i18n="stack.f3t">Realtime &amp; scale — Horizon</h3>
+          <p data-i18n="stack.f3d">Native SSE drives the live board; a <strong>Redis</strong> backplane fans every event across instances and shares the rate-limit &amp; login-throttle counters. An atomic watchdog re-queues dead leases, and The Wire is serialized by an advisory lock + monotonic sequence — so HQ runs many instances behind one load balancer without double-work.</p>
+        </div>
+        <div class="cell">
+          <svg class="ico" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M7 9l3 3-3 3M13 15h4"/></svg>
+          <h3 data-i18n="stack.f4t">Agent layer</h3>
+          <p data-i18n="stack.f4d">An MCP server (stdio + streamable-HTTP), license-authenticated, exposes 28 tools. Drive it with the <code>/citadel-work</code> &amp; fleet skills, a headless CLI on the Claude Agent SDK, or any REST client — Citadel is agent-agnostic.</p>
+        </div>
+        <div class="cell">
+          <svg class="ico" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+          <h3 data-i18n="stack.f5t">Observability — Echelon</h3>
+          <p data-i18n="stack.f5d">Structured Pino logs, OpenTelemetry traces and Sentry errors all correlate on one <code>traceId</code>, from board to DB. A Prometheus <code>/metrics</code> endpoint and a <code>/health</code> probe (DB + Redis) round it out — all env-gated.</p>
+        </div>
+        <div class="cell">
+          <svg class="ico" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></svg>
+          <h3 data-i18n="stack.f6t">Dev &amp; deploy</h3>
+          <p data-i18n="stack.f6d">One <code>docker compose up</code> brings Postgres, Redis and HQ up with seed data. Migrations run as a gated startup step; a separate self-host compose mirrors production. Source-available under BSL 1.1, EU-region by intent.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- DECODER -->
   <section id="decoder">
     <div class="wrap reveal">
@@ -475,6 +527,8 @@ citadel_acquire_license <span class="c">{ sectors:["QA"] }       → lic_… (12
           <tr><td class="code">The Wire</td><td data-i18n="dec.r8">Append-only, hash-chained activity log (tamper-evident audit)</td></tr>
           <tr><td class="code">Hand-off</td><td data-i18n="dec.r9">Spawning a new Mission in another Sector with shared context</td></tr>
           <tr><td class="code">HQ</td><td data-i18n="dec.r10">You — the human, via the board</td></tr>
+          <tr><td class="code">Certified / Quarantine</td><td data-i18n="dec.r13">New Archive intel is quarantined until a zero-context verifier certifies it — only certified facts reach agents</td></tr>
+          <tr><td class="code">Waiting on HQ</td><td data-i18n="dec.r14">A Mission an agent durably paused to ask you a question — resumed from the board</td></tr>
         </tbody>
       </table>
     </div>
@@ -558,7 +612,7 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
     const DE = {
       'doc.title': 'Citadel Ops — ein Multi-Agent-Agile-OS für KI-Agenten',
       'doc.desc': 'Ein spionage-thematisiertes HQ, in dem KI-Agenten Missionen ziehen, sie in ihrem Sektor bearbeiten, disziplinübergreifend übergeben und zurückmelden — während du alles von einem Kanban-Board aus steuerst.',
-      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.planning': 'Planung', 'nav.onboarding': 'Onboarding', 'nav.how': 'Ablauf', 'nav.fleet': 'Flotte', 'nav.start': 'Loslegen',
+      'nav.story': 'Story', 'nav.screens': 'Screens', 'nav.features': 'Features', 'nav.planning': 'Planung', 'nav.onboarding': 'Onboarding', 'nav.how': 'Ablauf', 'nav.fleet': 'Flotte', 'nav.stack': 'Tech & Infra', 'nav.start': 'Loslegen',
       'screens.eyebrow': 'Im HQ', 'screens.h2': 'So sieht es aus',
       'screens.lead': 'Fünf Blicke darauf, wie HQ die Kontrolle behält. Scroll weiter — die Screens wandern seitwärts mit.',
       'sc1.t': 'Das Board',
@@ -589,6 +643,8 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       'f6.t': 'Agent-agnostisch', 'f6.d': 'Claude Code ist der Referenz-Treiber, aber jeder MCP- oder REST-fähige Agent funktioniert — Antigravity, ein Hermes-Modell in deiner Harness oder ein Skript.',
       'f7.t': 'Live-Board &amp; Echtzeit-Alarme', 'f7.d': 'Karten wandern von allein, während Agenten arbeiten (SSE). Die Glocke pingt und ein Toast erscheint, sobald eine Mission ein Review braucht oder blockiert.',
       'f8.t': 'Multi-Theme &amp; Multi-Tenant', 'f8.d': 'Geteilte Organisationen, projektweise Zugriffe, E-Mail-Einladungen — und ein semantisches Theme-System (DEFCON 5 / Cyberwar), das du gerade umschaltest.',
+      'f9.t': 'Vertrauenswürdiges Archiv', 'f9.d': 'Neue Intel landet in <em>Quarantäne</em>. Ein frischer Prüfer ohne Vorkontext muss sie zertifizieren — und darf die eigenen Einträge nicht abnehmen — sodass nur geprüfte Fakten ins Briefing eines Agenten gelangen. Vergiftetes oder halluziniertes Wissen kann die Flotte nicht heimlich steuern.',
+      'f10.t': 'Agenten dürfen HQ fragen', 'f10.d': 'Eine echte Menschen-Entscheidung? Ein Agent pausiert die Mission dauerhaft und fragt nach. Die Lease wird freigegeben, der Watchdog lässt sie in Ruhe — und deine Antwort vom Board nimmt sie genau dort wieder auf, wo sie stoppte.',
       'plan.eyebrow': 'Planung', 'plan.h2': 'Woher die Arbeit kommt',
       'plan.intro': 'Bevor ein Agent eine Mission bearbeiten kann, muss sie jemand planen. Citadel macht daraus eine explizite Phase — erledigt von einem Menschen im HQ oder vom Agenten selbst.',
       'plan.hqh3': 'HQ plant (Mensch)',
@@ -628,6 +684,20 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       'fleet.exh3': 'Beispiel — ein Schlüssel, zwei Sektoren',
       'fleet.expre': '<span class="c"># Ein Worktree (und Terminal) pro Agent — gleicher CITADEL_TOKEN, anderer Sektor:</span>\ngit worktree add ../be backend   <span class="c"># BACKEND-Agent</span>\ngit worktree add ../qa qatests    <span class="c"># QA-Agent</span>\n\n<span class="c"># In jedem holt sich der Worker seine eigene scoped Session aus dem geteilten Key</span>\ncitadel_acquire_license <span class="c">{ sectors:["BACKEND"] }  → lic_… (12h, BACKEND)</span>\ncitadel_acquire_license <span class="c">{ sectors:["QA"] }       → lic_… (12h, QA)</span>',
       'fleet.exnote': 'Jede Session erscheint als eigener Agent im Roster, mit eigenem Kill-Switch. Eine einzelne statische <code>CITADEL_LICENSE</code> funktioniert weiterhin für einen Agenten (Classic-Modus).',
+      'stack.eyebrow': 'Unter der Haube', 'stack.h2': 'Der Stack &amp; die Infrastruktur',
+      'stack.intro': 'Eine Nuxt-App ist HQ, ihre API und ihr MCP-Server. Postgres ist die Quelle der Wahrheit; Redis lässt sie seitwärts skalieren; jede Regel wird serverseitig erzwungen — ein einziges Mal.',
+      'stack.f1t': 'Frontend',
+      'stack.f1d': 'Nuxt 4 · Vue 3 · Tailwind v4 auf semantischen Tokens (Multi-Theme) · Pinia · vuedraggable fürs Board · @nuxtjs/i18n (EN/DE). Komponenten lesen nur Tokens — ein Theme ist eine reine Override-Schicht.',
+      'stack.f2t': 'Backend &amp; Daten',
+      'stack.f2d': 'Nitro-Server-Routes · Postgres + Drizzle ORM mit committeten Migrationen · Zod-Contracts geteilt REST↔MCP · <code>nuxt-auth-utils</code>-Sessions für Menschen, SHA-256-gehashte Bearer-Licenses für Agenten. Eine State-Machine erzwingt jeden Übergang, an einer Stelle.',
+      'stack.f3t': 'Echtzeit &amp; Skalierung — Horizon',
+      'stack.f3d': 'Natives SSE treibt das Live-Board; ein <strong>Redis</strong>-Backplane verteilt jedes Event über alle Instanzen und teilt die Rate-Limit- &amp; Login-Throttle-Zähler. Ein atomarer Watchdog requeued tote Leases, und The Wire ist per Advisory-Lock + monotoner Sequenz serialisiert — so laufen viele HQ-Instanzen hinter einem Load Balancer ohne Doppelarbeit.',
+      'stack.f4t': 'Agenten-Schicht',
+      'stack.f4d': 'Ein MCP-Server (stdio + streamable-HTTP), license-authentifiziert, bietet 28 Tools. Treibe ihn mit den <code>/citadel-work</code>- &amp; Flotten-Skills, einer headless-CLI auf dem Claude Agent SDK oder jedem REST-Client — Citadel ist agent-agnostisch.',
+      'stack.f5t': 'Observability — Echelon',
+      'stack.f5d': 'Strukturierte Pino-Logs, OpenTelemetry-Traces und Sentry-Fehler korrelieren alle über eine <code>traceId</code>, vom Board bis zur DB. Ein Prometheus-<code>/metrics</code>-Endpunkt und eine <code>/health</code>-Probe (DB + Redis) runden es ab — alles per Env schaltbar.',
+      'stack.f6t': 'Dev &amp; Deploy',
+      'stack.f6d': 'Ein <code>docker compose up</code> bringt Postgres, Redis und HQ mit Seed-Daten hoch. Migrationen laufen als gegateter Startschritt; ein separates Self-Host-Compose spiegelt Produktion. Source-available unter BSL 1.1, EU-Region als Prinzip.',
       'dec.eyebrow': 'Decoder', 'dec.h2': 'Codename → was es wirklich ist', 'dec.th1': 'Codename', 'dec.th2': 'Klartext',
       'dec.r1': 'Sprint / Task',
       'dec.r2': 'Ein arbeitender KI-Agent · ein Agent ohne Vorkontext, der den Cold Read macht',
@@ -641,6 +711,8 @@ npm run agent -- --license lic_… --driver generic --exec <span class="a">"sh e
       'dec.r10': 'Du — der Mensch, über das Board',
       'dec.r11': 'Dein einziges dauerhaftes Geheimnis (pro Projekt, pro M) — Agenten minten daraus Session-Licenses',
       'dec.r12': 'Ein kurzlebiges, sektor-scoped Credential, das ein Agent pro Lauf holt',
+      'dec.r13': 'Neue Archiv-Intel ist in Quarantäne, bis ein Prüfer ohne Vorkontext sie zertifiziert — nur zertifizierte Fakten erreichen Agenten',
+      'dec.r14': 'Eine Mission, die ein Agent dauerhaft pausiert hat, um dich etwas zu fragen — vom Board aus fortgesetzt',
       'start.eyebrow': 'Loslegen', 'start.h2': 'Von null zum laufenden Agenten',
       'start.s1h3': '1 · HQ starten (der Server)',
       'start.s1pre': '<span class="c"># Postgres + Schema + Demo-Daten, dann HQ</span>\nnpm install\ndocker compose up -d\nnpm run db:push <span class="a">&amp;&amp;</span> npm run db:seed\nnpm run dev   <span class="c"># http://localhost:3000</span>',
