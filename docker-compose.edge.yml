@@ -1,0 +1,34 @@
+# Citadel Ops — app-only, attached to a SHARED edge (Caddy) + SHARED Postgres/Redis.
+# The multi-project shape: no bundled Caddy/Postgres/Redis here — those are external services
+# on the `web` (ingress) and `data` (DB) networks. Mirrors how it deploys next to other projects.
+#
+# Prereqs: the `web` + `data` networks exist and a shared `postgres` (with a `citadel` DB + role)
+# and `redis` run on `data` — the local-edge/ stack provides all of this.
+#
+# Run from the citadel-ops repo root:
+#   # first boot (seed the demo super-admin + org), then drop the flags and re-run:
+#   SEED_ON_START=1 CITADEL_ALLOW_SEED=true docker compose -f docker-compose.edge.yml up -d --build
+#   docker compose -f docker-compose.edge.yml up -d
+name: citadel
+
+services:
+  app:
+    build: .
+    container_name: citadel-app # Caddy routes to this name on the `web` network
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://citadel:citadel@postgres:5432/citadel # shared Postgres, citadel DB
+      REDIS_URL: redis://redis:6379/0 # shared Redis, logical DB 0
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:-local-rehearsal-session-secret-min-32-chars}
+      NUXT_PUBLIC_APP_URL: ${NUXT_PUBLIC_APP_URL:-http://citadel.localhost:8080}
+      RUN_MIGRATIONS: '1' # single instance: migrate on boot is fine
+      SEED_ON_START: ${SEED_ON_START:-0}
+      CITADEL_ALLOW_SEED: ${CITADEL_ALLOW_SEED:-}
+    networks: [web, data]
+
+networks:
+  web:
+    external: true
+  data:
+    external: true
