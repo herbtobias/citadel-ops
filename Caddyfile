@@ -1,0 +1,11 @@
+# Citadel Ops — Caddy reverse proxy with automatic HTTPS (Let's Encrypt).
+# DOMAIN + ACME_EMAIL come from the environment (see docker-compose.prod.yml / .env).
+# Caddy obtains and auto-renews the certificate; nothing else to do.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	reverse_proxy app:3000
+}

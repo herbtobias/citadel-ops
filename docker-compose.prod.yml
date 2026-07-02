@@ -1,0 +1,88 @@
+# Citadel Ops — single-VPS production stack (App + Postgres + Redis) behind Caddy (auto-TLS).
+# See docs/DEPLOY_VPS.md for the full runbook. Everything on one small EU host, ~€5/month.
+#
+#   # create .env with: DOMAIN, POSTGRES_PASSWORD, NUXT_SESSION_PASSWORD, ACME_EMAIL (see runbook §6)
+#   # first boot only (seeds the demo super-admin + org, then drop the flags):
+#   SEED_ON_START=1 CITADEL_ALLOW_SEED=true \
+#     docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+#   # every later start:
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d
+name: citadel
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: citadel
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: citadel
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U citadel -d citadel']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      # App talks to postgres/redis over the internal compose network.
+      DATABASE_URL: postgres://citadel:${POSTGRES_PASSWORD}@postgres:5432/citadel
+      REDIS_URL: redis://redis:6379
+      # REQUIRED, 32+ chars — the app refuses to boot in prod without it (00.env-check.ts).
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:?set NUXT_SESSION_PASSWORD in .env}
+      # Public base URL (invite/reset mail links). Must match the domain Caddy serves.
+      NUXT_PUBLIC_APP_URL: https://${DOMAIN:?set DOMAIN in .env}
+      # Single instance: migrate-on-boot is fine (drizzle-kit runs in docker-entrypoint.sh).
+      RUN_MIGRATIONS: '1'
+      # First boot only: seed the demo super-admin + org, then drop these (re-seed WIPES demo org).
+      SEED_ON_START: ${SEED_ON_START:-0}
+      CITADEL_ALLOW_SEED: ${CITADEL_ALLOW_SEED:-}
+      # Optional SMTP for invitation/reset emails; if SMTP_HOST is unset, mail is logged, not sent.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      MAIL_FROM: ${MAIL_FROM:-}
+    expose:
+      - '3000' # internal only — reached via Caddy, never published to the host
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
